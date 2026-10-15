@@ -157,7 +157,9 @@ pub(super) fn show(app: &mut App, ui: &mut egui::Ui, data: &Prerelease) {
         } else {
             gettext(locale, "Pre-save")
         };
-        let enabled = data.saved.is_some() && !data.saving && app.local_ready;
+        // Pre-saves go through librespot's session, which Spotify Free lacks.
+        let can_save = app.capabilities().prerelease;
+        let enabled = data.saved.is_some() && !data.saving && app.local_ready && can_save;
         let text_color = if enabled {
             ink
         } else {
@@ -183,7 +185,12 @@ pub(super) fn show(app: &mut App, ui: &mut egui::Ui, data: &Prerelease) {
                     .corner_radius(24)
                     .min_size(vec2(content_width + 48.0, 48.0)),
             )
-            .on_hover_text(gettext(locale, "Pre-save on Spotify"));
+            .on_hover_text(gettext(locale, "Pre-save on Spotify"))
+            .on_disabled_hover_text(if can_save {
+                gettext(locale, "Pre-save on Spotify")
+            } else {
+                gettext(locale, "Pre-saving needs Spotify Premium")
+            });
         save_button.widget_info(|| {
             egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, save_label.as_ref())
         });
