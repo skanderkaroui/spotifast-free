@@ -95,6 +95,14 @@ impl App {
         self.open(Page::Radio(uri.to_string()));
     }
 
+    /// Starts Spotify's own radio for `seed` on the Free web player.
+    pub(super) fn play_radio(&mut self, seed: String) {
+        if !crate::capabilities::is_spotify_item(&seed) {
+            return;
+        }
+        self.backend.player(PlayerCommand::Radio(seed));
+    }
+
     /// Asks for the seed's songs unless the page already has or awaits them.
     pub(super) fn load_radio(&mut self, seed: &str) {
         let name = self.radio_name(seed);
