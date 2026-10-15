@@ -60,6 +60,8 @@ pub mod ui;
 pub mod updates;
 pub mod util;
 pub mod vis;
+#[cfg(target_os = "macos")]
+pub mod web_player;
 pub mod winamp;
 pub mod window;
 pub mod zeroconf;
