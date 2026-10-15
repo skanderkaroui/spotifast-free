@@ -1808,6 +1808,10 @@ struct Worker {
     signed_in: bool,
     /// The plan, once the Web API has answered.
     premium: Option<bool>,
+    /// Free accounts on macOS play through Spotify's own web player in a
+    /// hidden helper, started on the first command and stopped on sign-out.
+    #[cfg(target_os = "macos")]
+    web_player: Option<crate::web_player::WebPlayer>,
     cancel_signin: Option<watch::Sender<bool>>,
     authorizing_source: Option<ApiSource>,
     pending_authorization: Option<ApiSource>,
@@ -1914,6 +1918,8 @@ impl Worker {
             engine_restart_pending: false,
             signed_in: false,
             premium: None,
+            #[cfg(target_os = "macos")]
+            web_player: None,
             cancel_signin: None,
             authorizing_source: None,
             pending_authorization: None,
@@ -2269,6 +2275,11 @@ impl Worker {
                 Command::Player(command) => {
                     if matches!(&command, PlayerCommand::Load(_)) {
                         self.resume = None;
+                    }
+                    #[cfg(target_os = "macos")]
+                    if self.premium == Some(false) {
+                        self.web_player_command(&command);
+                        continue;
                     }
                     match &self.engine {
                         // Until the new session picks the song up, it has
@@ -3245,6 +3256,15 @@ impl Worker {
         self.pending_playback_grant = None;
         self.engine_busy = false;
         self.premium = None;
+        #[cfg(target_os = "macos")]
+        {
+            if let Some(player) = self.web_player.take() {
+                player.shutdown();
+            }
+            // The saved plan belongs to the account that signed out; the next
+            // account must not start on it.
+            crate::web_player::forget_plan(&self.dirs.volume_dir().join("plan"));
+        }
         self.resume = None;
         self.resume_verify = None;
         self.waiting_for_network = false;
@@ -3836,10 +3856,121 @@ impl Worker {
         }
     }
 
+    /// Sends the helper's playback state to the app the way the librespot
+    /// engine's notify does.
+    #[cfg(target_os = "macos")]
+    fn web_player_notify(&self) -> crate::web_player::Notify {
+        let events = self.events.clone();
+        let waker = self.waker.clone();
+        Arc::new(move |state| {
+            let _ = events.send(Event::Local(Box::new(state)));
+            waker.wake();
+        })
+    }
+
+    /// Starts the Free playback helper on first use and sends it the command.
+    /// Controls Spotify's web player does not offer report why, rather than
+    /// failing silently.
+    #[cfg(target_os = "macos")]
+    fn web_player_command(&mut self, command: &PlayerCommand) {
+        use crate::web_player::{Unsupported, WebPlayer};
+        // A helper that quit after sitting idle is replaced on the next use.
+        if self
+            .web_player
+            .as_mut()
+            .is_some_and(|player| !player.running())
+            && let Some(player) = self.web_player.take()
+        {
+            player.shutdown();
+        }
+        if self.web_player.is_none() {
+            if !WebPlayer::available() {
+                self.emit(Event::Error(PREMIUM_NEEDED.into()));
+                return;
+            }
+            // Each ad Spotify plays is logged locally, never sent anywhere.
+            let ad_log = Some(self.dirs.volume_dir().join("ads.jsonl"));
+            match WebPlayer::start(self.web_player_notify(), ad_log) {
+                Ok(player) => {
+                    log::info!("web player helper started");
+                    self.web_player = Some(player);
+                    self.emit(Event::Playback(LocalPlayback::Ready {
+                        device_id: crate::web_player::DEVICE_ID.into(),
+                    }));
+                }
+                Err(error) => {
+                    self.emit(Event::Error(format!(
+                        "Free playback helper failed: {error}"
+                    )));
+                    return;
+                }
+            }
+        }
+        let Some(player) = self.web_player.as_mut() else {
+            return;
+        };
+        log::info!("web player command: {command:?}");
+        match player.command(command) {
+            Ok(Ok(())) => {}
+            Ok(Err(Unsupported::NotOffered(what))) => {
+                self.emit(Event::Error(format!(
+                    "Spotify Free doesn't offer {what} here"
+                )));
+            }
+            Err(error) => {
+                // The helper exited. Drop it; the next command starts a new one.
+                if let Some(player) = self.web_player.take() {
+                    player.shutdown();
+                }
+                self.emit(Event::Error(format!(
+                    "Free playback helper stopped: {error}"
+                )));
+            }
+        }
+    }
+
     /// Starts the engine only for Premium accounts. librespot 0.8 calls
     /// `exit(1)` for Free accounts, which cannot be caught. If the plan is
     /// unknown, preserve the previous behavior and start the engine.
     fn on_account_checked(&mut self, premium: Option<bool>) {
+        #[cfg(target_os = "macos")]
+        let premium = {
+            let path = self.dirs.volume_dir().join("plan");
+            // The plan belongs to one account; without a verified account
+            // nothing is saved or reused.
+            let account = self
+                .api
+                .account()
+                .map(|account| account.as_str().to_owned());
+            match (premium, account) {
+                (Some(premium), Some(account)) => {
+                    log::info!(
+                        "account plan from Spotify: {}",
+                        if premium { "premium" } else { "free" }
+                    );
+                    crate::web_player::save_plan(&path, &account, premium);
+                    Some(premium)
+                }
+                (Some(premium), None) => Some(premium),
+                // Spotify did not say. Use this account's saved plan when
+                // there is one; otherwise keep the old behaviour and wait,
+                // so a Premium account never starts on the Free helper.
+                (None, account) => {
+                    let saved =
+                        account.and_then(|account| crate::web_player::saved_plan(&path, &account));
+                    log::info!(
+                        "account plan unknown; using {}",
+                        match saved {
+                            Some(true) => "saved premium",
+                            Some(false) => "saved free",
+                            None => "the engine until Spotify answers",
+                        }
+                    );
+                    saved
+                }
+            }
+        };
+        let was_free = self.premium == Some(false);
         self.premium = premium;
         if premium == Some(false) {
             self.album_type_lookup.clear_engine_work();
@@ -3850,6 +3981,28 @@ impl Worker {
             }
             self.stop_kept_player();
             self.pending_playback_grant = None;
+            // Free accounts play through the web player helper. Announce it
+            // now so the app sends plays here; the process itself starts on
+            // the first command.
+            #[cfg(target_os = "macos")]
+            if crate::web_player::WebPlayer::available() {
+                log::info!("free account: local playback through the web player helper");
+                self.emit(Event::Playback(LocalPlayback::Ready {
+                    device_id: crate::web_player::DEVICE_ID.into(),
+                }));
+                // The app holds plays until local playback reports itself
+                // connected, but the helper only starts on the first play.
+                // Say so once, before a helper runs: a later account check
+                // must not blank the song a running helper is playing.
+                if self.web_player.is_none() {
+                    self.emit(Event::Local(Box::new(LocalState {
+                        connected: true,
+                        volume: u16::MAX,
+                        ..LocalState::default()
+                    })));
+                }
+                return;
+            }
             let credential_stored = self.playback_grant.is_some();
             if credential_stored {
                 self.emit(Event::Playback(LocalPlayback::Failed(
@@ -3857,6 +4010,17 @@ impl Worker {
                 )));
             }
             return;
+        }
+        // A Free plan that turned out Premium (Spotify corrected it, or a
+        // Premium account replaced a Free one): the engine takes over. The
+        // app was told the helper is its local player, so withdraw that
+        // first, or plays keep going to a helper that is gone.
+        #[cfg(target_os = "macos")]
+        if let Some(player) = self.web_player.take() {
+            player.shutdown();
+        }
+        if was_free {
+            self.emit(Event::Playback(LocalPlayback::Unavailable));
         }
         self.resume_engine();
         // A sign-in restored over a running engine picks up the headers the
@@ -7991,6 +8155,132 @@ mod authorization_tests {
             Waker::default(),
         );
         (runtime, worker, events)
+    }
+
+    /// A Premium account must keep librespot: it is never routed to the Free
+    /// helper, whatever the helper's presence or a stale saved plan says.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn premium_never_uses_the_free_helper() {
+        let (runtime, mut worker, events) = worker("premium-not-helper");
+        let _entered = runtime.enter();
+        worker
+            .api
+            .install(ApiSource::Shared, AccountId::new("ana"))
+            .unwrap();
+        let plan = worker.dirs.volume_dir().join("plan");
+        crate::web_player::save_plan(&plan, "ana", false);
+        worker.on_account_checked(Some(true));
+        assert_eq!(worker.premium, Some(true));
+        assert!(worker.web_player.is_none());
+        assert_eq!(
+            crate::web_player::saved_plan(&plan, "ana"),
+            Some(true),
+            "Spotify's answer wins"
+        );
+        assert!(!events.try_iter().any(|event| matches!(
+            event,
+            Event::Playback(LocalPlayback::Ready { device_id }) if device_id == crate::web_player::DEVICE_ID
+        )));
+    }
+
+    /// With no saved plan and no answer from Spotify, the plan stays unknown
+    /// and librespot keeps its old behaviour; nothing is guessed as Free.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn an_unknown_plan_is_not_guessed_free() {
+        let (runtime, mut worker, _events) = worker("unknown-plan");
+        let _entered = runtime.enter();
+        worker
+            .api
+            .install(ApiSource::Shared, AccountId::new("ana"))
+            .unwrap();
+        crate::web_player::forget_plan(&worker.dirs.volume_dir().join("plan"));
+        worker.on_account_checked(None);
+        assert_eq!(worker.premium, None);
+    }
+
+    /// A Free plan saved by one account is never used for another, so a
+    /// different (for example Premium) account keeps librespot.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn another_accounts_free_plan_is_not_used() {
+        let (runtime, mut worker, _events) = worker("other-account-plan");
+        let _entered = runtime.enter();
+        crate::web_player::save_plan(&worker.dirs.volume_dir().join("plan"), "ana", false);
+        worker
+            .api
+            .install(ApiSource::Shared, AccountId::new("bob"))
+            .unwrap();
+        worker.on_account_checked(None);
+        assert_eq!(worker.premium, None);
+    }
+
+    /// The same account's saved Free plan is used before Spotify answers.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn the_same_accounts_free_plan_is_used() {
+        let (runtime, mut worker, _events) = worker("same-account-plan");
+        let _entered = runtime.enter();
+        crate::web_player::save_plan(&worker.dirs.volume_dir().join("plan"), "ana", false);
+        worker
+            .api
+            .install(ApiSource::Shared, AccountId::new("ana"))
+            .unwrap();
+        worker.on_account_checked(None);
+        assert_eq!(worker.premium, Some(false));
+    }
+
+    /// A Free plan that turns out Premium withdraws the helper from the app,
+    /// so plays stop going to it and librespot can take over.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn free_then_premium_withdraws_the_helper() {
+        let (runtime, mut worker, events) = worker("free-then-premium");
+        let _entered = runtime.enter();
+        worker
+            .api
+            .install(ApiSource::Shared, AccountId::new("ana"))
+            .unwrap();
+        worker.premium = Some(false);
+        worker.on_account_checked(Some(true));
+        assert_eq!(worker.premium, Some(true));
+        assert!(
+            events
+                .try_iter()
+                .any(|event| matches!(event, Event::Playback(LocalPlayback::Unavailable)))
+        );
+    }
+
+    /// A Premium recheck of a Premium account sends nothing new.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn premium_recheck_keeps_local_playback() {
+        let (runtime, mut worker, events) = worker("premium-recheck");
+        let _entered = runtime.enter();
+        worker
+            .api
+            .install(ApiSource::Shared, AccountId::new("ana"))
+            .unwrap();
+        worker.premium = Some(true);
+        worker.on_account_checked(Some(true));
+        assert!(
+            !events
+                .try_iter()
+                .any(|event| matches!(event, Event::Playback(LocalPlayback::Unavailable)))
+        );
+    }
+
+    /// Signing out forgets the plan, so the next account does not start on it.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn sign_out_forgets_the_saved_plan() {
+        let (runtime, mut worker, _events) = worker("plan-sign-out");
+        let _entered = runtime.enter();
+        let plan = worker.dirs.volume_dir().join("plan");
+        crate::web_player::save_plan(&plan, "ana", false);
+        worker.sign_out();
+        assert_eq!(crate::web_player::saved_plan(&plan, "ana"), None);
     }
 
     #[test]
