@@ -658,6 +658,14 @@ fn add_menu(app: &mut App, ui: &mut egui::Ui) {
 
 fn rem_menu(app: &mut App, ui: &mut egui::Ui, rows: &[Row]) {
     let locale = app.locale;
+    // Spotify Free's queue only takes additions from here.
+    if !app.capabilities().queue_edit {
+        ui.add_enabled(
+            false,
+            egui::Button::new(gettext(locale, "Spotify Free can't change its queue here").as_ref()),
+        );
+        return;
+    }
     // Selection is by list row; only the songs the user queued can go.
     let removable: Vec<(usize, String)> = rows
         .iter()
