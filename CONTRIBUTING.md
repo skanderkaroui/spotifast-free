@@ -1,7 +1,15 @@
 # Contributing to Spotifast
 
+This repository is a fork of [Spotifast](https://github.com/crmne/spotifast)
+that adds playback for Spotify Free accounts. Report Free playback problems
+and send Free playback changes here. Anything that also happens in upstream
+Spotifast belongs [upstream](https://github.com/crmne/spotifast/issues), and
+the rest of this guide is upstream's policy, which this fork follows except
+where it says otherwise.
+
 Spotifast is a native Spotify client. Changes should improve the
-desktop app without adding a browser, fallback services, or another backend.
+desktop app without adding fallback services or another backend. The one
+browser engine is the Free playback helper (see below).
 
 ## Before opening an issue
 
@@ -15,14 +23,20 @@ project.
 
 Some boundaries come from Spotify or from upstream libraries:
 
-- Local playback requires Spotify Premium because librespot requires it.
+- Premium plays through librespot, which requires Premium. Free plays only
+  through Spotify's own web player in the macOS helper
+  (`experiments/macos-playback-host`), never through librespot.
+- The helper must leave Spotify's player alone: no skipping, muting or
+  hiding ads, no reading or replacing its audio, keys or licences, and no
+  faking the account's plan. Spotifast sends only the Spotify Connect
+  requests open.spotify.com sends for its own buttons.
 - Spotify Lossless is not available through librespot. Spotifast will
   reconsider it if librespot gains lawful upstream support; proposals that
   depend on bypassing Spotify's DRM are out of scope.
 - Spotify tracks must come from Spotify. Substituting audio from YouTube,
   Piped, `yt-dlp`, or another catalogue is out of scope.
-- Spotifast will not embed a browser engine, add telemetry, or introduce a
-  Spotifast-operated service.
+- Spotifast will not embed a browser engine beyond the Free playback helper,
+  add telemetry, or introduce a Spotifast-operated service.
 
 [What Spotify Lets a Client Do](docs/_reference/what-spotify-allows.md)
 lists what each of the three surfaces offers and the requests none of them
@@ -37,6 +51,8 @@ with the commit and release status stated. Reporter confirmation is welcome
 but is not required for closure. Reopen the issue if it persists after updating.
 
 ## Automated triage
+
+Upstream only: this fork does not run these workflows.
 
 [Copilot Triage](https://github.com/crmne/copilot-triage) assesses new and
 reopened issues and new discussions. It uses the report and latest five
@@ -74,7 +90,8 @@ implementation and regression tests live in the Copilot Triage repository.
    protections, or silently replace one service with another.
 4. **Cross-platform by default.** Linux, macOS, and Windows are supported
    products. Platform-specific code must be isolated and the other targets
-   must keep compiling.
+   must keep compiling. Free playback is macOS only for now; on Linux and
+   Windows a Free account browses and searches, as upstream.
 5. **Small dependency surface.** Reuse the standard library and existing
    crates where practical. A new dependency needs a concrete benefit worth
    its build time, binary size, maintenance, and security cost.
@@ -180,6 +197,21 @@ cargo test --locked --all-features --doc
 RUSTDOCFLAGS='-D warnings' cargo doc --locked --all-features --no-deps
 (cd docs && bundle exec jekyll build)
 ```
+
+Free playback changes also need the helper's own checks, and on a Mac
+signed in with a Free account, the live check:
+
+```sh
+node experiments/macos-playback-host/test.mjs
+node experiments/macos-playback-host/diagnostics.test.mjs
+SPOTIFY_BUNDLES=/path/to/bundles node experiments/macos-playback-host/rea-conformance.mjs
+bash experiments/free-e2e.sh
+```
+
+Recorded Spotify responses go through
+`experiments/macos-playback-host/scrub-recordings.mjs` before they are
+committed. Never commit a recording with an account's songs, playlists,
+device ids or sign-in.
 
 Linux needs the development packages listed under
 [Build from source](https://spotifast.rocks/getting-started/#build-from-source); `nix develop`
