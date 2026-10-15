@@ -196,7 +196,10 @@ fn contents(app: &mut App, ui: &mut egui::Ui, compact: bool) {
     // remote queue, so without local playback active every drop just
     // appends, same as the "Add to queue" menu item.
     let reorderable = app.queue_locally_reorderable();
-    if !reorderable && let Some(track) = queue_drop(ui, ui.clip_rect()) {
+    if !reorderable
+        && app.capabilities().queue_add
+        && let Some(track) = queue_drop(ui, ui.clip_rect())
+    {
         app.actions.push(Action::QueueMany {
             songs: track
                 .items
@@ -604,4 +607,73 @@ fn queue_row(app: &mut App, ui: &mut egui::Ui, index: usize, compact: bool, shif
             picked_songs: &[],
         },
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_app(name: &str) -> App {
+        let root =
+            std::env::temp_dir().join(format!("spotifast-queue-{name}-{}", std::process::id()));
+        let mut app = App::new(
+            &crate::backend::Waker::default(),
+            crate::paths::AppDirs {
+                config: root.join("config"),
+                state: root.join("state"),
+                cache: root.join("cache"),
+            },
+            crate::settings::Settings::default(),
+            crate::app::AppOptions {
+                media_controls: false,
+                restore_sign_in: false,
+                tray: false,
+            },
+        );
+        crate::demo::populate(&mut app);
+        let now = app.now_playing();
+        app.local_ready = true;
+        app.local.track = Some(crate::player::LocalTrack {
+            uri: now.as_ref().unwrap().uri.clone(),
+            ..Default::default()
+        });
+        app.local.playback = crate::player::Playback::Paused;
+        app.manual_queue = app.queue.get().unwrap().queue[..2]
+            .iter()
+            .map(|item| item.uri().to_string())
+            .collect();
+        app
+    }
+
+    fn shows_clear(app: &mut App) -> bool {
+        let ctx = egui::Context::default();
+        ctx.enable_accesskit();
+        let mut output = ctx.run_ui(egui::RawInput::default(), |ui| clear_button(app, ui));
+        output.textures_delta.clear();
+        output
+            .platform_output
+            .accesskit_update
+            .unwrap()
+            .nodes
+            .iter()
+            .any(|(_, node)| node.label() == Some("Clear queue"))
+    }
+
+    /// Clearing is offered for Premium's own queue, and never for Spotify
+    /// Free, whose queue only takes additions.
+    #[test]
+    fn clear_queue_is_hidden_for_free() {
+        let mut app = test_app("premium");
+        assert!(shows_clear(&mut app));
+        app.backend.shutdown();
+
+        #[cfg(target_os = "macos")]
+        {
+            let mut app = test_app("free");
+            app.local_device_id = Some(crate::web_player::DEVICE_ID.into());
+            assert!(!app.capabilities().queue_edit);
+            assert!(!shows_clear(&mut app));
+            app.backend.shutdown();
+        }
+    }
 }
