@@ -192,6 +192,13 @@ pub struct LocalState {
     /// `Paused` that brings the position counts as a seek for media
     /// controls, which would otherwise count on past the end (#587).
     pub replay_pending: bool,
+    /// Spotify's live restrictions on the playing item. Only the Free web
+    /// player reports them; librespot leaves them unrestricted.
+    pub restrictions: crate::capabilities::Restrictions,
+    /// Spotify's upcoming songs, in order, when the engine reports them
+    /// with its state (the Free web player). Empty for librespot, whose
+    /// queue comes from the Web API.
+    pub upcoming: Vec<String>,
 }
 
 /// What local playback was doing when its session ended, so the engine
@@ -297,6 +304,8 @@ pub enum PlayerCommand {
     Shuffle(bool),
     Repeat(RepeatMode),
     Load(LoadSpec),
+    /// Start a radio station seeded by this track URI (Free web player).
+    Radio(String),
     /// Take over the active Connect session, including its queue and position.
     Transfer,
 }
@@ -738,6 +747,8 @@ impl Engine {
             PlayerCommand::Seek(position_ms) => spirc.set_position_ms(position_ms)?,
             PlayerCommand::Volume(volume) => self.note_volume(volume, false)?,
             PlayerCommand::VolumePreview(volume) => self.note_volume(volume, true)?,
+            // Premium keeps using the app's own radio page.
+            PlayerCommand::Radio(seed) => log::debug!("radio {seed} ignored on librespot"),
             PlayerCommand::Shuffle(enabled) => spirc.shuffle(enabled)?,
             PlayerCommand::Repeat(mode) => match mode {
                 RepeatMode::Off => {
