@@ -135,7 +135,9 @@ pub fn handle(app: &mut App, ctx: &egui::Context) {
     });
     if !typing
         && ctx.input_mut(|input| input.consume_key(Modifiers::NONE, Key::B))
-        && let Some(now) = app.now_playing().filter(|now| !now.is_episode)
+        && let Some(now) = app
+            .now_playing()
+            .filter(|now| !now.is_episode && crate::capabilities::is_spotify_item(&now.uri))
     {
         actions.push(Action::ToggleSaved(now.uri));
     }
@@ -159,6 +161,9 @@ pub fn handle(app: &mut App, ctx: &egui::Context) {
                     }
                 }
             }
+            // MilkDrop reads Spotifast's own audio, which Spotify Free's
+            // sound never reaches.
+            Action::ToggleWinampMilkdrop if !app.capabilities().visualizers => {}
             other => app.actions.push(other),
         }
     }
@@ -185,6 +190,24 @@ pub fn handle(app: &mut App, ctx: &egui::Context) {
         }
     }
 }
+
+/// The shortcuts to list. Without visualizers (Spotify Free, whose sound
+/// never reaches Spotifast) MilkDrop's keys do nothing, so they are left
+/// out: the MilkDrop row and the five MilkDrop-window rows after it.
+pub fn shortcuts_for(
+    locale: Locale,
+    visualizers: bool,
+) -> Vec<(Cow<'static, str>, Cow<'static, str>)> {
+    let mut all = shortcuts(locale);
+    if !visualizers && let Some(start) = all.iter().position(|(keys, _)| keys == MILKDROP_SHORTCUT)
+    {
+        all.drain(start..(start + MILKDROP_ROWS).min(all.len()));
+    }
+    all
+}
+
+/// The MilkDrop key and the keys of the MilkDrop window that follow it.
+const MILKDROP_ROWS: usize = 6;
 
 /// The rows of the keyboard shortcuts dialog: the keys, then what they do.
 /// Key names stay as the keyboard prints them; words around them, and
@@ -511,6 +534,21 @@ mod tests {
         }
     }
 
+    /// Without visualizers the six MilkDrop rows go, and only those.
+    #[test]
+    fn milkdrop_shortcuts_are_left_out_without_visualizers() {
+        let all = shortcuts_for(Locale::English, true);
+        let free = shortcuts_for(Locale::English, false);
+        assert_eq!(all.len(), free.len() + MILKDROP_ROWS);
+        assert!(free.iter().all(|(_, what)| !what.contains("MilkDrop")));
+        assert_eq!(
+            all.iter()
+                .filter(|(_, what)| what.contains("MilkDrop"))
+                .count(),
+            MILKDROP_ROWS
+        );
+    }
+
     #[test]
     fn shortcut_dialog_names_platform_reserved_alternatives() {
         let label = |description: &str| {
@@ -666,6 +704,58 @@ mod tests {
             format!("{:?}", [Action::SetLyricsFullscreen(false)]),
             "F leaves lyrics full screen"
         );
+        app.backend.shutdown();
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    /// The MilkDrop key opens it for Premium; Spotify Free's sound never
+    /// reaches the visualizers, so there the key does nothing.
+    #[test]
+    fn the_milkdrop_key_follows_the_visualizer_capability() {
+        let root =
+            std::env::temp_dir().join(format!("spotifast-milkdrop-key-{}", std::process::id()));
+        let mut app = App::new(
+            &crate::backend::Waker::default(),
+            AppDirs {
+                config: root.join("config"),
+                state: root.join("state"),
+                cache: root.join("cache"),
+            },
+            Settings::default(),
+            AppOptions {
+                media_controls: false,
+                restore_sign_in: false,
+                tray: false,
+            },
+        );
+        let ctx = egui::Context::default();
+        let press = |app: &mut App| {
+            app.actions.clear();
+            let mut output = ctx.run_ui(
+                egui::RawInput {
+                    events: vec![egui::Event::Key {
+                        key: Key::K,
+                        physical_key: None,
+                        pressed: true,
+                        repeat: false,
+                        modifiers: Modifiers::COMMAND | Modifiers::SHIFT,
+                    }],
+                    ..Default::default()
+                },
+                |ui| handle(app, ui.ctx()),
+            );
+            output.textures_delta.clear();
+            app.actions
+                .iter()
+                .any(|action| matches!(action, Action::ToggleWinampMilkdrop))
+        };
+        assert!(press(&mut app));
+        #[cfg(target_os = "macos")]
+        {
+            app.local_device_id = Some(crate::web_player::DEVICE_ID.into());
+            assert!(!app.capabilities().visualizers);
+            assert!(!press(&mut app));
+        }
         app.backend.shutdown();
         let _ = std::fs::remove_dir_all(root);
     }
