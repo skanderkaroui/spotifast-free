@@ -29,7 +29,7 @@ body:
   - type: textarea
     id: fit
     attributes:
-      label: Why does this fit Spotifast?
-      description: Explain why it belongs in a small, native Spotify client.
+      label: Why does this fit this fork?
+      description: Explain why it belongs in a small, native Spotify client, and for Free playback, how it works within what Spotify's own web player allows.
     validations:
       required: true
