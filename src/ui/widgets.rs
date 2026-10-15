@@ -716,12 +716,14 @@ pub fn picked_menu(
             items: songs.to_vec(),
         });
     }
-    if menu_item(
-        ui,
-        &palette,
-        Some(Icon::ListEnd),
-        &gettext(locale, "Add to queue"),
-    ) {
+    if app.capabilities().queue_add
+        && menu_item(
+            ui,
+            &palette,
+            Some(Icon::ListEnd),
+            &gettext(locale, "Add to queue"),
+        )
+    {
         app.actions.push(Action::QueueMany {
             songs: songs
                 .iter()
@@ -974,12 +976,14 @@ fn item_menu_at(
             items: vec![item.clone()],
         });
     }
-    if menu_item(
-        ui,
-        &palette,
-        Some(Icon::ListEnd),
-        &gettext(locale, "Add to queue"),
-    ) {
+    if app.capabilities().queue_add
+        && menu_item(
+            ui,
+            &palette,
+            Some(Icon::ListEnd),
+            &gettext(locale, "Add to queue"),
+        )
+    {
         app.actions.push(Action::AddToQueue {
             uri: uri.clone(),
             label: label.clone(),
@@ -1221,6 +1225,7 @@ pub fn context_menu_items(
         app.actions.push(Action::ShufflePlay(uri.to_string()));
     }
     if kind == "album"
+        && app.capabilities().queue_add
         && menu_item(
             ui,
             &palette,
