@@ -373,6 +373,10 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                             .and_then(|user| user.product.clone())
                             .map(|product| match product.as_str() {
                                 "premium" => "Spotify Premium".to_string(),
+                                "free" | "open" if free_helper_available() => {
+                                    gettext(locale, "Spotify Free: plays here with ads")
+                                        .into_owned()
+                                }
                                 "free" | "open" => {
                                     gettext(locale, "Spotify Free, local playback needs Premium")
                                         .into_owned()
@@ -474,7 +478,13 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
         });
     }
 
+    let caps = app.capabilities();
     let (status, detail, action) = match &app.local_playback {
+        crate::backend::LocalPlayback::Ready { .. } if !caps.devices => (
+            pgettext(locale, "playback status", "Ready"),
+            gettext(locale, "Spotify Free plays on this computer."),
+            None,
+        ),
         crate::backend::LocalPlayback::Ready { .. } => (
             pgettext(locale, "playback status", "Ready"),
             gettext(locale, "This computer is a Spotify Connect device."),
@@ -505,10 +515,19 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
         ),
         crate::backend::LocalPlayback::Unavailable => (
             pgettext(locale, "playback status", "Not set up"),
-            gettext(
-                locale,
-                "Requires Spotify Premium and a one-time browser sign-in.",
-            ),
+            // With the Free helper, a Free account plays here too; before
+            // the plan is known this row must not claim Premium is needed.
+            if free_helper_available() {
+                gettext(
+                    locale,
+                    "Premium plays through Spotifast; Spotify Free plays with ads once signed in.",
+                )
+            } else {
+                gettext(
+                    locale,
+                    "Requires Spotify Premium and a one-time browser sign-in.",
+                )
+            },
             Some(gettext(locale, "Enable playback here")),
         ),
     };
@@ -522,7 +541,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
     let apply_playback = gettext(locale, "Apply and restart playback");
     let apply_playback_note = gettext(locale, "Restart local playback to apply these settings.");
     let download_updates = gettext(locale, "Download updates automatically");
-    let playback_rows = [
+    let mut playback_rows = [
         RowText::new(
             // Translators: {status} is a playback state such as Ready or Not set up.
             gettext(locale, "Status: {status}").replace("{status}", &status),
@@ -604,6 +623,10 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
         )
         .when(cfg!(target_os = "macos")),
     ];
+    // librespot's settings do not reach Spotify Free's web player.
+    for index in [1, 2, 3, 4, 5, 8, 9, 10, 11, 12] {
+        playback_rows[index].available &= caps.engine_settings;
+    }
     if section_matches(&needle, &playback, &playback_rows) {
         any_visible = true;
         section(ui, &palette, &playback, |ui| {
@@ -613,6 +636,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                         app.actions.push(Action::EnablePlayback);
                     }
                 } else if app.local_ready
+                    && caps.engine_settings
                     && theme::soft_button(
                         ui,
                         &palette,
@@ -851,7 +875,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                 });
             });
             ui.add_space(4.0);
-            if playback_dirty
+            if caps.engine_settings && playback_dirty
                 || playback_rows[11].matches(&needle, &playback)
                 || playback_rows[12].matches(&needle, &playback)
             {
@@ -882,7 +906,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
     let show_custom_titlebar = cfg!(target_os = "linux") || app.windows_controls_visible();
     let player_bar_vis = gettext(locale, "Player bar visualizer");
     let player_bar_vis_click = gettext(locale, "Click player bar to change visualizer");
-    let appearance_rows = [
+    let mut appearance_rows = [
         RowText::new(theme_title.clone(), {
             let detail = theme::catalog_detail(
                 &app.custom_themes,
@@ -971,6 +995,10 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
             ),
         ),
     ];
+    // Visualizers read Spotifast's own sound, which Spotify Free's never reaches.
+    for row in &mut appearance_rows[8..=10] {
+        row.available &= app.capabilities().visualizers;
+    }
     if section_matches(&needle, &appearance, &appearance_rows) {
         any_visible = true;
         section(ui, &palette, &appearance, |ui| {
@@ -1590,7 +1618,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
     let screen_hz = app.settings.milkdrop_screen_hz;
     let milkdrop_window = gettext(locale, "MilkDrop window");
     let folder = presets_folder.display().to_string();
-    let milkdrop_rows = [
+    let mut milkdrop_rows = [
         RowText::new(
             milkdrop_window.clone(),
             super::keys::platform_shortcut(
@@ -1675,6 +1703,9 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                 .join(" "),
         ),
     ];
+    for row in &mut milkdrop_rows {
+        row.available &= app.capabilities().visualizers;
+    }
     if section_matches(&needle, "MilkDrop", &milkdrop_rows) {
         any_visible = true;
         section(ui, &palette, "MilkDrop", |ui| {
@@ -1774,7 +1805,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
     }
 
     let equalizer = gettext(locale, "Equalizer");
-    let equalizer_rows = [
+    let mut equalizer_rows = [
         RowText::new(
             equalizer.clone(),
             gettext(
@@ -1798,6 +1829,9 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                 .join(" "),
         ),
     ];
+    for row in &mut equalizer_rows {
+        row.available &= app.capabilities().sound_effects;
+    }
     if section_matches(&needle, &equalizer, &equalizer_rows) {
         any_visible = true;
         section(ui, &palette, &equalizer, |ui| {
@@ -2012,6 +2046,18 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
     ui.data_mut(|data| data.insert_temp(proxy_dirty_id, proxy_dirty));
     if changed {
         app.actions.push(Action::SettingsChanged);
+    }
+}
+
+/// Whether Spotify Free can play on this computer through the web player helper.
+pub(crate) fn free_helper_available() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        crate::web_player::WebPlayer::available()
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        false
     }
 }
 
