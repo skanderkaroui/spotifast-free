@@ -28,8 +28,16 @@ framework behind a family of native desktop apps. It plays music through
 The interface includes complete
 [translations for all supported languages](docs/_reference/translating.md#languages-and-coverage).
 
-**Playback needs Spotify Premium.** Free accounts can browse and search, but
-cannot play music through Spotifast.
+**Spotify Free plays on macOS through Spotify's own web player.** Premium
+accounts play through librespot as before. On a Free account, Spotifast
+starts a small helper that runs open.spotify.com, unchanged, in the system's
+WebKit, and controls it with the same Spotify Connect requests the web
+player sends for its own buttons. Spotify plays every song and every ad
+itself, with its own DRM and restrictions. Controls Free cannot use (other
+devices, queue editing, the equalizer and visualizers) are hidden. See
+[the scope](experiments/SCOPE-free-playback.md) and
+[the helper](experiments/macos-playback-host/README.md). Free accounts on
+Windows and Linux can browse and search, but cannot play yet.
 
 ![Spotifast Home with the playlist library, recommendations, queue, and player visible](docs/screenshot.png)
 
