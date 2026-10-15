@@ -9,6 +9,7 @@ pub mod auth;
 pub mod autoscroll;
 pub mod backend;
 pub mod bidi;
+pub mod capabilities;
 pub mod cast;
 pub mod credentials;
 #[cfg(any(test, feature = "demo"))]
