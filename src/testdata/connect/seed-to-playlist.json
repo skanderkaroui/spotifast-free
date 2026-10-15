@@ -1,0 +1,11 @@
+{
+ "_source": "open.spotify.com GET inspiredby-mix/v2/seed_to_playlist/spotify:track:track00000000000000011, Free account; trimmed by scrub-recordings.mjs, ids, songs and playlists replaced",
+ "response": {
+  "mediaItems": [
+   {
+    "uri": "spotify:playlist:playlist00000000000002"
+   }
+  ],
+  "total": 1
+ }
+}
