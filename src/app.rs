@@ -868,6 +868,18 @@ impl fastframe_shell::Resident for App {
 /// the session's autostart apps.
 const TRAY_WAIT: Duration = Duration::from_secs(30);
 
+/// Whether a Free account can play here, through the macOS web player helper.
+fn free_playback_available() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        crate::web_player::WebPlayer::available()
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        false
+    }
+}
+
 /// The tray menu's Play or Pause entry, for what is playing.
 fn play_pause_label(playing: bool) -> &'static str {
     if playing { "Pause" } else { "Play" }
@@ -1659,6 +1671,12 @@ impl App {
         if self.local_ready && self.local.is_active() {
             return Target::Local;
         }
+        // Spotify takes no remote commands from Free accounts, and lists the
+        // helper's own web player as another device. Free plays therefore
+        // always go to the helper, never to a device through the Web API.
+        if self.local_ready && self.free_web_player() {
+            return Target::Local;
+        }
         if let Some(selected) = &self.selected_device
             && Some(selected.as_str()) != self.local_device_id.as_deref()
         {
@@ -2000,7 +2018,7 @@ impl App {
                 repeat: self.local.repeat,
                 volume_percent: volume_to_percent(self.local.volume),
                 can_control: true,
-                can_set_volume: true,
+                can_set_volume: self.capabilities().volume,
                 is_episode: track.is_episode,
                 resuming: false,
             });
@@ -3141,7 +3159,10 @@ impl App {
             state.track.as_ref().map(|track| track.uri.as_str()),
         );
         let held_volume = self.held_local_volume(state.volume);
-        if held_volume.is_none() && state.volume != self.settings.volume {
+        // The Free helper has no volume of its own (it reports full scale);
+        // saving that would start the next Premium session at full volume.
+        if held_volume.is_none() && !self.free_web_player() && state.volume != self.settings.volume
+        {
             self.settings.volume = state.volume;
             self.settings_dirty = true;
         }
@@ -3166,7 +3187,10 @@ impl App {
                 self.unavailable_at
                     .retain(|at| now.duration_since(*at) < Duration::from_secs(20));
                 self.unavailable_at.push(now);
-                if self.unavailable_at.len() >= 3
+                // Reconnecting restarts librespot's session, which the Free
+                // web player does not use.
+                if self.capabilities().engine_settings
+                    && self.unavailable_at.len() >= 3
                     && self
                         .last_unavailable_reconnect
                         .is_none_or(|at| at.elapsed() > Duration::from_secs(60))
@@ -3201,9 +3225,15 @@ impl App {
         if self.local.is_active() && !state.is_active() {
             self.poll_remote_soon();
         }
+        let upcoming_changed = state.upcoming != self.local.upcoming;
         self.local = state;
         if let Some(volume) = held_volume {
             self.local.volume = volume;
+        }
+        if upcoming_changed
+            || (self.free_web_player() && !matches!(self.queue, Loadable::Loaded(_)))
+        {
+            self.queue_from_upcoming();
         }
         if track_changed {
             self.on_now_playing_changed();
@@ -3222,6 +3252,36 @@ impl App {
             }
             self.request_user_names(unresolved);
         }
+    }
+
+    /// Next up for the Free web player, from Spotify's own upcoming list:
+    /// its queue endpoint refuses Free accounts. Songs missing details are
+    /// shown by URI until their lookup lands.
+    fn queue_from_upcoming(&mut self) {
+        if !self.free_web_player() {
+            return;
+        }
+        let uris = self.local.upcoming.clone();
+        let mut queue = Vec::with_capacity(uris.len());
+        for uri in &uris {
+            if let Some(id) = util::uri_id(uri)
+                && uri.starts_with("spotify:track:")
+                && !self.track_cache.contains_key(id)
+                && self.track_requests.insert(id.to_string())
+            {
+                self.backend.api(ApiRequest::Track { id: id.to_string() });
+            }
+            queue.push(self.optimistic_queue_item(uri, uri));
+        }
+        let currently_playing = self
+            .local
+            .track
+            .as_ref()
+            .map(|track| self.optimistic_queue_item(&track.uri, &track.title));
+        self.queue = Loadable::Loaded(crate::api::models::Queue {
+            currently_playing,
+            queue,
+        });
     }
 
     /// Loads details for the remembered track before playback starts.
@@ -3523,8 +3583,9 @@ impl App {
                 for uri in queued {
                     self.manual_queue.push(uri.clone());
                     // Spotify's queue refuses local files; the engine
-                    // queues them itself.
-                    if uri.starts_with(LOCAL_URI_PREFIX) {
+                    // queues them itself. The Free web player takes every
+                    // add through its helper.
+                    if uri.starts_with(LOCAL_URI_PREFIX) || self.free_web_player() {
                         self.backend.player(PlayerCommand::AddToQueue(uri));
                         continue;
                     }
@@ -3565,10 +3626,15 @@ impl App {
         if now.local {
             self.last_now_playing_sequence = self.local.track_sequence;
         }
-        self.resume_context = self.playing_context_uri();
-        self.resume_track = Some(now.uri.clone());
-        self.resume_position_ms = 0;
-        if now.local
+        // An ad or a stand-in is no place to resume; keep the last song.
+        let real = is_real_item(&now.uri);
+        if real {
+            self.resume_context = self.playing_context_uri();
+            self.resume_track = Some(now.uri.clone());
+            self.resume_position_ms = 0;
+        }
+        if real
+            && now.local
             && !now.is_episode
             && let Some(id) = &now.id
             && !self.track_cache.contains_key(id)
@@ -3643,7 +3709,7 @@ impl App {
         self.lyrics_uri = Some(now.uri.clone());
         self.lyrics_following = true;
         self.lyrics_line_shown = None;
-        if now.is_episode || self.offline {
+        if now.is_episode || self.offline || !is_real_item(&now.uri) {
             self.lyrics = Loadable::Loaded(None);
             return;
         }
@@ -4563,7 +4629,8 @@ impl App {
                         .art_url
                         .clone()
                         .filter(|url| !url.starts_with(crate::local_tags::ART_SCHEME)),
-                    url: Some(now.uri.clone()),
+                    // An ad has no Spotify link to open.
+                    url: is_real_item(&now.uri).then(|| now.uri.clone()),
                     ..MediaTrack::default()
                 }),
                 position: Duration::from_millis(u64::from(now.position_ms)),
@@ -5765,6 +5832,11 @@ impl App {
         if !self.is_connected() || !self.network_reachable {
             return;
         }
+        // Spotify's queue endpoint refuses Free accounts; every try is a
+        // wasted request against the rate limit.
+        if self.free_web_player() {
+            return;
+        }
         if self.resume_only() && matches!(self.queue, Loadable::Loaded(_)) {
             // Nothing is playing anywhere and the queue on show is the
             // remembered one; a fetch could only replace it with less.
@@ -5880,7 +5952,9 @@ impl App {
     /// and re-add its songs in the new order, which only reaches the
     /// engine actually playing them.
     pub fn queue_locally_reorderable(&self) -> bool {
-        self.local.is_active() && matches!(self.target(), Target::Local)
+        self.capabilities().queue_edit
+            && self.local.is_active()
+            && matches!(self.target(), Target::Local)
     }
 
     /// Whether the active local queue has rows that can be cleared.
@@ -6020,7 +6094,7 @@ impl App {
                 .iter()
                 .flat_map(|queue| queue.queue.iter().map(|item| item.uri().to_string())),
         );
-        for uri in rows {
+        for uri in rows.filter(|uri| is_real_item(uri)) {
             if seen.insert(uri.clone()) {
                 uris.push(uri);
             }
@@ -6372,7 +6446,7 @@ impl App {
             if uri.is_empty()
                 || self.saved.contains_key(&uri)
                 || self.saved_pending.contains(&uri)
-                || uri.starts_with("spotify:local")
+                || !crate::capabilities::is_spotify_item(&uri)
             {
                 continue;
             }
@@ -6558,7 +6632,8 @@ impl App {
                     let free = user
                         .product
                         .as_deref()
-                        .is_some_and(|product| product != "premium");
+                        .is_some_and(|product| product != "premium")
+                        && !free_playback_available();
                     if free && !self.premium_notice_shown {
                         self.premium_notice_shown = true;
                         self.dialog = Some(Dialog::PremiumNeeded);
@@ -8047,7 +8122,11 @@ impl App {
                             Some(PlayableItem::Track(track.clone())),
                         );
                         self.track_cache.insert(id.clone(), track);
-                        self.track_used.insert(id, Instant::now());
+                        self.track_used.insert(id.clone(), Instant::now());
+                        let uri = format!("spotify:track:{id}");
+                        if self.free_web_player() && self.local.upcoming.contains(&uri) {
+                            self.queue_from_upcoming();
+                        }
                     }
                     Err(error) => {
                         self.resolve_pasted_song(&format!("spotify:track:{id}"), None);
@@ -9371,6 +9450,38 @@ impl App {
         self.now_playing().is_none_or(|now| now.can_set_volume)
     }
 
+    /// Local playback is Spotify's web player in the Free helper. It takes
+    /// every control Spotify's own bar offers except the volume, which stays
+    /// with the web player.
+    pub fn free_web_player(&self) -> bool {
+        #[cfg(target_os = "macos")]
+        {
+            self.local_device_id.as_deref() == Some(crate::web_player::DEVICE_ID)
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            false
+        }
+    }
+
+    /// What playback on this computer can do right now. Every control that
+    /// differs between Premium and Free asks this (see `capabilities`).
+    pub fn capabilities(&self) -> crate::capabilities::Capabilities {
+        use crate::capabilities::{Capabilities, Engine};
+        if !self.free_web_player() {
+            return Capabilities::new(Engine::Librespot, Default::default(), false);
+        }
+        #[cfg(target_os = "macos")]
+        let in_ad = self
+            .local
+            .track
+            .as_ref()
+            .is_some_and(|track| crate::web_player::is_ad(&track.uri));
+        #[cfg(not(target_os = "macos"))]
+        let in_ad = false;
+        Capabilities::new(Engine::FreeWebPlayer, self.local.restrictions, in_ad)
+    }
+
     fn set_volume(&mut self, percent: u8, settle: bool) {
         let percent = percent.min(100);
         match self.target() {
@@ -9380,8 +9491,9 @@ impl App {
                 self.pending_local_volume = Some((volume, Instant::now()));
                 // The engine echoes `VolumeChanged` only while this device
                 // holds the Connect session, so the snapshot that would
-                // otherwise persist this may never arrive.
-                if self.settings.volume != volume {
+                // otherwise persist this may never arrive. The Free web
+                // player's level is its own, not Premium's saved one.
+                if !self.free_web_player() && self.settings.volume != volume {
                     self.settings.volume = volume;
                     self.settings_dirty = true;
                 }
@@ -9699,7 +9811,7 @@ impl App {
             .replace("{count}", &count.to_string())
             .replace("{name}", &label),
         );
-        if self.local.is_active() && self.target() == Target::Local {
+        if self.free_web_player() || (self.local.is_active() && self.target() == Target::Local) {
             for uri in uris {
                 self.backend.player(PlayerCommand::AddToQueue(uri));
             }
@@ -9784,7 +9896,9 @@ impl App {
         }
         // Queue tracks, episodes and local files directly on the active
         // local engine. Other targets and item types use the Web API.
-        if engine_queues(&uri) && self.queue_locally_reorderable() {
+        // The Free web player takes every add through its helper: the Web
+        // API refuses Free accounts and does not know its device.
+        if self.free_web_player() || (engine_queues(&uri) && self.queue_locally_reorderable()) {
             self.backend.player(PlayerCommand::AddToQueue(uri));
             self.queue_recheck_at = Some(Instant::now() + QUEUE_RECHECK);
             return;
@@ -10501,6 +10615,10 @@ impl App {
             self.supersede_play_search();
         }
         match action {
+            // Spotify Free plays its own radio for the seed; the station
+            // read behind the radio page needs librespot.
+            Action::Open(Page::Radio(seed)) if self.free_web_player() => self.play_radio(seed),
+            Action::OpenSongRadio { uri, .. } if self.free_web_player() => self.play_radio(uri),
             Action::Open(page) => self.open(page),
             Action::OpenSongRadio { uri, track } => self.open_song_radio(&uri, &track),
             Action::PrepareTint(url) => {
@@ -10632,6 +10750,25 @@ impl App {
                     self.play_request(request, false);
                 }
                 RowContext::Queue => self.play_queue_item(index as usize, uri),
+                // Spotify Free plays a playlist or album only in Spotify's
+                // own order (it ignores a list of songs sent with it, as
+                // checked against open.spotify.com), so the clicked song
+                // starts inside its playlist and Next stays there.
+                RowContext::View {
+                    uris, context_uri, ..
+                } if self.free_web_player() => {
+                    let (uris, index) = cap_uris(uris.as_ref(), index);
+                    let start = if uri.is_empty() {
+                        uris.get(index as usize).cloned()
+                    } else {
+                        Some(uri)
+                    };
+                    let mut request = PlayRequest::context(context_uri);
+                    if let Some(start) = start {
+                        request = request.starting_at_uri(start);
+                    }
+                    self.play_request(request, false);
+                }
                 RowContext::View {
                     uris, context_uri, ..
                 } => {
@@ -10665,6 +10802,11 @@ impl App {
             Action::Next if self.resume_only() => {
                 self.step_resume(true);
             }
+            Action::Next if !self.capabilities().skip_next => {}
+            Action::Previous if !self.capabilities().skip_prev => {}
+            Action::Seek(_) | Action::SeekBy(_) if !self.capabilities().seek => {}
+            Action::ToggleShuffle | Action::SetShuffle(_) if !self.capabilities().shuffle => {}
+            Action::CycleRepeat | Action::SetRepeat(_) if !self.capabilities().repeat => {}
             Action::Next => {
                 // Move the queue head to the playing row immediately. Do not
                 // pop when there is no active playback target.
@@ -10675,6 +10817,13 @@ impl App {
                 match target {
                     Target::Local => self.backend.player(PlayerCommand::Next),
                     Target::Remote(device_id) => self.remote(RemoteAction::Next, device_id),
+                }
+                // Spotify's restrictions name the song skipped from (the
+                // first in a list has no previous one) until its next state
+                // arrives. After a skip there is always a song to go back
+                // to, so a quick Previous must not be dropped meanwhile.
+                if self.free_web_player() {
+                    self.local.restrictions.skip_prev = false;
                 }
             }
             // Previous restarts after three seconds and otherwise steps back,
@@ -10694,9 +10843,18 @@ impl App {
                 // the row marker stuck on the skipped-to song.
                 self.intent_track = None;
                 self.queue_start_pending = Some(self.target());
+                let steps_back = self
+                    .now_playing()
+                    .is_none_or(|now| now.position_ms <= RESTART_BEFORE_PREVIOUS);
                 match self.target() {
                     Target::Local => self.backend.player(PlayerCommand::Previous),
                     Target::Remote(device_id) => self.remote(RemoteAction::Previous, device_id),
+                }
+                // As after Next: the song gone back from now follows. Past
+                // three seconds Spotify restarts the song instead, which
+                // leaves what follows as it was.
+                if self.free_web_player() && steps_back {
+                    self.local.restrictions.skip_next = false;
                 }
             }
             Action::Seek(position_ms) => self.seek(position_ms),
@@ -10858,6 +11016,7 @@ impl App {
                     self.backend.api(ApiRequest::SetSaved { uris, saved });
                 }
             }
+            Action::ToggleSaved(uri) if !is_real_item(&uri) => {}
             Action::ToggleSaved(uri) => {
                 let saved = self.is_saved(&uri).unwrap_or(false);
                 let targets = if saved {
@@ -11106,6 +11265,12 @@ impl App {
                 });
                 self.backend
                     .api(ApiRequest::FollowPlaylist { id, follow: false });
+            }
+            Action::Transfer(_) | Action::ActivateReceiver(_) if !self.capabilities().devices => {
+                self.toast(gettext(
+                    self.locale,
+                    "Spotify Free plays on this computer only",
+                ));
             }
             Action::Transfer(device_id) => {
                 self.remember_device_choice(&device_id);
@@ -11528,6 +11693,8 @@ impl App {
                     self.apply(Action::RestartEngine, ctx);
                 }
             }
+            // Free's web player has no engine settings to restart with.
+            Action::RestartEngine if !self.capabilities().engine_settings => {}
             Action::RestartEngine => {
                 self.save_settings();
                 let config = engine_config(
@@ -11574,7 +11741,9 @@ impl App {
                     .as_ref()
                     .and_then(|user| user.product.as_deref())
                     .is_some_and(|product| product != "premium");
-                if free {
+                if free && free_playback_available() {
+                    // Free plays through the web player helper; nothing to enable.
+                } else if free {
                     self.toast_error(gettext(self.locale, "Local playback needs Spotify Premium"));
                 } else if !self.local_ready
                     && !matches!(
@@ -11591,6 +11760,7 @@ impl App {
                     self.backend.send(Command::AuthorizePlayback);
                 }
             }
+            Action::SetPrereleaseSaved { .. } if !self.capabilities().prerelease => {}
             Action::SetPrereleaseSaved { uri, saved } => {
                 if self.local_ready {
                     for page in self.album_pages.values_mut() {
@@ -12402,7 +12572,7 @@ impl App {
     ///
     /// Paused time and seeking do not count. Each track is recorded once.
     fn note_listening(&mut self) {
-        let Some(now) = self.now_playing_live() else {
+        let Some(now) = self.now_playing_live().filter(|now| is_real_item(&now.uri)) else {
             self.listening = None;
             return;
         };
@@ -12645,6 +12815,11 @@ impl App {
     }
 
     fn poll_remote_if_due(&mut self) {
+        // The Free helper reports Spotify's own playback state as it changes;
+        // asking the Web API as well only spends the shared rate limit.
+        if self.free_web_player() {
+            return;
+        }
         let (interval, song_end) = self.remote_poll_interval();
         let elapsed = self.remote_polled_at.elapsed();
         if self.remote_poll_pending || elapsed < interval {
@@ -12691,7 +12866,7 @@ impl App {
     fn save_session(&mut self) {
         self.session_dirty = false;
         self.last_session_save = Instant::now();
-        if let Some(now) = self.now_playing() {
+        if let Some(now) = self.now_playing().filter(|now| is_real_item(&now.uri)) {
             self.resume_context = self.playing_context_uri();
             self.resume_track = Some(now.uri.clone());
             self.resume_position_ms = now.position_ms;
@@ -13021,6 +13196,12 @@ pub fn eq_settings(settings: &Settings) -> crate::eq::EqSettings {
 
 pub fn volume_to_percent(volume: u16) -> u8 {
     ((u32::from(volume) * 100 + u32::from(u16::MAX) / 2) / u32::from(u16::MAX)) as u8
+}
+
+/// A Spotify URI, not the Free web player's ad (`spotifast:ad`) or a
+/// stand-in (`web-player:`). Local files still count.
+fn is_real_item(uri: &str) -> bool {
+    uri.starts_with("spotify:")
 }
 
 pub fn percent_to_volume(percent: u8) -> u16 {
@@ -23194,6 +23375,303 @@ mod tests {
         assert!(!super::shows_in_dock(false, true));
         assert!(super::shows_in_dock(false, false), "no way back without it");
         assert!(super::shows_in_dock(true, false));
+    }
+
+    /// A Free account's plays wait for local playback to report itself
+    /// connected. The helper reports that at sign-in, before its process
+    /// runs, so a play is sent at once instead of held forever.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_free_play_is_sent_once_the_helper_reports_ready() {
+        let mut app = test_app("free-helper-ready");
+        app.handle_playback(LocalPlayback::Ready {
+            device_id: crate::web_player::DEVICE_ID.into(),
+        });
+        assert!(app.free_web_player());
+        assert!(matches!(app.target(), Target::Local));
+        app.handle_local(LocalState {
+            connected: true,
+            ..LocalState::default()
+        });
+        app.play_request(PlayRequest::tracks(vec!["spotify:track:t".into()]), false);
+        assert!(app.queued_play.is_none(), "the play went to the helper");
+        app.backend.shutdown();
+    }
+
+    /// The helper reports full scale because it has no volume. That must not
+    /// replace the saved level a Premium session starts librespot at.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn the_free_helper_keeps_the_saved_volume() {
+        let mut app = test_app("free-helper-volume");
+        app.settings.volume = 20_000;
+        app.handle_playback(LocalPlayback::Ready {
+            device_id: crate::web_player::DEVICE_ID.into(),
+        });
+        app.handle_local(LocalState {
+            connected: true,
+            volume: u16::MAX,
+            ..LocalState::default()
+        });
+        assert_eq!(app.settings.volume, 20_000);
+        app.backend.shutdown();
+    }
+
+    /// A Free click on a song in a sorted playlist view plays the playlist
+    /// from that song (Spotify Free ignores a song list), so Next stays in
+    /// the playlist.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_free_click_in_a_sorted_view_plays_inside_the_playlist() {
+        let mut app = test_app("free-sorted-view");
+        app.handle_playback(LocalPlayback::Ready {
+            device_id: crate::web_player::DEVICE_ID.into(),
+        });
+        app.handle_local(LocalState {
+            connected: true,
+            ..LocalState::default()
+        });
+        app.backend.take_player_commands();
+        app.actions.push(Action::PlayFromRow {
+            context: RowContext::View {
+                uris: vec!["spotify:track:b".to_string(), "spotify:track:a".to_string()].into(),
+                context_uri: "spotify:playlist:p".into(),
+                editable_playlist: None,
+            },
+            uri: "spotify:track:a".into(),
+            index: 1,
+        });
+        app.apply_actions(&egui::Context::default());
+        let sent = app.backend.take_player_commands();
+        let Some(PlayerCommand::Load(spec)) = sent.last() else {
+            panic!("expected a load, got {sent:?}");
+        };
+        assert_eq!(spec.context_uri.as_deref(), Some("spotify:playlist:p"));
+        assert_eq!(spec.offset_uri.as_deref(), Some("spotify:track:a"));
+        app.backend.shutdown();
+    }
+
+    /// Spotify lists the helper's web player as a separate device. A paused
+    /// helper must still receive Free plays, not that device via the Web API,
+    /// which refuses Free accounts.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_paused_free_helper_still_receives_plays() {
+        let mut app = test_app("free-helper-target");
+        app.handle_playback(LocalPlayback::Ready {
+            device_id: crate::web_player::DEVICE_ID.into(),
+        });
+        app.selected_device = Some("spotify-web-player-device".into());
+        assert!(matches!(app.target(), Target::Local));
+        app.backend.shutdown();
+    }
+
+    /// The helper reports playback itself, so a Free account sends Spotify
+    /// no playback or queue polls that would spend the shared rate limit.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn the_free_web_player_does_not_poll_the_web_api() {
+        let mut app = test_app("free-helper-polls");
+        app.handle_playback(LocalPlayback::Ready {
+            device_id: crate::web_player::DEVICE_ID.into(),
+        });
+        app.remote_polled_at = Instant::now() - Duration::from_secs(3600);
+        let seq = app.remote_poll_seq;
+        app.poll_remote_if_due();
+        assert_eq!(app.remote_poll_seq, seq, "no playback poll");
+        let queue_seq = app.queue_seq;
+        app.refresh_queue(true);
+        assert_eq!(app.queue_seq, queue_seq, "no queue request");
+        app.backend.shutdown();
+    }
+
+    /// Spotify's web player takes its volume through Connect, so the
+    /// slider stays live for Free.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn the_free_web_player_offers_volume() {
+        let mut app = test_app("free-helper-volume");
+        app.handle_playback(LocalPlayback::Ready {
+            device_id: crate::web_player::DEVICE_ID.into(),
+        });
+        app.handle_local(LocalState {
+            connected: true,
+            playback: Playback::Playing,
+            track: Some(crate::player::LocalTrack {
+                uri: "web-player:artist:title".into(),
+                title: "title".into(),
+                ..Default::default()
+            }),
+            track_sequence: 1,
+            ..LocalState::default()
+        });
+        let now = app.now_playing().expect("the helper's song is shown");
+        assert_eq!(now.title, "title");
+        assert!(now.local);
+        assert!(app.can_set_volume());
+        app.backend.shutdown();
+    }
+
+    fn playing_app(name: &str, free: bool, uri: &str) -> App {
+        let mut app = test_app(name);
+        app.handle_playback(LocalPlayback::Ready {
+            device_id: if free {
+                crate::web_player::DEVICE_ID.into()
+            } else {
+                "this-computer".into()
+            },
+        });
+        app.handle_local(LocalState {
+            connected: true,
+            playback: Playback::Playing,
+            track: Some(crate::player::LocalTrack {
+                uri: uri.into(),
+                title: "song".into(),
+                duration_ms: 200_000,
+                ..Default::default()
+            }),
+            track_sequence: 1,
+            ..LocalState::default()
+        });
+        app.backend.take_player_commands();
+        app
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn free_volume_is_sent_but_not_saved_as_premiums() {
+        for free in [true, false] {
+            let mut app = playing_app("cap-volume", free, "spotify:track:a");
+            app.settings.volume = 20_000;
+            app.apply(Action::SetVolume(50), &egui::Context::default());
+            let sent = app.backend.take_player_commands();
+            assert!(
+                matches!(sent.as_slice(), [PlayerCommand::Volume(v)] if *v == percent_to_volume(50))
+            );
+            assert_eq!(app.local.volume, percent_to_volume(50));
+            let saved = if free { 20_000 } else { percent_to_volume(50) };
+            assert_eq!(app.settings.volume, saved, "free={free}");
+            app.backend.shutdown();
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn free_queue_adds_go_through_the_helper() {
+        let mut app = playing_app("cap-queue-free", true, "spotify:track:a");
+        app.local.playback = Playback::Stopped;
+        app.apply(
+            Action::AddToQueue {
+                uri: "spotify:track:b".into(),
+                label: "b".into(),
+            },
+            &egui::Context::default(),
+        );
+        let sent = app.backend.take_player_commands();
+        assert!(
+            matches!(sent.as_slice(), [PlayerCommand::AddToQueue(u)] if u == "spotify:track:b")
+        );
+        app.backend.shutdown();
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn only_premium_edits_the_queue() {
+        for free in [true, false] {
+            let mut app = playing_app("cap-queue-edit", free, "spotify:track:a");
+            app.manual_queue = vec!["spotify:track:b".into()];
+            app.queue = loaded_queue("spotify:track:a", &["spotify:track:b"]);
+            assert_eq!(app.queue_locally_reorderable(), !free);
+            assert_eq!(app.can_clear_queue(), !free);
+            assert_eq!(app.can_remove_from_queue(0), !free);
+            app.backend.shutdown();
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn next_and_seek_do_nothing_during_a_free_ad() {
+        let mut app = playing_app("cap-ad-next", true, crate::web_player::AD_URI);
+        let ctx = egui::Context::default();
+        app.apply(Action::Next, &ctx);
+        app.apply(Action::Seek(5_000), &ctx);
+        assert!(app.backend.take_player_commands().is_empty());
+        assert!(app.pending_local_position.is_none());
+        app.backend.shutdown();
+        let mut app = playing_app("cap-premium-next", false, "spotify:track:a");
+        app.apply(Action::Next, &ctx);
+        assert!(matches!(
+            app.backend.take_player_commands().as_slice(),
+            [PlayerCommand::Next]
+        ));
+        app.backend.shutdown();
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn an_ad_is_never_the_resume_track() {
+        let mut app = playing_app("cap-ad-resume", true, "spotify:track:real");
+        app.handle_local(LocalState {
+            connected: true,
+            playback: Playback::Playing,
+            track: Some(crate::player::LocalTrack {
+                uri: crate::web_player::AD_URI.into(),
+                title: "Advertisement".into(),
+                ..Default::default()
+            }),
+            track_sequence: 2,
+            ..LocalState::default()
+        });
+        app.save_session();
+        assert_eq!(app.resume_track.as_deref(), Some("spotify:track:real"));
+        app.backend.shutdown();
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn free_radio_plays_spotifys_radio_without_the_page() {
+        let mut app = playing_app("cap-radio", true, "spotify:track:a");
+        app.apply(
+            Action::Open(Page::Radio("spotify:track:seed".into())),
+            &egui::Context::default(),
+        );
+        let sent = app.backend.take_player_commands();
+        assert!(matches!(sent.as_slice(), [PlayerCommand::Radio(s)] if s == "spotify:track:seed"));
+        assert_ne!(app.page(), &Page::Radio("spotify:track:seed".into()));
+        app.backend.shutdown();
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn free_next_up_comes_from_spotifys_upcoming_list() {
+        let mut app = playing_app("cap-upcoming", true, "spotify:track:a");
+        app.handle_local(LocalState {
+            connected: true,
+            playback: Playback::Playing,
+            track: app.local.track.clone(),
+            track_sequence: 1,
+            upcoming: vec!["spotify:track:b".into(), "spotify:track:c".into()],
+            ..LocalState::default()
+        });
+        let queue = app.queue.get().expect("loaded");
+        let uris: Vec<_> = queue
+            .queue
+            .iter()
+            .map(|item| item.uri().to_string())
+            .collect();
+        assert_eq!(uris, ["spotify:track:b", "spotify:track:c"]);
+        app.backend.shutdown();
+    }
+
+    /// Premium keeps its engine: the librespot device id is not the helper.
+    #[test]
+    fn a_premium_device_is_not_the_free_web_player() {
+        let mut app = test_app("premium-device");
+        app.handle_playback(LocalPlayback::Ready {
+            device_id: "this-computer".into(),
+        });
+        assert!(!app.free_web_player());
+        app.backend.shutdown();
     }
 
     /// Dock menu picks wait in their own queue, which the application reads
