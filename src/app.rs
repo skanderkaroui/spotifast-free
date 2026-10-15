@@ -13434,6 +13434,8 @@ fn cover_error(locale: Locale, error: &crate::api::client::ApiError) -> String {
     }
 }
 
+#[cfg(test)]
+mod free_matrix_tests;
 mod radio;
 
 #[cfg(test)]
