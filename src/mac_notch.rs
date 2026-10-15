@@ -339,6 +339,12 @@ fn update_play_button_ui(button: &NSButton, icons: &NotchIcons, playing: bool) {
     );
 }
 
+/// Only a Spotify song can be liked: not an episode, and not the Free
+/// helper's ad.
+fn can_like(track: &NotchTrackInfo) -> bool {
+    can_toggle_saved(track.is_episode) && crate::capabilities::is_spotify_item(&track.uri)
+}
+
 fn update_like_button_ui(button: &NSButton, icons: &NotchIcons, saved: bool) {
     let (img, tint, label) = if saved {
         (
@@ -449,7 +455,7 @@ define_class!(
             if let Ok(mut lock) = CONTROLLER.lock()
                 && let Some(ctrl) = lock.as_mut()
                 && let Some(track) = ctrl.track.as_mut()
-                && can_toggle_saved(track.is_episode)
+                && can_like(track)
             {
                 track.saved = !track.saved;
                 let is_saved = track.saved;
@@ -1598,7 +1604,7 @@ pub fn sync_state(enabled: bool, is_background: bool, track: Option<&NotchTrackI
             update_shuffle_button_ui(&ctrl.shuffle_button, &ctrl.icons, t.shuffle);
             update_repeat_button_ui(&ctrl.repeat_button, &ctrl.icons, t.repeat);
             update_device_button_ui(&ctrl.device_button, &ctrl.icons, t.is_remote);
-            ctrl.like_button.setHidden(!can_toggle_saved(t.is_episode));
+            ctrl.like_button.setHidden(!can_like(t));
 
             update_artwork_path(ctrl, t.art_path.clone());
         } else {
@@ -1641,10 +1647,8 @@ pub fn sync_state(enabled: bool, is_background: bool, track: Option<&NotchTrackI
         }
         *cached = updated;
 
-        if changes.episode_changed {
-            ctrl.like_button
-                .setHidden(!can_toggle_saved(latest.is_episode));
-        }
+        // An ad can follow a song without the episode flag changing.
+        ctrl.like_button.setHidden(!can_like(latest));
 
         if changes.art_changed {
             update_artwork_path(ctrl, latest.art_path.clone());
