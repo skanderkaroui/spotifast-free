@@ -11,6 +11,7 @@ pub mod backend;
 pub mod bidi;
 pub mod capabilities;
 pub mod cast;
+pub mod connect_state;
 pub mod credentials;
 #[cfg(any(test, feature = "demo"))]
 pub mod demo;
