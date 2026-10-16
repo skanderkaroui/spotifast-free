@@ -8,7 +8,7 @@
 set -u
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 app="${SPOTIFAST:-$root/target/debug/spotifast}"
-log="${SPOTIFAST_LOG:-$HOME/Library/Application Support/me.paolino.spotifast/spotifast.log}"
+log="${SPOTIFAST_LOG:-$HOME/Library/Application Support/io.github.skanderkaroui.SpotifastFree/spotifast.log}"
 playlist="${1:-spotify:playlist:37i9dQZF1DXcBWIGoYBM5M}" # Today's Top Hits (public)
 timeout=15
 
