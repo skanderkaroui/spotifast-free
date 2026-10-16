@@ -43,6 +43,10 @@ pub const IDLE_QUIT: std::time::Duration = std::time::Duration::from_secs(5 * 60
 
 /// How long `shutdown` waits for the helper to quit before killing it.
 const SHUTDOWN_GRACE: std::time::Duration = std::time::Duration::from_secs(2);
+/// How long a just-asked play or pause holds against Spotify's state reports
+/// that still say the opposite. Spotify confirms within a second or two in
+/// live runs; past this, its report wins (the command was refused).
+const ASKED_PLAYBACK_HOLD: std::time::Duration = std::time::Duration::from_secs(4);
 
 /// The last plan Spotify reported, saved with the account it belongs to so
 /// the next launch knows at once whether to use the helper instead of
@@ -253,6 +257,21 @@ impl WebPlayer {
         match command {
             PlayerCommand::Shuffle(on) => state.shuffle = *on,
             PlayerCommand::Repeat(mode) => state.repeat = *mode,
+            // Show the new play or pause at once and hold it against
+            // Spotify's reports from before the command, so the next press
+            // asks for the opposite.
+            PlayerCommand::Toggle if !in_ad => {
+                let wanted = if playing {
+                    Playback::Paused
+                } else {
+                    Playback::Playing
+                };
+                let now = Instant::now();
+                state.position_ms = state.position_now();
+                state.position_at = (wanted == Playback::Playing).then_some(now);
+                state.playback = wanted;
+                state.asked_playback = Some((wanted, now));
+            }
             // Loading until the new song's audio starts.
             PlayerCommand::Load(spec) if spec.play => state.loading = true,
             PlayerCommand::Radio(_) => state.loading = true,
@@ -634,7 +653,17 @@ fn apply_event(state: &mut LocalState, event: &serde_json::Value, now: Instant) 
                 } else {
                     Playback::Playing
                 };
-                if state.track.is_some() && state.playback != wanted {
+                // A play or pause just asked holds until Spotify agrees, or
+                // for a few seconds if it never does (refused).
+                let held = match state.asked_playback {
+                    Some((asked, _)) if asked == wanted => {
+                        state.asked_playback = None;
+                        false
+                    }
+                    Some((_, at)) => now.saturating_duration_since(at) < ASKED_PLAYBACK_HOLD,
+                    None => false,
+                };
+                if !held && state.track.is_some() && state.playback != wanted {
                     state.position_ms = state.position_now();
                     state.position_at = (wanted == Playback::Playing).then_some(now);
                     state.playback = wanted;
@@ -788,6 +817,55 @@ mod tests {
         let started = Instant::now();
         player.shutdown();
         assert!(started.elapsed() < SHUTDOWN_GRACE + std::time::Duration::from_secs(2));
+    }
+
+    /// Live run on the packaged app: pause, then play a second later, sent
+    /// pause twice. Spotify's reports from before the pause still said
+    /// playing, so the second press read "playing" and paused again.
+    #[test]
+    fn a_quick_pause_then_play_asks_for_pause_then_resume() {
+        let player_state = |paused: bool| {
+            let mut event = state_event("spotify:track:t", "Song");
+            event["paused"] = json!(paused);
+            event
+        };
+        // A helper that reads commands and never answers, like Spotify
+        // before its first report after the command.
+        let mut player = WebPlayer::spawn(Command::new("cat"), Arc::new(|_| {}), None).unwrap();
+        let now = Instant::now();
+        {
+            let mut state = player.state.lock().unwrap();
+            apply_event(&mut state, &player_state(false), now);
+            assert_eq!(state.playback, Playback::Playing);
+        }
+        player.command(&PlayerCommand::Toggle).unwrap().unwrap();
+        {
+            let mut state = player.state.lock().unwrap();
+            assert_eq!(state.playback, Playback::Paused, "shown paused at once");
+            // A report from before the pause arrives: still playing.
+            apply_event(&mut state, &player_state(false), Instant::now());
+            assert_eq!(
+                state.playback,
+                Playback::Paused,
+                "a stale report does not undo the pause"
+            );
+        }
+        // So the next press asks to resume.
+        let playing = player.state.lock().unwrap().playback == Playback::Playing;
+        assert!(
+            helper_lines(&PlayerCommand::Toggle, playing, false).unwrap()[0].contains("\"resume\"")
+        );
+        // Spotify confirms the pause; then it is no longer held.
+        {
+            let mut state = player.state.lock().unwrap();
+            apply_event(&mut state, &player_state(true), Instant::now());
+            assert!(state.asked_playback.is_none());
+            // A pause Spotify refuses: after the hold, its report wins.
+            state.asked_playback = Some((Playback::Playing, Instant::now() - ASKED_PLAYBACK_HOLD));
+            apply_event(&mut state, &player_state(true), Instant::now());
+            assert_eq!(state.playback, Playback::Paused);
+        }
+        player.shutdown();
     }
 
     /// Clicking a song in a playlist plays the playlist itself from that
