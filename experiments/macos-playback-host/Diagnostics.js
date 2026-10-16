@@ -369,11 +369,25 @@
       return actions.play({ contextUri: station });
     },
   };
+  // Set from Spotify's top bar by reportAccount below.
+  let account = null;
   window.__spotifastConnect = async (action, args = {}) => {
     const run = actions[action];
     if (!run) return post('control', { action, handled: false, how: 'unknown-action' });
+    // Signed out: the helper has shown Spotify's sign-in. Hold the command
+    // until the page is signed in (up to ten minutes), then run it, so the
+    // song the user picked starts once they are in.
+    if (account === 'signed-out') {
+      post('control', { action, handled: false, how: 'signing-in', waiting: true });
+      const end = Date.now() + 600000;
+      while (account !== 'signed-in' && Date.now() < end) await sleep(500);
+    }
     if (!(await ready())) {
-      return post('control', { action, handled: false, how: connect.auth ? 'no-device' : 'not-signed-in' });
+      return post('control', {
+        action,
+        handled: false,
+        how: account === 'signed-out' ? 'not-signed-in' : connect.auth ? 'no-device' : 'not-signed-in',
+      });
     }
     if (!connect.license) await readState().catch(() => {});
     try {
@@ -420,7 +434,6 @@
   // "user-widget-link" once signed in). Reported when it settles and each
   // time it changes, so the helper can show its window for sign-in and
   // hide it again by itself.
-  let account = null;
   const reportAccount = () => {
     const now = byTestId('user-widget-link') ? 'signed-in'
       : byTestId('login-button') ? 'signed-out' : null;
