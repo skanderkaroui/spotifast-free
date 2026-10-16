@@ -197,6 +197,9 @@ pub struct LocalState {
     /// with its state (the Free web player). Empty for librespot, whose
     /// queue comes from the Web API.
     pub upcoming: Vec<String>,
+    /// The Free web player is holding a command while the user signs in to
+    /// Spotify in its window. Always false for librespot.
+    pub signing_in: bool,
 }
 
 /// What local playback was doing when its session ended, so the engine
