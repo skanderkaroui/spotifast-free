@@ -39,13 +39,32 @@ for size in 16 32 128 256 512; do
 done
 iconutil -c icns "$iconset" -o "$app/Contents/Resources/spotifast.icns"
 
-# arm64 refuses to launch an unsigned bundle, so sign one way or another.
-if [ -n "${CODESIGN_IDENTITY:-}" ]; then
-    codesign --force --timestamp --options runtime \
-        --sign "$CODESIGN_IDENTITY" "$app"
+# The Spotify Free playback helper goes inside the app, where
+# src/web_player.rs looks for it, with the same icon. Build it first with
+# experiments/macos-playback-host/build.sh; HELPER_APP overrides the path.
+helper="${HELPER_APP:-$here/../../.cache/webkit-playback-probe/SpotifastPlaybackProbe.app}"
+if [ -d "$helper" ]; then
+    mkdir -p "$app/Contents/Helpers"
+    cp -R "$helper" "$app/Contents/Helpers/"
+    cp "$app/Contents/Resources/spotifast.icns" \
+        "$app/Contents/Helpers/SpotifastPlaybackProbe.app/Contents/Resources/spotifast.icns"
 else
-    codesign --force --sign - "$app"
+    echo "note: no playback helper at $helper; Free accounts will not play" >&2
 fi
+
+# arm64 refuses to launch an unsigned bundle, so sign one way or another.
+# Nested code is signed before the bundle that holds it.
+sign() {
+    if [ -n "${CODESIGN_IDENTITY:-}" ]; then
+        codesign --force --timestamp --options runtime --sign "$CODESIGN_IDENTITY" "$1"
+    else
+        codesign --force --sign - "$1"
+    fi
+}
+if [ -d "$app/Contents/Helpers/SpotifastPlaybackProbe.app" ]; then
+    sign "$app/Contents/Helpers/SpotifastPlaybackProbe.app"
+fi
+sign "$app"
 codesign --verify --strict "$app"
 
 echo "$app"
