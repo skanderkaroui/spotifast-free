@@ -19,7 +19,9 @@ use sha2::{Digest, Sha256};
 
 use crate::{auth::StoredToken, paths::AppDirs};
 
-const SERVICE: &str = "rocks.spotifast.Spotifast";
+/// This fork's Keychain service, apart from upstream Spotifast's
+/// `rocks.spotifast.Spotifast`, so the two never read each other's sign-in.
+const SERVICE: &str = "io.github.skanderkaroui.SpotifastFree";
 const TIMEOUT: Duration = Duration::from_secs(20);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
