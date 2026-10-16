@@ -415,8 +415,24 @@
     }
   };
 
+  // Whether this page is signed in to Spotify, from Spotify's own markers
+  // (REA, web-player top bar: data-testid "login-button" while signed out,
+  // "user-widget-link" once signed in). Reported when it settles and each
+  // time it changes, so the helper can show its window for sign-in and
+  // hide it again by itself.
+  let account = null;
+  const reportAccount = () => {
+    const now = byTestId('user-widget-link') ? 'signed-in'
+      : byTestId('login-button') ? 'signed-out' : null;
+    if (now && now !== account) {
+      account = now;
+      post('account', { state: now });
+    }
+  };
+
   if (spotifyPage) {
     setInterval(reportAd, 500);
+    setInterval(reportAccount, 1000);
     // Spotify's state while something plays; commands also read it at once.
     setInterval(() => { if (document.querySelector('audio, video') || lastState) readState().catch(() => {}); }, 2000);
   }
