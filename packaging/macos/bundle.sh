@@ -18,8 +18,8 @@ here="$(cd "$(dirname "$0")" && pwd)"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 
-executable=Spotifast
-identifier=rocks.spotifast.Spotifast
+executable="Spotifast Free"
+identifier=io.github.skanderkaroui.SpotifastFree
 cp "$binary" "$app/Contents/MacOS/$executable"
 chmod 755 "$app/Contents/MacOS/$executable"
 # The build number has to be numbers: a release candidate's -rc1 comes off.
