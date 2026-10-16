@@ -8,6 +8,9 @@ use std::path::PathBuf;
 
 use directories::ProjectDirs;
 
+/// This fork's name for its folders, Keychain entries and window state.
+pub const APP_NAME: &str = "SpotifastFree";
+
 #[derive(Clone, Debug)]
 pub struct AppDirs {
     pub config: PathBuf,
@@ -17,11 +20,14 @@ pub struct AppDirs {
 
 impl AppDirs {
     pub fn discover() -> Self {
-        Self::for_name("spotifast")
+        Self::for_name(APP_NAME)
     }
 
     fn for_name(name: &str) -> Self {
-        let project = ProjectDirs::from("me", "paolino", name);
+        // macOS: ~/Library/Application Support/io.github.skanderkaroui.SpotifastFree,
+        // apart from upstream Spotifast's me.paolino.spotifast, so both can
+        // be installed side by side.
+        let project = ProjectDirs::from("io.github", "skanderkaroui", name);
         match project {
             Some(project) => Self {
                 config: project.config_dir().to_path_buf(),
