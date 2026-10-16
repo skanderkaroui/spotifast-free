@@ -11,9 +11,9 @@ body:
 
         Please include the log from Spotifast's last run:
 
-        - macOS: `~/Library/Application\ Support/me.paolino.spotifast/spotifast.log`
-        - Linux: `~/.local/state/spotifast/spotifast.log`
-        - Windows: `%LOCALAPPDATA%\paolino\spotifast\data\spotifast.log`
+        - macOS: `~/Library/Application\ Support/io.github.skanderkaroui.SpotifastFree/spotifast.log`
+        - Linux: `~/.local/state/spotifastfree/spotifast.log`
+        - Windows: `%LOCALAPPDATA%\skanderkaroui\SpotifastFree\data\spotifast.log`
 
         If the app crashed or vanished, include `panic.log` from the same folder.
   - type: input
