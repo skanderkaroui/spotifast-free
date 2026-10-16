@@ -847,7 +847,7 @@ fn native_options(
     #[cfg(target_os = "linux")]
     let persistence_path = persistence_path.or_else(|| {
         // Keep the native profile path even when Flatpak supplies its app ID.
-        eframe::storage_dir("spotifast").map(|dir| dir.join("app.ron"))
+        eframe::storage_dir(spotifast::paths::APP_NAME).map(|dir| dir.join("app.ron"))
     });
     #[cfg(target_os = "linux")]
     let app_id = desktop_entry();
@@ -862,7 +862,7 @@ fn native_options(
         app_icon()
     };
     let viewport = egui::ViewportBuilder::default()
-        .with_title("Spotifast")
+        .with_title("Spotifast Free")
         .with_app_id(app_id)
         .with_taskbar(true)
         .with_icon(icon);
@@ -929,7 +929,8 @@ fn native_options(
 
 fn profile_options(mut options: eframe::NativeOptions) -> eframe::NativeOptions {
     if options.persist_window {
-        options.persistence_path = eframe::storage_dir("spotifast").map(|dir| dir.join("app.ron"));
+        options.persistence_path =
+            eframe::storage_dir(spotifast::paths::APP_NAME).map(|dir| dir.join("app.ron"));
     }
     options
 }
@@ -973,7 +974,7 @@ mod native_window_tests {
         let main = profile_options(native_options(false, None, None, Geometry::default()));
         assert_eq!(
             main.persistence_path,
-            eframe::storage_dir("spotifast").map(|dir| dir.join("app.ron"))
+            eframe::storage_dir(spotifast::paths::APP_NAME).map(|dir| dir.join("app.ron"))
         );
         let demo_path = std::path::PathBuf::from("temporary/demo.ron");
         let demo = profile_options(demo_native_options(
@@ -1006,7 +1007,7 @@ mod native_window_tests {
             assert_eq!(mini.viewport.app_id, main.viewport.app_id);
             assert_eq!(
                 main.persistence_path,
-                eframe::storage_dir("spotifast").map(|dir| dir.join("app.ron"))
+                eframe::storage_dir(spotifast::paths::APP_NAME).map(|dir| dir.join("app.ron"))
             );
         }
         #[cfg(not(target_os = "linux"))]
@@ -1362,7 +1363,9 @@ impl Shell {
                 MenuCommand::Back => Action::Back,
                 MenuCommand::Forward => Action::Forward,
                 MenuCommand::OpenRepo => {
-                    ctx.open_url(egui::OpenUrl::new_tab("https://github.com/crmne/spotifast"));
+                    ctx.open_url(egui::OpenUrl::new_tab(
+                        "https://github.com/skanderkaroui/spotifast-free",
+                    ));
                     continue;
                 }
                 // Editing goes through egui, which owns the text field

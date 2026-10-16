@@ -12,10 +12,19 @@ use std::path::PathBuf;
 /// own. A new portable folder copies the per-user settings and state, except
 /// the single-instance files a running installed copy holds locked and the
 /// logs of its runs.
+///
+/// The per-user folders are this fork's own (macOS:
+/// ~/Library/Application Support/io.github.skanderkaroui.SpotifastFree),
+/// apart from upstream Spotifast's me.paolino.spotifast, so both can be
+/// installed side by side. The slug names the portable markers the packaging
+/// and updater write, and stays `spotifast` like the binary.
 const FOLDERS: fastframe_dirs::App = fastframe_dirs::App {
     not_copied: &["instance", "spotifast.log", "panic.log"],
-    ..fastframe_dirs::App::new("spotifast", "me", "paolino", "spotifast")
+    ..fastframe_dirs::App::new("spotifast", "io.github", "skanderkaroui", APP_NAME)
 };
+
+/// This fork's name for its folders, Keychain entries and window state.
+pub const APP_NAME: &str = "SpotifastFree";
 
 #[derive(Clone, Debug)]
 pub struct AppDirs {
@@ -312,11 +321,12 @@ mod tests {
         );
     }
 
-    /// Installed copies, and every copy on Linux and macOS, keep the folders
-    /// they always had.
+    /// Installed copies, and every copy on Linux and macOS, keep this fork's
+    /// own per-user folders.
     #[test]
-    fn the_per_user_folders_are_the_ones_spotifast_always_used() {
-        let Some(project) = directories::ProjectDirs::from("me", "paolino", "spotifast") else {
+    fn the_per_user_folders_are_this_forks_own() {
+        let Some(project) = directories::ProjectDirs::from("io.github", "skanderkaroui", APP_NAME)
+        else {
             return;
         };
         let dirs = AppDirs::installed();
