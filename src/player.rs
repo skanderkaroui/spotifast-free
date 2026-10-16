@@ -202,6 +202,10 @@ pub struct LocalState {
     /// The Free web player is holding a command while the user signs in to
     /// Spotify in its window. Always false for librespot.
     pub signing_in: bool,
+    /// Play or pause just asked of the Free web player, and when. Spotify's
+    /// state reports from before the command still say the old one; they
+    /// must not undo it, or a quick pause then play sends pause twice.
+    pub asked_playback: Option<(Playback, std::time::Instant)>,
 }
 
 /// What local playback was doing when its session ended, so the engine
