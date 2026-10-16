@@ -5,15 +5,19 @@
 # hidden web player did (Spotifast's log). Never starts or quits Spotifast.
 # It takes over the account's playback for about a minute.
 # Usage: free-e2e.sh [PLAYLIST_URI]
+# SPOTIFAST=path picks the build to drive, e.g. a packaged app's
+# "Spotifast Free.app/Contents/MacOS/Spotifast Free". Default: the debug build.
 set -u
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 app="${SPOTIFAST:-$root/target/debug/spotifast}"
 log="${SPOTIFAST_LOG:-$HOME/Library/Application Support/io.github.skanderkaroui.SpotifastFree/spotifast.log}"
 playlist="${1:-spotify:playlist:37i9dQZF1DXcBWIGoYBM5M}" # Today's Top Hits (public)
 timeout=15
+# The running copy is the build being driven, whichever it is.
+running() { pgrep -fx "$app" >/dev/null || pgrep -f "^$app( |$)" >/dev/null; }
 
-if ! pgrep -f target/debug/spotifast >/dev/null; then
-    echo "Spotifast is not running: start it signed in with a Free account first." >&2
+if ! running; then
+    echo "Spotifast is not running ($app): start it signed in with a Free account first." >&2
     exit 2
 fi
 [ -f "$log" ] || { echo "no log at $log" >&2; exit 2; }
@@ -174,7 +178,7 @@ steps="$steps$off transfer
 "
 "$app" transfer spotifast-e2e-no-such-device >/dev/null 2>&1
 sleep 5
-if ! pgrep -f target/debug/spotifast >/dev/null; then
+if ! running; then
     record FAIL transfer "Spotifast quit"
 elif since "$off" | grep -q 'web player command'; then
     record FAIL transfer "sent: $(since "$off" | grep 'web player command' | head -1 | sed 's/.*command: //')"
