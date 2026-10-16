@@ -181,6 +181,23 @@ adTick();
 assert.equal(take('ad').at(-1).state, 'end');
 console.log('ok: ads start and end from ad-controls');
 
+// 7b. Sign-in: Spotify's top bar shows "login-button" while signed out and
+// "user-widget-link" once signed in. Each change is reported once.
+const accountTick = intervals[1];
+posted.length = 0;
+accountTick();
+assert.equal(take('account').length, 0, 'nothing is reported before the bar renders');
+shown['login-button'] = {};
+accountTick();
+accountTick();
+assert.deepEqual(take('account').map((e) => e.state), ['signed-out']);
+delete shown['login-button'];
+shown['user-widget-link'] = {};
+accountTick();
+assert.deepEqual(take('account').map((e) => e.state), ['signed-out', 'signed-in']);
+delete shown['user-widget-link'];
+console.log('ok: sign-in is detected from Spotify\'s own top bar');
+
 // 8. Not this account's player: no state is reported. (The pause above
 // may still trigger a state read; clear what it posted first.)
 await endpointOf('resume');
