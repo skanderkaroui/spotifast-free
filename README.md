@@ -59,34 +59,40 @@ and [helper](experiments/macos-playback-host/README.md).
 ## Install
 
 This fork has no prebuilt downloads yet; the Homebrew, AUR and download-page
-builds are upstream Spotifast, which plays Premium only. Build from source on
-macOS 14 or later with Rust and the Xcode command-line tools:
+builds are upstream Spotifast, which plays Premium only. Build Spotifast
+Free.app from source on macOS 14 or later with Rust and the Xcode
+command-line tools:
 
 ```sh
 git clone https://github.com/skanderkaroui/spotifast-free.git
 cd spotifast-free
-cargo build --no-default-features --bin spotifast
+cargo build --release --no-default-features --bin spotifast
 sh experiments/macos-playback-host/build.sh
+bash packaging/macos/bundle.sh target/release/spotifast "Spotifast Free.app" "$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+open "Spotifast Free.app"
 ```
 
+`bundle.sh` puts the playback helper inside the app, both with the
+Spotifast icon. Move the app to `/Applications` to keep it.
 `--no-default-features` leaves out MilkDrop, which needs cmake, a C++
 compiler and libclang; drop it to build MilkDrop for Premium.
 [Build from source](https://spotifast.rocks/getting-started/#build-from-source)
 lists every dependency.
 
+Spotifast Free keeps its own settings, Keychain sign-in and log
+(`~/Library/Application Support/io.github.skanderkaroui.SpotifastFree`), so
+it runs alongside upstream Spotifast without sharing anything.
+
 ## Start listening
 
-1. Run `sh experiments/run-free.sh` and choose **Sign in with Spotify**.
-   Approve access in your browser, then return to the app.
+1. Open Spotifast Free and choose **Sign in with Spotify**. Approve access
+   in your browser, then return to the app.
 2. **Premium:** open the device menu in the player bar and choose **Set up
    playback here**, then approve playback in your browser. Your computer
    appears as a Spotify Connect device named **Spotifast**.
-3. **Free:** sign in to the helper once. Quit Spotifast, open the helper's
-   window, sign in on Spotify's page, close it, and start Spotifast again:
-
-   ```sh
-   .cache/webkit-playback-probe/SpotifastPlaybackProbe.app/Contents/MacOS/SpotifastPlaybackProbe --web-player
-   ```
+3. **Free:** press play. The first time, Spotify's own sign-in opens in a
+   small window; sign in there and it closes by itself, and the song you
+   picked starts. You stay signed in after that.
 
 Spotifast remembers your sign-in in the macOS Keychain. A local build is
 signed again on every rebuild, so macOS asks once more after each one;
@@ -121,7 +127,9 @@ cargo test --no-default-features
 node experiments/macos-playback-host/test.mjs
 node experiments/macos-playback-host/diagnostics.test.mjs
 
-# Live, against a running Spotifast signed in with a Free account
+# Live, against a running Spotifast signed in with a Free account (the debug
+# build from experiments/run-free.sh, or SPOTIFAST=".../Spotifast Free" for
+# the packaged app)
 bash experiments/free-e2e.sh
 ```
 
