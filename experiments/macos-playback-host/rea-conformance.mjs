@@ -100,6 +100,9 @@ check('_offsetPosition called with timestamp, position_as_of_timestamp, playback
 check('queue built from next_tracks', vendor, /next_tracks:\w\.tracks/);
 // Now-playing bar (dwp-now-playing-bar chunk).
 check('ad marker data-testid "ad-controls"', chunks, '"data-testid":"ad-controls"');
+// Top bar (web-player): the sign-in markers the helper watches.
+check('signed-out marker data-testid "login-button"', app, '"data-testid":"login-button"');
+check('signed-in marker data-testid "user-widget-link"', app, '"data-testid":"user-widget-link"');
 // Canvas player: playTracks(..., {muted:!0, loop:!0}).
 check('Canvas playTracks({muted:!0,loop:!0})', all, /playTracks\(\[\w\],\{[^}]*muted:!0,loop:!0/);
 
