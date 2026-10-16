@@ -194,10 +194,56 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
         return nil
     }
 
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        // Spotifast's hidden helper: closing its sign-in window hides it
+        // rather than quitting the player Spotifast is talking to.
+        guard CommandLine.arguments.contains("--headless") else { return true }
+        sender.orderOut(nil)
+        NSApp.setActivationPolicy(.accessory)
+        return false
+    }
+
     func userContentController(_ userContentController: WKUserContentController,
                                didReceive message: WKScriptMessage) {
         guard let text = message.body as? String else { return }
         FileHandle.standardOutput.write(Data(text.utf8) + Data([10]))
+        if text.contains("\"event\":\"account\""),
+           let data = text.data(using: .utf8),
+           let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let state = event["state"] as? String {
+            account(state)
+        }
+    }
+
+    /// Spotify's sign-in, as the page reports it. Signed out: show the
+    /// window so the user can sign in on Spotify's own page. Signed in after
+    /// that: hide it again (Spotifast's hidden helper) or close it (the
+    /// sign-in window opened by hand), with nothing for the user to confirm.
+    private var askedToSignIn = false
+    private func account(_ state: String) {
+        let headless = CommandLine.arguments.contains("--headless")
+        switch state {
+        case "signed-out":
+            askedToSignIn = true
+            status.stringValue = "Sign in to Spotify here. This window closes by itself once you are in."
+            if headless {
+                NSApp.setActivationPolicy(.regular)
+                window.makeKeyAndOrderFront(nil)
+                NSApp.activate()
+            }
+        case "signed-in" where askedToSignIn:
+            askedToSignIn = false
+            if headless {
+                window.orderOut(nil)
+                NSApp.setActivationPolicy(.accessory)
+                // The page that signed in is already registered as this
+                // account's player; Spotifast's next command goes to it.
+            } else {
+                NSApp.terminate(nil)
+            }
+        default:
+            break
+        }
     }
 
     func windowWillClose(_ notification: Notification) { NSApp.terminate(nil) }
@@ -209,7 +255,7 @@ MainActor.assumeIsolated {
     let menu = NSMenu()
     let applicationItem = NSMenuItem()
     let applicationMenu = NSMenu()
-    applicationMenu.addItem(withTitle: "Quit Playback Probe", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+    applicationMenu.addItem(withTitle: "Quit Spotifast Free Helper", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
     applicationItem.submenu = applicationMenu
     menu.addItem(applicationItem)
     application.mainMenu = menu
