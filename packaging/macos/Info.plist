@@ -2,8 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleName</key><string>Spotifast</string>
-    <key>CFBundleDisplayName</key><string>Spotifast</string>
+    <key>CFBundleName</key><string>Spotifast Free</string>
+    <key>CFBundleDisplayName</key><string>Spotifast Free</string>
     <key>CFBundleIdentifier</key><string>__IDENTIFIER__</string>
     <key>CFBundleExecutable</key><string>__EXECUTABLE__</string>
     <key>CFBundleIconFile</key><string>spotifast</string>
@@ -33,6 +33,6 @@
             <key>CFBundleTypeRole</key><string>Viewer</string>
         </dict>
     </array>
-    <key>NSHumanReadableCopyright</key><string>© 2026 Carmine Paolino. MIT License. Not affiliated with Spotify AB.</string>
+    <key>NSHumanReadableCopyright</key><string>Built on Spotifast, © 2026 Carmine Paolino. MIT License. Not affiliated with Spotify AB.</string>
 </dict>
 </plist>
