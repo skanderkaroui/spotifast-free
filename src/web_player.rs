@@ -160,7 +160,7 @@ impl WebPlayer {
                     }
                     let playing = {
                         let state = watched.lock().unwrap_or_else(|p| p.into_inner());
-                        state.playback == Playback::Playing || state.loading
+                        state.playback == Playback::Playing || state.loading || state.signing_in
                     };
                     if playing {
                         paused_since = None;
@@ -188,6 +188,7 @@ impl WebPlayer {
                             "control"
                                 | "page-error"
                                 | "page-rejection"
+                                | "account"
                                 | "navigation-error"
                                 | "ad"
                                 | "state"
@@ -462,16 +463,34 @@ fn apply_event(state: &mut LocalState, event: &serde_json::Value, now: Instant) 
         // error rather than left spinning.
         Some("control") => {
             if event.get("handled").and_then(|v| v.as_bool()) == Some(true) {
+                state.signing_in = false;
                 return std::mem::take(&mut state.error).is_some();
+            }
+            // Held while the user signs in to Spotify in the helper's window,
+            // which opened by itself; it runs once they are in.
+            if str_of("how") == Some("signing-in") {
+                state.signing_in = true;
+                state.error = Some("Sign in to Spotify in the window that opened to play".into());
+                return true;
             }
             let action = str_of("action").unwrap_or("command");
             state.loading = false;
+            state.signing_in = false;
             state.error = Some(match str_of("how") {
                 Some("not-signed-in") => "Sign in to Spotify in the playback helper first".into(),
                 _ => format!("Spotify refused {action}"),
             });
             true
         }
+        // Spotify's sign-in in the helper: signing in again clears the hint.
+        Some("account") => match str_of("state") {
+            Some("signed-in") if state.signing_in => {
+                state.signing_in = false;
+                state.error = None;
+                true
+            }
+            _ => false,
+        },
         // An ad Spotify is playing. The bar shows it as the track, so the
         // listener sees an ad, not the previous song; the song returns with
         // Spotify's next state report.
@@ -1115,6 +1134,36 @@ mod tests {
         let done = json!({"event":"control","action":"play","handled":true,"status":200});
         assert!(apply_event(&mut state, &done, now));
         assert!(state.error.is_none());
+    }
+
+    /// Signed out: the helper shows Spotify's sign-in and holds the play.
+    /// Spotifast keeps it loading with a hint, not a refusal, and the play
+    /// runs once the user is in.
+    #[test]
+    fn a_play_held_for_sign_in_keeps_loading_then_plays() {
+        let now = Instant::now();
+        let mut state = LocalState {
+            loading: true,
+            ..LocalState::default()
+        };
+        let held = json!({"event":"control","action":"play","handled":false,"how":"signing-in","waiting":true});
+        assert!(apply_event(&mut state, &held, now));
+        assert!(state.loading, "still loading while the user signs in");
+        assert!(state.signing_in);
+        assert!(
+            state
+                .error
+                .as_deref()
+                .is_some_and(|e| e.contains("Sign in"))
+        );
+        let signed_in = json!({"event":"account","state":"signed-in"});
+        assert!(apply_event(&mut state, &signed_in, now));
+        assert!(!state.signing_in && state.error.is_none());
+        let done = json!({"event":"control","action":"play","handled":true,"status":200});
+        apply_event(&mut state, &done, now);
+        assert!(state.error.is_none());
+        // A sign-in report with nothing held changes nothing.
+        assert!(!apply_event(&mut state, &signed_in, now));
     }
 
     #[test]
