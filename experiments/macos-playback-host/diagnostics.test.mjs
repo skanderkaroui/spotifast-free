@@ -198,6 +198,29 @@ assert.deepEqual(take('account').map((e) => e.state), ['signed-out', 'signed-in'
 delete shown['user-widget-link'];
 console.log('ok: sign-in is detected from Spotify\'s own top bar');
 
+// 7c. A play while signed out is held, reported as waiting, and sent once
+// the page is signed in. The fake setTimeout runs at once, so let each poll
+// yield to this test with a real one while the command waits.
+const instant = context.setTimeout;
+context.setTimeout = (fn) => setImmediate(fn);
+shown['login-button'] = {};
+accountTick();
+posted.length = 0;
+const sentBefore = sent.length;
+const held = context.window.__spotifastConnect('pause');
+for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setImmediate(resolve));
+assert.equal(take('control').at(-1)?.how, 'signing-in', 'the command waits for sign-in');
+assert.equal(sent.slice(sentBefore).filter((r) => r.url.includes('/player/command/')).length, 0, 'nothing sent while signed out');
+delete shown['login-button'];
+shown['user-widget-link'] = {};
+accountTick();
+await held;
+context.setTimeout = instant;
+assert.equal(take('control').at(-1)?.handled, true, 'the held command ran after sign-in');
+assert.equal(sent.slice(sentBefore).filter((r) => r.url.includes('/player/command/')).length, 1, 'sent once, after sign-in');
+delete shown['user-widget-link'];
+console.log('ok: a command waits for sign-in and runs once signed in');
+
 // 8. Not this account's player: no state is reported. (The pause above
 // may still trigger a state read; clear what it posted first.)
 await endpointOf('resume');
