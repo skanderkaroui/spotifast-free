@@ -11,6 +11,19 @@ cookies and Spotifast credentials are not imported. No ad filtering,
 license handling or key extraction is performed: the page plays every song
 and every ad itself.
 
+Spotifast Free.app ships the helper in `Contents/Helpers/`, where
+`src/web_player.rs` looks for it (`packaging/macos/bundle.sh`); a debug
+build finds it through `SPOTIFAST_PLAYBACK_HELPER` (`experiments/run-free.sh`).
+Its bundle ID, `io.github.skanderkaroui.SpotifastFree.Helper`, keys its
+Spotify sign-in.
+
+Sign-in is automatic. The helper runs hidden; when Spotify's page shows
+its **Log in** button (`data-testid="login-button"`), the helper shows its
+window, and a command that arrives meanwhile waits (`control` with
+`how: "signing-in"`). Once the account button appears
+(`user-widget-link`), the window hides again and the waiting command runs.
+Closing the window by hand only hides it.
+
 Spotifast controls the page with Spotify Connect, the same requests
 open.spotify.com sends for its own buttons (REA, `vendor~web-player`:
 `_sendPlayerCommand`, `_generatePlayOptions`). `Diagnostics.js` sends them
@@ -25,7 +38,7 @@ node experiments/macos-playback-host/diagnostics.test.mjs
 sh experiments/macos-playback-host/build.sh
 APP=.cache/webkit-playback-probe/SpotifastPlaybackProbe.app/Contents/MacOS/SpotifastPlaybackProbe
 
-# Visible, to sign in once:
+# Visible (sign-in, debugging); it closes itself once signed in:
 $APP --web-player
 
 # Live check of every control (not while Spotifast's helper is playing):
@@ -60,7 +73,8 @@ Events on stdout:
 | `media` | The heard media element: `playing`, `pause`, `ended`, `waiting` (muted looping Canvas clips are ignored) |
 | `now-playing` | Media Session metadata, used to leave an ad |
 | `ad` | An ad started (`ad-controls` in Spotify's bar) or ended |
-| `control` | Whether Spotify accepted a command (`handled`, HTTP `status`) |
+| `account` | Spotify's sign-in on the page: `signed-out` or `signed-in` |
+| `control` | Whether Spotify accepted a command (`handled`, HTTP `status`; `how: "signing-in"` while it waits for sign-in) |
 | `key-system`, `page-error` | Diagnostics |
 
 Spotify Free ignores a list of songs sent with a playlist and plays the
