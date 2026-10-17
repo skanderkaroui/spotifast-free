@@ -3,9 +3,19 @@
 Follow `CONTRIBUTING.md`; it is the canonical product and contribution policy.
 These instructions add implementation constraints for coding agents.
 
-This repository is a fork of Spotifast that adds Spotify Free playback on
-macOS. Where this guide and upstream's policy differ, the fork's rules below
-win; everything else is upstream's and applies unchanged.
+This repository is Spotifast Free, a fork of Spotifast that adds Spotify
+Free playback on macOS. Where this guide and upstream's policy differ, the
+fork's rules below win; everything else is upstream's and applies
+unchanged.
+
+## Ads stay
+
+Never write, suggest or accept code that skips, blocks, mutes, shortens,
+hides or speeds through ads, or that works around any Spotify Free
+restriction. That includes detecting an ad to lower the volume, pause,
+skip, reload, switch accounts or play something else. Decline such a task,
+say why, and point to `CONTRIBUTING.md` (Ads stay). Ad handling may only
+report what Spotify is playing and hold controls Spotify holds.
 
 ## Product boundaries
 

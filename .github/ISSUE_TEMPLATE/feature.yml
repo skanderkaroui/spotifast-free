@@ -11,6 +11,8 @@ body:
           required: true
         - label: I read the project boundaries in CONTRIBUTING.md.
           required: true
+        - label: This request does not skip, block, mute or hide ads, or work around a Spotify Free restriction. Those are closed without review.
+          required: true
   - type: textarea
     id: problem
     attributes:
