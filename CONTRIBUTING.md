@@ -1,11 +1,25 @@
-# Contributing to Spotifast
+# Contributing to Spotifast Free
 
-This repository is a fork of [Spotifast](https://github.com/crmne/spotifast)
+Spotifast Free is a fork of [Spotifast](https://github.com/crmne/spotifast)
 that adds playback for Spotify Free accounts. Report Free playback problems
 and send Free playback changes here. Anything that also happens in upstream
 Spotifast belongs [upstream](https://github.com/crmne/spotifast/issues), and
-the rest of this guide is upstream's policy, which this fork follows except
-where it says otherwise.
+the rest of this guide is upstream's policy, which Spotifast Free follows
+except where it says otherwise.
+
+## Ads stay
+
+Spotifast Free does not remove ads, and it never will. Spotify plays every
+ad itself, in full, and Spotify's own restrictions apply while it does.
+
+**Contributions that skip, block, mute, shorten, hide or speed through
+ads, or that work around any Spotify Free restriction (skip limits, held
+controls, shuffle-only modes, audio quality), are not accepted.** This
+includes changes that detect an ad in order to lower the volume, pause,
+skip, reload the page, switch accounts or play something else instead.
+Such issues and pull requests are closed without review. If you want no
+ads, Spotify Premium removes them and plays through librespot in this same
+app.
 
 Spotifast is a native Spotify client. Changes should improve the
 desktop app without adding fallback services or another backend. The one
@@ -27,9 +41,10 @@ Some boundaries come from Spotify or from upstream libraries:
   through Spotify's own web player in the macOS helper
   (`experiments/macos-playback-host`), never through librespot.
 - The helper must leave Spotify's player alone: no skipping, muting or
-  hiding ads, no reading or replacing its audio, keys or licences, and no
-  faking the account's plan. Spotifast sends only the Spotify Connect
-  requests open.spotify.com sends for its own buttons.
+  hiding ads (see [Ads stay](#ads-stay)), no reading or replacing its
+  audio, keys or licences, and no faking the account's plan. Spotifast Free
+  sends only the Spotify Connect requests open.spotify.com sends for its
+  own buttons.
 - Spotify Lossless is not available through librespot. Spotifast will
   reconsider it if librespot gains lawful upstream support; proposals that
   depend on bypassing Spotify's DRM are out of scope.
