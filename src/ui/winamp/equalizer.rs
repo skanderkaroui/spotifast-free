@@ -74,6 +74,9 @@ pub(super) fn show(app: &mut App, view: &mut View, now: Option<&NowPlaying>, foc
     }
 
     let settings = current(app);
+    // Spotify Free's sound never passes through the equalizer: its
+    // controls are drawn but take no input.
+    let sound = app.capabilities().sound_effects;
     let (normal, pressed) = if settings.on {
         (sprites::EQ_ON_ON, sprites::EQ_ON_ON_PRESSED)
     } else {
@@ -82,6 +85,7 @@ pub(super) fn show(app: &mut App, view: &mut View, now: Option<&NowPlaying>, foc
     if view
         .button(layout::EQ_ON, normal, pressed, "eq-on")
         .clicked()
+        && sound
     {
         app.actions.push(Action::ToggleEq);
     }
@@ -93,7 +97,7 @@ pub(super) fn show(app: &mut App, view: &mut View, now: Option<&NowPlaying>, foc
         sprites::EQ_AUTO_OFF_PRESSED,
         "eq-auto",
     );
-    if auto.clicked() {
+    if auto.clicked() && sound {
         app.actions.push(Action::ApplyEqPreset(0));
     }
     let presets = view.button(
@@ -102,21 +106,27 @@ pub(super) fn show(app: &mut App, view: &mut View, now: Option<&NowPlaying>, foc
         sprites::EQ_PRESETS_PRESSED,
         "eq-presets",
     );
-    if std::mem::take(&mut app.winamp.open_presets) {
+    if std::mem::take(&mut app.winamp.open_presets) && sound {
         egui::Popup::open_id(view.ui.ctx(), egui::Popup::default_response_id(&presets));
     }
-    super::menu(egui::Popup::menu(&presets), view.skin, view.unit, |ui| {
-        presets_menu(app, ui);
-    });
+    if sound {
+        super::menu(egui::Popup::menu(&presets), view.skin, view.unit, |ui| {
+            presets_menu(app, ui);
+        });
+    }
 
     graph(view, &settings);
     let preamp = fraction(settings.preamp_db);
-    if let Some(value) = slider(view, layout::EQ_PREAMP, "eq-preamp", preamp) {
+    if let Some(value) = slider(view, layout::EQ_PREAMP, "eq-preamp", preamp)
+        && sound
+    {
         app.actions.push(Action::SetEqPreamp(decibels(value)));
     }
     for (band, gain_db) in settings.bands_db.into_iter().enumerate() {
         let area = layout::eq_band(band);
-        if let Some(value) = slider(view, area, &format!("eq-band-{band}"), fraction(gain_db)) {
+        if let Some(value) = slider(view, area, &format!("eq-band-{band}"), fraction(gain_db))
+            && sound
+        {
             app.actions.push(Action::SetEqBand(band, decibels(value)));
         }
     }
@@ -185,6 +195,11 @@ fn shade(app: &mut App, view: &mut View, now: Option<&NowPlaying>, focused: bool
     // Balance, with the same snap to the centre.
     let track = layout::EQ_SHADE_BALANCE;
     let (_, event) = view.slider(track, "eq-shade-balance", layout::EQ_SHADE_THUMB);
+    let event = if app.capabilities().sound_effects {
+        event
+    } else {
+        SliderEvent::None
+    };
     match event {
         SliderEvent::Dragging(value) => {
             let balance = super::balance_of(value);

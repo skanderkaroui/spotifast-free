@@ -1,8 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Contribution and project scope
-    url: https://github.com/crmne/spotifast/blob/main/CONTRIBUTING.md
-    about: Check product boundaries and contribution requirements before opening an issue or pull request.
-  - name: Documentation
-    url: https://spotifast.rocks
-    about: Install steps, settings, and where Spotifast keeps its files and logs.
+  - name: Not about Free playback? Report it to upstream Spotifast
+    url: https://github.com/crmne/spotifast/issues
+    about: Problems that also happen in upstream Spotifast belong there. This fork only adds Spotify Free playback.
+  - name: How Free playback works and its limits
+    url: https://github.com/skanderkaroui/spotifast-free/blob/main/experiments/SCOPE-free-playback.md
+    about: What Free can and cannot do here, and how the helper drives Spotify's web player.
+  - name: Spotifast user guide
+    url: https://spotifast.rocks/using-spotifast/
+    about: Upstream's guide to settings, shortcuts and files. Everything but install and the Premium requirement applies here.

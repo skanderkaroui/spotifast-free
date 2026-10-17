@@ -704,12 +704,14 @@ pub fn picked_menu(
     });
     ui.add_space(4.0);
     menu_separator(ui, &palette);
-    if menu_item(
-        ui,
-        &palette,
-        Some(Icon::ListEnd),
-        &gettext(locale, "Add to queue"),
-    ) {
+    if app.capabilities().queue_add
+        && menu_item(
+            ui,
+            &palette,
+            Some(Icon::ListEnd),
+            &gettext(locale, "Add to queue"),
+        )
+    {
         app.actions.push(Action::QueueMany {
             songs: songs
                 .iter()
@@ -937,12 +939,14 @@ pub fn item_menu(
     ui.set_max_width(300.0);
     let uri = item.uri().to_string();
     let label = item.name().to_string();
-    if menu_item(
-        ui,
-        &palette,
-        Some(Icon::ListEnd),
-        &gettext(locale, "Add to queue"),
-    ) {
+    if app.capabilities().queue_add
+        && menu_item(
+            ui,
+            &palette,
+            Some(Icon::ListEnd),
+            &gettext(locale, "Add to queue"),
+        )
+    {
         app.actions.push(Action::AddToQueue {
             uri: uri.clone(),
             label: label.clone(),
@@ -1159,6 +1163,7 @@ pub fn context_menu_items(
         app.actions.push(Action::ShufflePlay(uri.to_string()));
     }
     if kind == "album"
+        && app.capabilities().queue_add
         && menu_item(
             ui,
             &palette,

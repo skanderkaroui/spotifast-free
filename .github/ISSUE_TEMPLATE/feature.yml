@@ -11,6 +11,8 @@ body:
           required: true
         - label: I read the project boundaries in CONTRIBUTING.md.
           required: true
+        - label: This request does not skip, block, mute or hide ads, or work around a Spotify Free restriction. Those are closed without review.
+          required: true
   - type: textarea
     id: problem
     attributes:
@@ -29,7 +31,7 @@ body:
   - type: textarea
     id: fit
     attributes:
-      label: Why does this fit Spotifast?
-      description: Explain why it belongs in a small, native Spotify client.
+      label: Why does this fit this fork?
+      description: Explain why it belongs in a small, native Spotify client, and for Free playback, how it works within what Spotify's own web player allows.
     validations:
       required: true

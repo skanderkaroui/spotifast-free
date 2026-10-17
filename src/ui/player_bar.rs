@@ -64,7 +64,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
             // Its empty space is the visualizer's control, as Winamp's
             // visualizer was: a click moves to the next mode. The controls
             // drawn after it take their own clicks.
-            if app.settings.player_bar_vis_click {
+            if app.settings.player_bar_vis_click && app.capabilities().visualizers {
                 let empty = ui.interact(
                     behind,
                     ui.id().with("player-bar-visualizer"),
@@ -125,7 +125,11 @@ fn visualizer(app: &mut App, ui: &egui::Ui, rect: Rect, now: Option<&NowPlaying>
     use crate::settings::PlayerBarVis;
     use crate::vis;
     let mode = app.settings.player_bar_vis;
-    let sounding = now.is_some_and(|now| (now.playing || now.loading) && now.local);
+    // The Free web player's sound plays inside its own page and never
+    // reaches Spotifast's audio tap; drawing the tap then shows old or no
+    // sound out of time with the song, so the bar stays plain.
+    let sounding = now.is_some_and(|now| (now.playing || now.loading) && now.local)
+        && app.capabilities().visualizers;
     let dark = ui.visuals().dark_mode;
     let (low, high) = vis_colours(app.now_playing_tint().unwrap_or(app.palette.accent), dark);
     // Over a light bar the same colour paints more strongly, or white
@@ -420,7 +424,9 @@ fn now_playing_block(app: &mut App, ui: &mut egui::Ui, region: Rect, now: Option
         cover_rect,
         6.0,
     );
-    let song = app.now_playing_item();
+    // An ad is not a Spotify item: nothing to like, open, or act on.
+    let spotify_item = crate::capabilities::is_spotify_item(&now.uri);
+    let song = app.now_playing_item().filter(|_| spotify_item);
     let drag_sense = if song.is_some() {
         Sense::click_and_drag()
     } else {
@@ -466,7 +472,8 @@ fn now_playing_block(app: &mut App, ui: &mut egui::Ui, region: Rect, now: Option
             app.actions.push(Action::SettingsChanged);
         }
     }
-    let heart_width = if now.is_episode { 0.0 } else { 42.0 };
+    let heart = !now.is_episode && spotify_item;
+    let heart_width = if heart { 42.0 } else { 0.0 };
     let text_left = cover_rect.right() + 12.0;
     let text_width = (region.right() - text_left - heart_width).max(40.0);
     let text_rect = Rect::from_min_size(pos2(text_left, cy - 18.0), vec2(text_width, 36.0));
@@ -479,7 +486,7 @@ fn now_playing_block(app: &mut App, ui: &mut egui::Ui, region: Rect, now: Option
     text_ui.set_clip_rect(text_rect.intersect(ui.clip_rect()));
     text_ui.spacing_mut().item_spacing.y = 2.0;
     let title_response = theme::link(&mut text_ui, &now.title, theme::medium(14.0), palette.text);
-    if title_response.clicked() {
+    if title_response.clicked() && spotify_item {
         if let Some(id) = &now.album_id {
             app.actions.push(Action::Open(Page::Album(id.clone())));
         } else if let Some(id) = &now.show_id {
@@ -487,7 +494,9 @@ fn now_playing_block(app: &mut App, ui: &mut egui::Ui, region: Rect, now: Option
         }
     }
     text_ui.horizontal_top(|ui| {
-        if now.artists.is_empty() {
+        if !spotify_item {
+            theme::text(ui, &now.subtitle, theme::regular(12.0), palette.secondary);
+        } else if now.artists.is_empty() {
             if theme::link(ui, &now.subtitle, theme::regular(12.0), palette.secondary).clicked()
                 && let Some(id) = &now.show_id
             {
@@ -530,7 +539,7 @@ fn now_playing_block(app: &mut App, ui: &mut egui::Ui, region: Rect, now: Option
         }
     }
 
-    if !now.is_episode {
+    if heart {
         let saved = app.is_saved(&now.uri).unwrap_or(false);
         // A liked heart stays green under the pointer, like shuffle.
         let (icon, color, hover, tooltip) = if saved {
@@ -591,6 +600,7 @@ fn transport(app: &mut App, ui: &mut egui::Ui, now: Option<&NowPlaying>, region:
     let loading = now.is_some_and(|now| now.loading);
     let shuffle = now.map_or_else(|| app.playing_context_shuffle(), |now| now.shuffle);
     let repeat = now.map(|now| now.repeat).unwrap_or_default();
+    let caps = app.capabilities();
     let dim = if enabled {
         palette.secondary
     } else {
@@ -617,6 +627,9 @@ fn transport(app: &mut App, ui: &mut egui::Ui, now: Option<&NowPlaying>, region:
 
     let shuffle_color = if shuffle { palette.accent } else { dim };
     let mut cell = centered(ui, slot(widths[0]));
+    if !caps.shuffle {
+        cell.disable();
+    }
     let shuffle_button = theme::icon_button(
         &mut cell,
         Icon::Shuffle,
@@ -642,6 +655,9 @@ fn transport(app: &mut App, ui: &mut egui::Ui, now: Option<&NowPlaying>, region:
     }
 
     let mut cell = centered(ui, slot(widths[1]));
+    if !caps.skip_prev {
+        cell.disable();
+    }
     if theme::icon_button(
         &mut cell,
         Icon::SkipBackFilled,
@@ -693,6 +709,9 @@ fn transport(app: &mut App, ui: &mut egui::Ui, now: Option<&NowPlaying>, region:
     }
 
     let mut cell = centered(ui, slot(widths[3]));
+    if !caps.skip_next {
+        cell.disable();
+    }
     if theme::icon_button(
         &mut cell,
         Icon::SkipForwardFilled,
@@ -720,6 +739,9 @@ fn transport(app: &mut App, ui: &mut egui::Ui, now: Option<&NowPlaying>, region:
         ),
     };
     let mut cell = centered(ui, slot(widths[4]));
+    if !caps.repeat {
+        cell.disable();
+    }
     if theme::icon_button(
         &mut cell,
         repeat_icon,
@@ -768,6 +790,9 @@ fn transport(app: &mut App, ui: &mut egui::Ui, now: Option<&NowPlaying>, region:
             .max_rect(slider_rect)
             .layout(Layout::left_to_right(Align::Center)),
     );
+    if !caps.seek {
+        slider_ui.disable();
+    }
     let fraction = if duration > 0 {
         position as f32 / duration as f32
     } else {
@@ -814,7 +839,14 @@ fn extras(app: &mut App, ui: &mut egui::Ui, now: Option<&NowPlaying>) {
     // Some remote devices, such as a phone playing over Bluetooth, refuse
     // volume changes from other apps: show their volume but don't offer to
     // change it.
-    let adjustable = now.is_none_or(|now| now.can_set_volume);
+    // On this computer the engine decides; Spotify Free's helper takes volume too.
+    let adjustable = now.is_none_or(|now| {
+        if now.local {
+            app.capabilities().volume
+        } else {
+            now.can_set_volume
+        }
+    });
     let controls = ui.add_enabled_ui(adjustable, |ui| {
         match thin_slider(
             ui,
@@ -917,7 +949,9 @@ fn extras(app: &mut App, ui: &mut egui::Ui, now: Option<&NowPlaying>) {
     }
     // A dragged song dropped on the queue button queues it, same as the
     // "Add to queue" menu item.
-    if let Some(track) = queue_button.dnd_release_payload::<DragTrack>() {
+    if let Some(track) = queue_button.dnd_release_payload::<DragTrack>()
+        && app.capabilities().queue_add
+    {
         app.actions.push(Action::QueueMany {
             songs: track
                 .items
