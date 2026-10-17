@@ -202,8 +202,10 @@ pub fn open_spotify_url(uri: &str) -> Option<String> {
 pub fn tray_template_rgba(size: usize) -> Vec<u8> {
     let mut rgba = mark_rgba(size, false);
     for pixel in rgba.as_chunks_mut::<4>().0 {
-        // The triangle is the dark colour; make it a hole instead.
-        if pixel[1] < 128 {
+        // The triangle is the near-black ink; make it a hole instead. Judged
+        // by the brightest channel, so it holds for any disc colour (the
+        // blue disc's green channel alone is below half).
+        if pixel[0].max(pixel[1]).max(pixel[2]) < 128 {
             pixel[3] = 0;
         }
         pixel[0] = 0;
@@ -251,9 +253,10 @@ fn triangle_distance(p: (f32, f32), a: (f32, f32), b: (f32, f32), c: (f32, f32))
 /// The mark on a 128-unit square, as `packaging/icons/spotifast.svg` draws
 /// it: a disc of radius 62 and a play triangle with corners rounded by 5,
 /// set a little left of its box so it looks centred. `polished` adds the
-/// darker rim, the lit face and the bright edge between them.
+/// darker rim, the lit face and the bright edge between them. Spotifast
+/// Free wears it in blue (upstream Spotifast's green, hue-shifted).
 fn mark_rgba(size: usize, polished: bool) -> Vec<u8> {
-    const GREEN: [f32; 3] = [30.0, 215.0, 96.0];
+    const BLUE: [f32; 3] = [30.0, 119.0, 215.0];
     const INK: [f32; 3] = [11.0, 14.0, 12.0];
     let mut rgba = vec![0u8; size * size * 4];
     // The disc keeps two pixels of margin, so its edge is never clipped.
@@ -270,12 +273,12 @@ fn mark_rgba(size: usize, polished: bool) -> Vec<u8> {
                 continue;
             }
             let mut colour = if polished {
-                let rim = mix([24.0, 192.0, 85.0], [12.0, 138.0, 58.0], (v - 2.0) / 124.0);
+                let rim = mix([24.0, 104.0, 192.0], [12.0, 72.0, 138.0], (v - 2.0) / 124.0);
                 let lit = (v - 8.0) / 112.0;
                 let face = if lit < 0.55 {
-                    mix([92.0, 240.0, 149.0], GREEN, lit / 0.55)
+                    mix([92.0, 159.0, 240.0], BLUE, lit / 0.55)
                 } else {
-                    mix(GREEN, [21.0, 182.0, 80.0], (lit - 0.55) / 0.45)
+                    mix(BLUE, [21.0, 97.0, 182.0], (lit - 0.55) / 0.45)
                 };
                 let on_face = ((54.4 - distance) * unit + 0.5).clamp(0.0, 1.0);
                 let mut colour = mix(rim, face, on_face);
@@ -283,14 +286,14 @@ fn mark_rgba(size: usize, polished: bool) -> Vec<u8> {
                 // the top, shaded at the bottom.
                 let edge = (1.0 - (distance - 55.0).abs() / 0.9).clamp(0.0, 1.0);
                 let (tone, strength) = if lit < 0.5 {
-                    ([217.0, 255.0, 232.0], 1.0 - 1.3 * lit)
+                    ([217.0, 234.0, 255.0], 1.0 - 1.3 * lit)
                 } else {
-                    ([10.0, 110.0, 46.0], 0.35 + 1.1 * (lit - 0.5))
+                    ([10.0, 58.0, 110.0], 0.35 + 1.1 * (lit - 0.5))
                 };
                 colour = mix(colour, tone, edge * strength.clamp(0.0, 1.0));
                 colour
             } else {
-                GREEN
+                BLUE
             };
             let triangle = triangle_distance((u, v), (49.2, 43.5), (49.2, 84.5), (86.1, 64.0));
             let glyph = ((5.0 - triangle) * unit + 0.5).clamp(0.0, 1.0);
@@ -394,6 +397,16 @@ mod tests {
 
         // #and the corners stay clear
         assert_eq!(pixel(&large, 128, 1, 1)[3], 0);
+
+        // #and Spotifast Free's disc is blue, not upstream's green
+        assert!(
+            face[2] > face[1] && face[2] > face[0],
+            "face {face:?} should be blue"
+        );
+        assert!(
+            rim[2] > rim[1] && rim[2] > rim[0],
+            "rim {rim:?} should be blue"
+        );
 
         // #and the menu-bar template is the disc with the triangle cut out
         let template = tray_template_rgba(44);
