@@ -14,9 +14,9 @@
 </p>
 
 <p align="center">
-  <a href="Cargo.toml"><img src="https://img.shields.io/badge/Built_with-Rust-1ed760" alt="Built with Rust"></a>
+  <a href="Cargo.toml"><img src="https://img.shields.io/badge/Built_with-Rust-1e77d7" alt="Built with Rust"></a>
   <a href="#spotify-free"><img src="https://img.shields.io/badge/Spotify_Free-macOS-24292f" alt="Spotify Free on macOS"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-1ed760" alt="MIT license"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-1e77d7" alt="MIT license"></a>
 </p>
 
 Spotifast Free is a fork of [Spotifast](https://github.com/crmne/spotifast)
