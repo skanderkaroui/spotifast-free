@@ -663,9 +663,11 @@ pub enum AutostartRequest {
 }
 
 /// Spotifast's registration to start at login. The hidden start passes
-/// `--start-hidden`, which the command line takes.
+/// `--start-hidden`, which the command line takes. Its Windows Run value is
+/// this fork's name, apart from upstream Spotifast's; macOS goes by the
+/// bundle's own identifier.
 pub fn autostart() -> fastframe_autostart::Autostart {
-    fastframe_autostart::Autostart::new("spotifast", "Spotifast")
+    fastframe_autostart::Autostart::new("spotifast", crate::i18n::APP_NAME)
 }
 
 pub enum Command {
