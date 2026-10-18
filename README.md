@@ -30,9 +30,6 @@ typically uses 100–250 MB of RAM and starts in well under a second.
   unchanged in a small background helper and controls from its native
   interface. On macOS for now.
 
-**Spotifast Free does not remove, skip or mute ads.** Free accounts hear
-Spotify's ads, as on any Spotify app.
-
 The interface includes complete
 [translations for all supported languages](docs/_reference/translating.md#languages-and-coverage).
 
@@ -144,11 +141,8 @@ committed, so no account's songs or playlists end up in the repository.
 Report Free playback problems in
 [Spotifast Free's issues](https://github.com/skanderkaroui/spotifast-free/issues),
 with the steps and the log. Anything that also happens in upstream Spotifast
-belongs [upstream](https://github.com/crmne/spotifast/issues).
-
-Changes that skip, block, mute or hide ads, or work around Spotify's Free
-restrictions, are out of scope and will be closed. See
-[CONTRIBUTING.md](CONTRIBUTING.md).
+belongs [upstream](https://github.com/crmne/spotifast/issues). See
+[CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 To look at the interface without a Spotify account, run:
 
