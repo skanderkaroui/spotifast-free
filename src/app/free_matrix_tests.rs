@@ -438,3 +438,51 @@ fn free_flip_to_premium_restores_premium_caps() {
     assert!(!app.backend.take_transfer_requests().is_empty());
     app.backend.shutdown();
 }
+
+/// The words the settings page paints after filtering for `query`.
+fn settings_text(app: &mut App, query: &str) -> String {
+    let ctx = egui::Context::default();
+    app.attach(&ctx);
+    ctx.data_mut(|data| {
+        data.insert_temp(egui::Id::new("settings-filter"), query.to_owned());
+    });
+    let mut text = String::new();
+    for _ in 0..2 {
+        text.clear();
+        let mut output = ctx.run_ui(
+            egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::vec2(1280.0, 2200.0),
+                )),
+                ..Default::default()
+            },
+            |ui| crate::ui::settings::show(app, ui),
+        );
+        output.textures_delta.clear();
+        fn walk(shape: &egui::epaint::Shape, text: &mut String) {
+            match shape {
+                egui::epaint::Shape::Text(shape) => {
+                    text.push_str(&shape.galley.job.text);
+                    text.push('\n');
+                }
+                egui::epaint::Shape::Vec(shapes) => shapes.iter().for_each(|s| walk(s, text)),
+                _ => {}
+            }
+        }
+        for shape in &output.shapes {
+            walk(&shape.shape, &mut text);
+        }
+    }
+    text
+}
+
+/// Local files play through librespot, which Spotify Free's web player
+/// never uses, so the folder setting is Premium's alone.
+#[test]
+fn local_files_setting_is_premium_only() {
+    both("local-files", |free, app| {
+        let text = settings_text(app, "Local files");
+        assert_eq!(text.contains("Choose folder"), !free, "free={free}\n{text}");
+    });
+}
