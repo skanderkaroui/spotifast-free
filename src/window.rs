@@ -237,7 +237,7 @@ mod tests {
         assert!(arm.text.contains("Compatibility Pack"));
 
         let x64 = missing_opengl_message(crate::i18n::Locale::English, false);
-        assert_eq!(x64.title, "Spotifast cannot open its window");
+        assert_eq!(x64.title, "Spotifast Free cannot open its window");
         assert_eq!(x64.page, "https://spotifast.rocks/download/");
         assert!(x64.text.contains("OpenGL 2.0"));
         assert!(x64.text.contains("virtual machine"));
