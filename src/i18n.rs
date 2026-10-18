@@ -1,10 +1,114 @@
 //! Bundled gettext catalogs. English is the source language and the fallback
 //! for every message a catalog has not translated yet. The interface follows
 //! the operating system's language unless Settings names another one.
+//!
+//! Spotifast Free shares upstream Spotifast's catalogs unchanged, so they
+//! keep merging cleanly. Every message passes through [`brand`] on the way
+//! out, which names this app "Spotifast Free" wherever a translation says
+//! "Spotifast", in every language.
 
-pub use fastframe_i18n::{gettext, ngettext, pgettext};
+use std::borrow::Cow;
+
+pub use fastframe_i18n::Locale as CatalogLocale;
+
+/// This fork's name, as the interface shows it.
+pub const APP_NAME: &str = "Spotifast Free";
+
+/// Names the app "Spotifast Free" in an interface message. Messages that
+/// already say "Spotifast Free", or that mean upstream ("upstream
+/// Spotifast"), are left as they are.
+pub fn brand(text: Cow<'static, str>) -> Cow<'static, str> {
+    if !text.contains("Spotifast") {
+        return text;
+    }
+    let mut out = String::with_capacity(text.len() + 8);
+    let mut rest = text.as_ref();
+    while let Some(at) = rest.find("Spotifast") {
+        let (before, after) = rest.split_at(at);
+        out.push_str(before);
+        let after = &after["Spotifast".len()..];
+        let upstream = before.trim_end().ends_with("upstream");
+        // "Spotifast Free" already, or a path or bundle id glued to letters
+        // (SpotifastFree, SpotifastPlaybackProbe): keep as written. Only
+        // ASCII counts: Japanese and Chinese run words together with no
+        // space ("Spotifastをアップデート").
+        let glued = after
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_ascii_alphanumeric());
+        if upstream || glued || after.starts_with(" Free") {
+            out.push_str("Spotifast");
+        } else {
+            out.push_str(APP_NAME);
+        }
+        rest = after;
+    }
+    out.push_str(rest);
+    Cow::Owned(out)
+}
+
+pub fn gettext<L: CatalogLocale>(locale: L, source: &'static str) -> Cow<'static, str> {
+    brand(fastframe_i18n::gettext(locale, source))
+}
+
+pub fn pgettext<L: CatalogLocale>(
+    locale: L,
+    context: &'static str,
+    source: &'static str,
+) -> Cow<'static, str> {
+    brand(fastframe_i18n::pgettext(locale, context, source))
+}
+
+pub fn ngettext<L: CatalogLocale>(
+    locale: L,
+    singular: &'static str,
+    plural: &'static str,
+    count: u32,
+) -> Cow<'static, str> {
+    brand(fastframe_i18n::ngettext(locale, singular, plural, count))
+}
 
 include!(concat!(env!("OUT_DIR"), "/catalogs.rs"));
+
+#[cfg(test)]
+mod brand_tests {
+    use super::*;
+
+    #[test]
+    fn interface_text_names_spotifast_free() {
+        let b = |s: &'static str| brand(Cow::Borrowed(s)).into_owned();
+        assert_eq!(b("Update Spotifast"), "Update Spotifast Free");
+        assert_eq!(b("Spotifastをアップデート"), "Spotifast Freeをアップデート");
+        assert_eq!(b("Spotifast'i güncelle"), "Spotifast Free'i güncelle");
+        assert_eq!(
+            b("Spotifast {version} • not affiliated with Spotify"),
+            "Spotifast Free {version} • not affiliated with Spotify"
+        );
+        // Already named, upstream, or part of a longer word: unchanged.
+        assert_eq!(b("Spotifast Free on GitHub"), "Spotifast Free on GitHub");
+        assert_eq!(
+            b("Report it to upstream Spotifast"),
+            "Report it to upstream Spotifast"
+        );
+        assert_eq!(
+            b("io.github.skanderkaroui.SpotifastFree"),
+            "io.github.skanderkaroui.SpotifastFree"
+        );
+        assert_eq!(b("Random"), "Random");
+    }
+
+    #[test]
+    fn translated_messages_come_out_branded() {
+        assert_eq!(
+            gettext(Locale::English, "Update Spotifast"),
+            "Update Spotifast Free"
+        );
+        assert_eq!(
+            gettext(Locale::French, "Update Spotifast"),
+            "Mettre à jour Spotifast Free"
+        );
+    }
+}
 
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, clap::ValueEnum)]
 pub enum Locale {
