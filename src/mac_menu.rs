@@ -704,7 +704,7 @@ mod mac_impl {
         ));
         help_menu.addItem(&create_item(
             mtm,
-            ns_string!("Spotifast on GitHub"),
+            ns_string!("Spotifast Free on GitHub"),
             Some(sel!(openRepo:)),
             ns_string!(""),
             None,
