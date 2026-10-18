@@ -739,8 +739,9 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
         .when(!cfg!(target_os = "macos")),
         RowText::new(start_with_computer.clone(), start_detail).when(start_available),
     ];
-    // librespot's settings do not reach Spotify Free's web player.
-    for index in [1, 2, 3, 4, 5, 8, 9, 10, 11] {
+    // librespot's settings do not reach Spotify Free's web player, and
+    // neither do local files, which librespot plays.
+    for index in [1, 2, 3, 4, 5, 8, 9, 10, 11, 14] {
         playback_rows[index].available &= caps.engine_settings;
     }
     if section_matches(&needle, &playback, &playback_rows) {
