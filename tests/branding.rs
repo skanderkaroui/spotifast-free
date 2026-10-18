@@ -96,7 +96,7 @@ fn existing_preferences_and_custom_connect_names_survive_a_save() {
 
     let scratch = Scratch::new();
     let path = scratch.0.join("settings.json");
-    for name in ["Spotifast", "Living room", "Carmine's laptop"] {
+    for name in ["Spotifast Free", "Living room", "Carmine's laptop"] {
         let saved = Settings {
             device_name: name.into(),
             theme: ThemeChoice::Light,
@@ -110,7 +110,7 @@ fn existing_preferences_and_custom_connect_names_survive_a_save() {
         saved.save(&path);
         assert_eq!(Settings::load(&path), saved);
     }
-    assert_eq!(Settings::default().device_name, "Spotifast");
+    assert_eq!(Settings::default().device_name, "Spotifast Free");
 }
 
 #[cfg(target_os = "linux")]
