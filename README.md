@@ -9,7 +9,6 @@
 <p align="center">
   <a href="#install"><strong>Install</strong></a> ·
   <a href="#spotify-free">Spotify Free</a> ·
-  <a href="#ads-stay">Ads</a> ·
   <a href="https://github.com/skanderkaroui/spotifast-free/issues">Issues</a>
 </p>
 
@@ -32,7 +31,7 @@ typically uses 100–250 MB of RAM and starts in well under a second.
   interface. On macOS for now.
 
 **Spotifast Free does not remove, skip or mute ads.** Free accounts hear
-Spotify's ads, as on any Spotify app. See [Ads stay](#ads-stay).
+Spotify's ads, as on any Spotify app.
 
 The interface includes complete
 [translations for all supported languages](docs/_reference/translating.md#languages-and-coverage).
@@ -57,22 +56,6 @@ The helper keeps its own Spotify sign-in, separate from your browsers, and
 quits after five idle minutes. How it works, its limits, and how it is
 checked against Spotify's web player: [scope](experiments/SCOPE-free-playback.md)
 and [helper](experiments/macos-playback-host/README.md).
-
-## Ads stay
-
-Spotifast Free is a faster window onto Spotify Free, not a way around it.
-
-- Ads play in full, at their own volume. Nothing blocks, skips, mutes,
-  shortens or hides them.
-- Spotify's own restrictions apply: while an ad plays, skip and seek are
-  held, exactly as in Spotify's apps.
-- Spotifast Free never reads, records or replaces Spotify's audio, never
-  touches its DRM or keys, and never pretends a Free account is Premium.
-
-This is a rule of the project. Changes that skip, block, mute or hide ads,
-or work around Spotify's Free restrictions, will not be accepted (see
-[CONTRIBUTING.md](CONTRIBUTING.md)). If you want no ads, Spotify Premium
-removes them and plays through librespot in this same app.
 
 ## Install
 
