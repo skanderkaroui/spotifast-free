@@ -22,6 +22,5 @@ here; do not commit them.
 - [ ] Dependencies come from crates.io or `github.com/crmne` repositories, and the maintainer approved any added or changed git source.
 - [ ] I understand and take responsibility for every submitted line, including AI-assisted code.
 - [ ] Free playback: Premium behaviour is unchanged, and `src/app/free_matrix_tests.rs` passes for both plans.
-- [ ] This does not skip, block, mute, shorten or hide ads, or work around any Spotify Free restriction (see "Ads stay" in `CONTRIBUTING.md`).
-- [ ] Free playback: the helper still leaves Spotify's player and DRM untouched.
+- [ ] Free playback: the helper still leaves Spotify's player, ads and DRM untouched (see "Ads stay" in `CONTRIBUTING.md`).
 - [ ] Recordings went through `scrub-recordings.mjs`; nothing personal (songs, playlists, ids, paths, sign-in) is committed.
