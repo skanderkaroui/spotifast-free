@@ -147,9 +147,15 @@ pub(super) fn show(app: &mut App, ui: &mut egui::Ui, data: &Prerelease) {
     });
     ui.add_space(48.0);
     ui.horizontal(|ui| {
-        let green = Color32::from_rgb(0x1e, 0xd7, 0x60);
+        // Spotifast Free's blue, with the dark palette's ink so the label
+        // reads the same in light and dark mode.
+        let fill = theme::Palette::dark().accent;
         let saved = data.saved == Some(true);
-        let ink = if saved { palette.text } else { Color32::BLACK };
+        let ink = if saved {
+            palette.text
+        } else {
+            theme::Palette::dark().on_accent
+        };
         let save_label = if data.saving {
             gettext(locale, "Saving…")
         } else if data.saved == Some(true) {
@@ -176,7 +182,7 @@ pub(super) fn show(app: &mut App, ui: &mut egui::Ui, data: &Prerelease) {
             .add_enabled(
                 enabled,
                 egui::Button::new("")
-                    .fill(if saved { palette.surface } else { green })
+                    .fill(if saved { palette.surface } else { fill })
                     .stroke(if saved {
                         Stroke::new(1.0, palette.outline)
                     } else {
@@ -217,7 +223,7 @@ pub(super) fn show(app: &mut App, ui: &mut egui::Ui, data: &Prerelease) {
             },
             icon_rect,
             16.0,
-            if saved { green } else { ink },
+            if saved { fill } else { ink },
         );
         if save_button.clicked() {
             app.actions.push(Action::SetPrereleaseSaved {
