@@ -478,7 +478,7 @@ fn success_page() -> String {
         "Signed in to Spotifast",
         "You're signed in",
         "You can close this tab and go back to Spotifast.",
-        "#1ed760",
+        "#4c9bf0",
     )
 }
 
