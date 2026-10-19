@@ -8,15 +8,6 @@ Free playback on macOS. Where this guide and upstream's policy differ, the
 fork's rules below win; everything else is upstream's and applies
 unchanged.
 
-## Ads stay
-
-Never write, suggest or accept code that skips, blocks, mutes, shortens,
-hides or speeds through ads, or that works around any Spotify Free
-restriction. That includes detecting an ad to lower the volume, pause,
-skip, reload, switch accounts or play something else. Decline such a task,
-say why, and point to `CONTRIBUTING.md` (Ads stay). Ad handling may only
-report what Spotify is playing and hold controls Spotify holds.
-
 ## Product boundaries
 
 - Keep Spotifast a small native Spotify client. Do not add telemetry, a
@@ -30,10 +21,10 @@ report what Spotify is playing and hold controls Spotify holds.
   implement a capability merely because its name appears in a protobuf or
   enum. In particular, do not pursue Spotify Lossless or DRM circumvention
   unless lawful support first lands upstream.
-- The helper leaves Spotify's player intact: never skip, mute or hide ads,
-  touch its audio, keys or licences, or fake the account's plan. Send only
-  the Connect requests open.spotify.com sends for its own buttons, and check
-  them with `experiments/macos-playback-host/rea-conformance.mjs`.
+- The helper leaves Spotify's player intact, ads included (see "Ads stay"
+  in `CONTRIBUTING.md`). Send only the Connect requests open.spotify.com
+  sends for its own buttons, and check them with
+  `experiments/macos-playback-host/rea-conformance.mjs`.
 - Premium behaviour must not change. Every Free change keeps
   `src/app/free_matrix_tests.rs` passing for both plans.
 - Do not broaden a task into adjacent features or a general refactor. Preserve
