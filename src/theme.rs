@@ -51,9 +51,11 @@ impl Palette {
             text: Color32::from_rgb(0xf2, 0xf4, 0xf6),
             secondary: Color32::from_rgb(0xa9, 0xb1, 0xbc),
             dim: Color32::from_rgb(0x6e, 0x77, 0x84),
-            accent: Color32::from_rgb(0x1e, 0xd7, 0x60),
-            accent_hover: Color32::from_rgb(0x3c, 0xe8, 0x7a),
-            on_accent: Color32::from_rgb(0x0a, 0x14, 0x0e),
+            // Spotifast Free's blue: the logo's hue, light enough to read
+            // on the dark window (6.5:1).
+            accent: Color32::from_rgb(0x4c, 0x9b, 0xf0),
+            accent_hover: Color32::from_rgb(0x6a, 0xae, 0xf3),
+            on_accent: Color32::from_rgb(0x0a, 0x0e, 0x14),
             danger: Color32::from_rgb(0xf5, 0x71, 0x7f),
             warning: Color32::from_rgb(0xf2, 0xb8, 0x5c),
             overlay: Color32::from_rgb(0x22, 0x27, 0x2e),
@@ -74,8 +76,8 @@ impl Palette {
             text: Color32::from_rgb(0x14, 0x17, 0x1a),
             secondary: Color32::from_rgb(0x53, 0x5b, 0x66),
             dim: Color32::from_rgb(0x8b, 0x93, 0x9e),
-            accent: Color32::from_rgb(0x15, 0xa6, 0x4a),
-            accent_hover: Color32::from_rgb(0x12, 0x8f, 0x40),
+            accent: Color32::from_rgb(0x1b, 0x68, 0xbb),
+            accent_hover: Color32::from_rgb(0x15, 0x55, 0x99),
             on_accent: Color32::WHITE,
             danger: Color32::from_rgb(0xd6, 0x3b, 0x4c),
             warning: Color32::from_rgb(0xb8, 0x7a, 0x14),
@@ -1042,6 +1044,31 @@ mod tests {
             assert_eq!(&got[..], expected, "pixel {x},{y}");
         }
         output.textures_delta.clear();
+    }
+
+    /// Spotifast Free's own palettes wear the logo's blue, never upstream's
+    /// green, and the accent reads at 4.5:1 on its window and under its
+    /// own text.
+    #[test]
+    fn the_default_accent_is_blue_and_readable() {
+        let luminance = |colour: Color32| {
+            let linear = egui::Rgba::from(colour);
+            0.2126 * linear.r() + 0.7152 * linear.g() + 0.0722 * linear.b()
+        };
+        let contrast = |a: Color32, b: Color32| {
+            let (a, b) = (luminance(a), luminance(b));
+            (a.max(b) + 0.05) / (a.min(b) + 0.05)
+        };
+        for palette in [Palette::dark(), Palette::light()] {
+            for accent in [palette.accent, palette.accent_hover] {
+                assert!(
+                    accent.b() > accent.g() && accent.g() > accent.r(),
+                    "{accent:?} is blue"
+                );
+            }
+            assert!(contrast(palette.accent, palette.window) >= 4.5);
+            assert!(contrast(palette.accent, palette.on_accent) >= 4.5);
+        }
     }
 
     /// Palette files name the sixteen colours every app shares and
