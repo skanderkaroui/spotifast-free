@@ -415,6 +415,11 @@ pub struct App {
     pub local_device_id: Option<String>,
     /// Ignore the previous local song until a Connect transfer reports its track.
     local_transfer_sequence: Option<u64>,
+    /// The Free web player's song a skip just left, and whether that was
+    /// Next (true) or Previous. Spotify's reports for it can still arrive
+    /// with its own restrictions (a first song has no previous); until a
+    /// report names another song, they must not hold the way back.
+    free_skipped_from: Option<(String, bool)>,
     /// Local playback is authorized and the engine is connected.
     pub local_ready: bool,
     pub local_playback: LocalPlayback,
@@ -1096,6 +1101,7 @@ impl App {
             user: None,
             local_device_id: None,
             local_transfer_sequence: None,
+            free_skipped_from: None,
             local_ready: false,
             local_playback: LocalPlayback::Unavailable,
             local: LocalState::default(),
@@ -3227,6 +3233,20 @@ impl App {
         }
         let upcoming_changed = state.upcoming != self.local.upcoming;
         self.local = state;
+        // A late report for the song a skip left keeps its restrictions;
+        // the way back stays open until Spotify names the new song.
+        let playing_uri = self.local.track.as_ref().map(|track| track.uri.as_str());
+        match &self.free_skipped_from {
+            Some((uri, next)) if playing_uri == Some(uri.as_str()) => {
+                if *next {
+                    self.local.restrictions.skip_prev = false;
+                } else {
+                    self.local.restrictions.skip_next = false;
+                }
+            }
+            Some(_) => self.free_skipped_from = None,
+            None => {}
+        }
         if let Some(volume) = held_volume {
             self.local.volume = volume;
         }
@@ -10824,6 +10844,11 @@ impl App {
                 // to, so a quick Previous must not be dropped meanwhile.
                 if self.free_web_player() {
                     self.local.restrictions.skip_prev = false;
+                    self.free_skipped_from = self
+                        .local
+                        .track
+                        .as_ref()
+                        .map(|track| (track.uri.clone(), true));
                 }
             }
             // Previous restarts after three seconds and otherwise steps back,
@@ -10855,6 +10880,11 @@ impl App {
                 // leaves what follows as it was.
                 if self.free_web_player() && steps_back {
                     self.local.restrictions.skip_next = false;
+                    self.free_skipped_from = self
+                        .local
+                        .track
+                        .as_ref()
+                        .map(|track| (track.uri.clone(), false));
                 }
             }
             Action::Seek(position_ms) => self.seek(position_ms),

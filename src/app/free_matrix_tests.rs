@@ -198,6 +198,28 @@ fn free_previous_right_after_next_is_not_held_by_the_old_song() {
     app.backend.shutdown();
 }
 
+/// Live run on 0.14.0: Spotify's report for the song just skipped from,
+/// still saying "no previous track", came in after Next. It must not hold
+/// Previous again before the skipped-to song's own report arrives.
+#[test]
+fn free_previous_is_not_held_by_a_late_report_for_the_skipped_from_song() {
+    let mut app = app_for("prev-late-report", true, SONG);
+    let mut first = playing(SONG, 1);
+    first.restrictions.skip_prev = true;
+    app.handle_local(first.clone());
+    app.backend.take_player_commands();
+    run(&mut app, Action::Next);
+    // The skipped-from song's report, late.
+    app.handle_local(first);
+    app.backend.take_player_commands();
+    let sent = run(&mut app, Action::Previous);
+    assert!(
+        sent.iter().any(|c| matches!(c, PlayerCommand::Previous)),
+        "{sent:?}"
+    );
+    app.backend.shutdown();
+}
+
 #[test]
 fn free_next_right_after_previous_is_not_held_by_the_old_song() {
     let mut app = app_for("next-after-prev", true, SONG);
