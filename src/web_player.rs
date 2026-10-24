@@ -475,6 +475,22 @@ fn apply_event(state: &mut LocalState, event: &serde_json::Value, now: Instant) 
                 return true;
             }
             let action = str_of("action").unwrap_or("command");
+            // A play or pause the bar showed at once, refused: show again
+            // what Spotify plays, instead of waiting for its next report.
+            if matches!(action, "pause" | "resume")
+                && let Some((asked, _)) = state.asked_playback.take()
+            {
+                let back = if asked == Playback::Playing {
+                    Playback::Paused
+                } else {
+                    Playback::Playing
+                };
+                if state.playback == asked {
+                    state.position_ms = state.position_now();
+                    state.position_at = (back == Playback::Playing).then_some(now);
+                    state.playback = back;
+                }
+            }
             state.loading = false;
             state.signing_in = false;
             state.error = Some(match str_of("how") {
@@ -1266,6 +1282,40 @@ mod tests {
         apply_event(&mut state, &json!({"event":"media","type":"waiting"}), now);
         assert!(!state.loading);
         assert_eq!(state.playback, Playback::Playing);
+    }
+
+    /// Spotify can refuse a play or pause (a network error, a device it
+    /// no longer knows). The bar showed it at once; the refusal puts the
+    /// bar back, rather than leaving it wrong until Spotify's next report.
+    #[test]
+    fn a_refused_play_or_pause_is_undone() {
+        let now = Instant::now();
+        let mut state = LocalState::default();
+        apply_event(&mut state, &state_event("spotify:track:t", "Song"), now);
+        assert_eq!(state.playback, Playback::Playing);
+        // What `command` does for a pause shown at once.
+        state.playback = Playback::Paused;
+        state.asked_playback = Some((Playback::Paused, now));
+        assert!(apply_event(
+            &mut state,
+            &json!({"event":"control","action":"pause","handled":false,"how":"network"}),
+            now
+        ));
+        assert_eq!(
+            state.playback,
+            Playback::Playing,
+            "back to what Spotify plays"
+        );
+        assert!(state.asked_playback.is_none());
+        // A refusal for some other command leaves play or pause alone.
+        state.playback = Playback::Paused;
+        state.asked_playback = Some((Playback::Paused, now));
+        apply_event(
+            &mut state,
+            &json!({"event":"control","action":"next","handled":false}),
+            now,
+        );
+        assert_eq!(state.playback, Playback::Paused);
     }
 
     /// Spotify's state can name the ad (`spotify:ad:`) before its bar shows
