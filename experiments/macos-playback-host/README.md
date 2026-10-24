@@ -17,7 +17,9 @@ build finds it through `SPOTIFAST_PLAYBACK_HELPER` (`experiments/run-free.sh`).
 Its bundle ID, `io.github.skanderkaroui.SpotifastFree.Helper`, keys its
 Spotify sign-in.
 
-Sign-in is automatic. The helper runs hidden; when Spotify's page shows
+Sign-in is automatic. The helper loads Spotify's settings page
+(`open.spotify.com/preferences`): the same web player and player bar, without
+the home feed's artwork, which nobody sees in the hidden window. The helper runs hidden; when Spotify's page shows
 its **Log in** button (`data-testid="login-button"`), the helper shows its
 window, and a command that arrives meanwhile waits (`control` with
 `how: "signing-in"`). Once the account button appears
