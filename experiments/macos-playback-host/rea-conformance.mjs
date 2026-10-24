@@ -42,6 +42,13 @@ console.log('-- Spotify still has what Diagnostics.js relies on');
 for (const endpoint of ['play', 'pause', 'resume', 'skip_next', 'skip_prev', 'seek_to', 'set_shuffling_context', 'set_options', 'add_to_queue']) {
   check(`_sendPlayerCommand("${endpoint}")`, vendor, `_sendPlayerCommand("${endpoint}"`);
 }
+// Command acknowledgement: the response's body.ack_id is awaited, the dealer's
+// cluster message carries ack_id, and the wait gives up after 3400 ms.
+check('_awaitResponseWithAck awaits body.ack_id', vendor,
+  /_awaitResponseWithAck\(\w,\w\)\{[\s\S]{0,300}\.body\)\?void 0:\w\.ack_id/);
+check('_onClusterMessage acknowledges payloads[0].ack_id', vendor,
+  /_onClusterMessage\(\w\)\{let \w=\w\.payloads&&\w\.payloads\[0\];if\(!\w\)return;let \w=\w\.ack_id;\w&&this\._tracker\.trackCommandAcknowledged\(\w\)/);
+check('ack timeout 3400 ms', vendor, /\bep=3400\b/);
 // _makeEndpoint: `${this._endpoint}/${t}/${e}/from/${o}/to/${n}`.
 check('_makeEndpoint url format .../from/<id>/to/<id>', vendor,
   /_makeEndpoint\(\w,\w,\w\)\{[^}]*`\$\{this\._endpoint\}\/\$\{\w\}\/\$\{\w\}\/from\/\$\{\w\}\/to\/\$\{\w\}`/);

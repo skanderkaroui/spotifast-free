@@ -346,3 +346,109 @@ for (const name of fixtureNames) {
   assert.deepEqual({ ...lost.args }, {}, 'the refused command carries its own arguments for the replay');
   console.log('ok: a forgotten device is retried if Spotify still lists it, and reported lost if not');
 }
+
+// 11. Quick pause then play: Spotify's player sends a command only after
+// the previous one's acknowledgement arrives on its dealer connection
+// (REA: _awaitResponseWithAck waits for ack_id, trackCommandAcknowledged,
+// 3400 ms cap). Sent back to back, the hidden player received the pause
+// after the play and ended paused (live trace, 24 Oct). The page now does
+// the same: one command at a time, each held until its ack or the cap.
+{
+  const ackDevice = 'c'.repeat(40);
+  const out = [];
+  const log = [];
+  const sockets = [];
+  let next = 0;
+  class FakeSocket extends EventTarget {
+    constructor() { super(); sockets.push(this); }
+  }
+  const ack = (id) => {
+    log.push(`ack ${id}`);
+    const event = new Event('message');
+    event.data = JSON.stringify({ uri: 'hm://connect-state/v1/cluster', payloads: [{ ack_id: id, cluster: {} }] });
+    sockets.forEach((s) => s.dispatchEvent(event));
+  };
+  const fetchFake = async (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url.endsWith('/cluster')) return { ok: true, status: 200, json: async () => ({ ...cluster, active_device_id: ackDevice, devices: { [ackDevice]: { license: 'on-demand' } } }) };
+    if (url.endsWith('/melody/v1/time')) return { ok: true, status: 200, json: async () => ({ timestamp: 1000000 }) };
+    if (url.includes('/player/command/')) {
+      const id = `ack-${next += 1}`;
+      log.push(`send ${JSON.parse(init.body).command.endpoint} ${id}`);
+      return { ok: true, status: 200, json: async () => ({ ack_id: id }) };
+    }
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+  const page = {
+    ...context,
+    window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } }, fetch: fetchFake, WebSocket: FakeSocket },
+    WebSocket: FakeSocket,
+    setInterval: () => {},
+    setTimeout,
+    navigator: {},
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  new page.window.WebSocket('wss://dealer.spotify.com/');
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer t' } });
+  await page.window.fetch(`https://gew1-spclient.spotify.com/track-playback/v1/devices/${ackDevice}/state`,
+    { method: 'PUT', headers: { authorization: 'Bearer t' } });
+
+  const pause = page.window.__spotifastConnect('pause');
+  const resume = page.window.__spotifastConnect('resume');
+  await new Promise((r) => setTimeout(r, 50));
+  assert.deepEqual(log, ['send pause ack-1'], 'the play waits for the pause to be acknowledged');
+  ack('ack-1');
+  await pause;
+  await new Promise((r) => setTimeout(r, 50));
+  assert.deepEqual(log, ['send pause ack-1', 'ack ack-1', 'send resume ack-2']);
+  ack('ack-2');
+  await resume;
+  assert.deepEqual(out.filter((e) => e.event === 'control').map((e) => `${e.action}:${e.handled}`), ['pause:true', 'resume:true']);
+
+  // An ack that never comes holds the next command only up to the cap.
+  log.length = 0;
+  const started = Date.now();
+  await page.window.__spotifastConnect('pause');
+  await page.window.__spotifastConnect('resume');
+  assert.deepEqual(log, ['send pause ack-3', 'send resume ack-4']);
+  assert.ok(Date.now() - started >= 3400 * 2 - 100, 'each waited for the cap');
+  console.log('ok: commands go one at a time, each after the previous one is acknowledged');
+}
+
+// 12. A command whose request never answers holds the next one only up to
+// the chain's limit; buttons do not all hang behind it.
+{
+  const hungDevice = 'd'.repeat(40);
+  const out = [];
+  const sentCommands = [];
+  const fetchFake = async (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url.endsWith('/cluster')) return { ok: true, status: 200, json: async () => ({ ...cluster, active_device_id: hungDevice, devices: { [hungDevice]: { license: 'on-demand' } } }) };
+    if (url.endsWith('/melody/v1/time')) return { ok: true, status: 200, json: async () => ({ timestamp: 1000000 }) };
+    if (url.includes('/player/command/')) {
+      const endpoint = JSON.parse(init.body).command.endpoint;
+      sentCommands.push(endpoint);
+      if (endpoint === 'pause') return new Promise(() => {});
+      return { ok: true, status: 200, json: async () => ({}) };
+    }
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+  const page = {
+    ...context,
+    window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } }, fetch: fetchFake },
+    setInterval: () => {},
+    setTimeout,
+    navigator: {},
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer t' } });
+  await page.window.fetch(`https://gew1-spclient.spotify.com/track-playback/v1/devices/${hungDevice}/state`,
+    { method: 'PUT', headers: { authorization: 'Bearer t' } });
+  page.window.__spotifastConnect('pause');
+  const started = Date.now();
+  await page.window.__spotifastConnect('next');
+  const waited = Date.now() - started;
+  assert.deepEqual(sentCommands, ['pause', 'skip_next']);
+  assert.ok(waited >= 6000 && waited < 8000, `next waited ${waited} ms`);
+  console.log('ok: a command that hangs holds the next one only briefly');
+}

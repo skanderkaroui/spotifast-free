@@ -170,6 +170,45 @@
       return send.apply(this, args);
     };
   }
+  // Acknowledgements of this page's commands, as Spotify's dealer
+  // connection delivers them: a cluster update naming the command's ack_id
+  // (REA: _onClusterMessage -> trackCommandAcknowledged). Spotify's player
+  // waits for one before trusting a command, up to 3400 ms (REA:
+  // trackAcknowledgementRequired, CONNECTAPI_CLIENT_ACK_TIMEOUT).
+  const ACK_TIMEOUT_MS = 3400;
+  const acked = new Set();
+  const ackWaiters = new Map();
+  const acknowledge = (id) => {
+    const waiter = ackWaiters.get(id);
+    if (waiter) {
+      ackWaiters.delete(id);
+      waiter();
+    } else {
+      acked.add(id);
+      setTimeout(() => acked.delete(id), ACK_TIMEOUT_MS);
+    }
+  };
+  const acknowledged = (id) => new Promise((resolve) => {
+    if (acked.delete(id)) return resolve(true);
+    const timer = setTimeout(() => { ackWaiters.delete(id); resolve(false); }, ACK_TIMEOUT_MS);
+    ackWaiters.set(id, () => { clearTimeout(timer); resolve(true); });
+  });
+  const PageSocket = spotifyPage ? window.WebSocket : null;
+  if (PageSocket) {
+    window.WebSocket = function (...args) {
+      const socket = new PageSocket(...args);
+      socket.addEventListener('message', (message) => {
+        if (typeof message.data !== 'string' || !message.data.includes('ack_id')) return;
+        try {
+          const id = JSON.parse(message.data).payloads?.[0]?.ack_id;
+          if (id) acknowledge(id);
+        } catch (_) {}
+      });
+      return socket;
+    };
+    window.WebSocket.prototype = PageSocket.prototype;
+    Object.setPrototypeOf(window.WebSocket, PageSocket);
+  }
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const ready = async (ms = 20000) => {
     const end = Date.now() + ms;
@@ -212,6 +251,11 @@
         if (await deviceListed()) continue;
         throw Object.assign(new Error('device lost'), { lost: true, status: response.status });
       }
+      // Accepted: hold the next command until Spotify's player has taken
+      // this one, as Spotify's own player does. A pause and play sent back
+      // to back otherwise reach the player in the wrong order.
+      const ackId = response.status === 200 ? (await response.json?.().catch(() => null))?.ack_id : null;
+      if (ackId) await acknowledged(ackId);
       return response.status;
     }
     return 404;
@@ -397,7 +441,18 @@
   };
   // Set from Spotify's top bar by reportAccount below.
   let account = null;
-  window.__spotifastConnect = async (action, args = {}) => {
+  // Commands run one at a time, in the order pressed: each starts once the
+  // one before it was acknowledged (or gave up), as Spotify's player sends.
+  // A command stuck longer (a request that hangs, a wait for sign-in) holds
+  // the next one only so long; then it goes, as it did before.
+  const CHAIN_HOLD_MS = ACK_TIMEOUT_MS + 3000;
+  let commandChain = Promise.resolve();
+  window.__spotifastConnect = (action, args = {}) => {
+    const turn = commandChain.then(() => runCommand(action, args));
+    commandChain = Promise.race([turn.catch(() => {}), sleep(CHAIN_HOLD_MS)]);
+    return turn;
+  };
+  const runCommand = async (action, args = {}) => {
     const run = actions[action];
     if (!run) return post('control', { action, handled: false, how: 'unknown-action' });
     // Signed out: the helper has shown Spotify's sign-in. Hold the command
