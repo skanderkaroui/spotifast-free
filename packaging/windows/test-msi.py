@@ -123,10 +123,9 @@ def build_inno_setup(root, binary):
     """spotifast.iss as it ships, under the test identity."""
     script = (HERE / "spotifast.iss").read_text(encoding="utf-8-sig")
     for old, new in (
-        ('#define AppName "Spotifast"', f'#define AppName "{IDENTITY}"'),
-        ('#define AppIdentity "Spotifast"', f'#define AppIdentity "{IDENTITY}"'),
-        ("AppId={{FCED1EA0-EBF5-4C32-BA3B-A3AD724BACC3}", "AppId={" + INNO_APP_ID),
-        ("Spotifast.spotify", f"{IDENTITY}.spotify"),
+        ('#define AppName "Spotifast Free"', f'#define AppName "{IDENTITY}"'),
+        ('#define AppIdentity "SpotifastFree"', f'#define AppIdentity "{IDENTITY}"'),
+        ("AppId={{2E7059BC-EC1A-4438-8A7E-279C43355921}", "AppId={" + INNO_APP_ID),
         ("Software\\Classes\\spotify", f"Software\\Classes\\{SCHEME}"),
         ('ValueName: "spotify"', f'ValueName: "{SCHEME}"'),
         ("[Setup]\n", f"[Setup]\nSourceDir={HERE}\n"),

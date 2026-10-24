@@ -53,6 +53,7 @@ end;
         script = cls.root / "test.iss"
         script.write_text(f'''#define Arch "x86_64"
 #define AppExeName "spotifast.exe"
+#define AppName "{cls.identity}"
 [Setup]
 AppId={cls.identity}
 AppName={cls.identity}
