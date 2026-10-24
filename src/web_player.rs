@@ -93,6 +93,9 @@ pub struct WebPlayer {
     child: Child,
     stdin: Arc<Mutex<ChildStdin>>,
     state: Arc<Mutex<LocalState>>,
+    /// Tells the app about a change shown at once, as the reader does for
+    /// Spotify's reports.
+    notify: Notify,
 }
 
 /// Why a command could not go to the web player.
@@ -177,9 +180,11 @@ impl WebPlayer {
                 }
             })?;
         let shared = Arc::clone(&state);
+        let reader_notify = Arc::clone(&notify);
         std::thread::Builder::new()
             .name("web-player-events".into())
             .spawn(move || {
+                let notify = reader_notify;
                 for line in BufReader::new(stdout).lines().map_while(Result::ok) {
                     let Ok(event) = serde_json::from_str::<serde_json::Value>(&line) else {
                         continue;
@@ -230,6 +235,7 @@ impl WebPlayer {
             child,
             stdin,
             state,
+            notify,
         })
     }
 
@@ -254,6 +260,7 @@ impl WebPlayer {
         // Assume the change took, so the bar shows it at once; Spotify's
         // next state report corrects it if Spotify refused.
         let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
+        let before = state.clone();
         match command {
             PlayerCommand::Shuffle(on) => state.shuffle = *on,
             PlayerCommand::Repeat(mode) => state.repeat = *mode,
@@ -277,6 +284,14 @@ impl WebPlayer {
             PlayerCommand::Radio(_) => state.loading = true,
             PlayerCommand::Volume(volume) => state.volume = *volume,
             _ => {}
+        }
+        // The app only hears what changed: a play shown here at once that
+        // Spotify's next report merely repeats would otherwise never reach
+        // it, and it would keep showing pause while Spotify plays.
+        if *state != before {
+            let changed = state.clone();
+            drop(state);
+            (self.notify)(changed);
         }
         Ok(Ok(()))
     }
@@ -865,6 +880,33 @@ mod tests {
             apply_event(&mut state, &player_state(true), Instant::now());
             assert_eq!(state.playback, Playback::Paused);
         }
+        player.shutdown();
+    }
+
+    /// Live runs on 0.14: pause then play, and Spotify's reports for the
+    /// play said nothing new (the helper already showed playing), so the
+    /// app kept the paused copy it was last sent and showed pause while
+    /// Spotify played. The play or pause shown at once reaches the app too.
+    #[test]
+    fn a_play_or_pause_shown_at_once_reaches_the_app() {
+        let sent = Arc::new(Mutex::new(Vec::new()));
+        let seen = Arc::clone(&sent);
+        let mut player = WebPlayer::spawn(
+            Command::new("cat"),
+            Arc::new(move |state: LocalState| seen.lock().unwrap().push(state.playback)),
+            None,
+        )
+        .unwrap();
+        {
+            let mut state = player.state.lock().unwrap();
+            let mut event = state_event("spotify:track:t", "Song");
+            event["paused"] = json!(true);
+            apply_event(&mut state, &event, Instant::now());
+        }
+        player.command(&PlayerCommand::Toggle).unwrap().unwrap();
+        assert_eq!(sent.lock().unwrap().last(), Some(&Playback::Playing));
+        player.command(&PlayerCommand::Toggle).unwrap().unwrap();
+        assert_eq!(sent.lock().unwrap().last(), Some(&Playback::Paused));
         player.shutdown();
     }
 
