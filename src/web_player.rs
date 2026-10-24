@@ -773,6 +773,16 @@ fn apply_event(state: &mut LocalState, event: &serde_json::Value, now: Instant) 
                 }
                 _ => return false,
             };
+            // An event the element sent before a play or pause just asked
+            // reached it would undo that press; hold it as Spotify's own
+            // reports are held. Only Spotify's state ends the hold: a stale
+            // report of its own can still follow the element.
+            if let Some((asked, at)) = state.asked_playback
+                && asked != playback
+                && now.saturating_duration_since(at) < ASKED_PLAYBACK_HOLD
+            {
+                return false;
+            }
             let changed = playback != state.playback || state.loading;
             state.loading = false;
             state.position_ms = state.position_now();
@@ -1281,6 +1291,33 @@ mod tests {
         apply_event(&mut state, &json!({"event":"media","type":"playing"}), now);
         apply_event(&mut state, &json!({"event":"media","type":"waiting"}), now);
         assert!(!state.loading);
+        assert_eq!(state.playback, Playback::Playing);
+    }
+
+    /// Probe on 0.14: a "playing" from the media element, sent before the
+    /// pause reached it, arrived after the pause was pressed and showed
+    /// playing again. Like Spotify's reports, the element's events are held
+    /// against a play or pause just asked, for the same few seconds.
+    #[test]
+    fn a_stale_media_event_does_not_undo_a_pause() {
+        let now = Instant::now();
+        let mut state = LocalState::default();
+        apply_event(&mut state, &state_event("spotify:track:t", "Song"), now);
+        state.playback = Playback::Paused;
+        state.asked_playback = Some((Playback::Paused, now));
+        assert!(!apply_event(
+            &mut state,
+            &json!({"event":"media","type":"playing"}),
+            now
+        ));
+        assert_eq!(state.playback, Playback::Paused);
+        // After the hold, the element is believed again.
+        let later = now + ASKED_PLAYBACK_HOLD;
+        assert!(apply_event(
+            &mut state,
+            &json!({"event":"media","type":"playing"}),
+            later
+        ));
         assert_eq!(state.playback, Playback::Playing);
     }
 
