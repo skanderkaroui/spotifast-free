@@ -1817,9 +1817,14 @@ struct Worker {
     /// The plan, once the Web API has answered.
     premium: Option<bool>,
     /// Free accounts on macOS play through Spotify's own web player in a
-    /// hidden helper, started on the first command and stopped on sign-out.
+    /// hidden helper, started as soon as the plan is known and kept running
+    /// so presses never wait on a cold start. Stopped on sign-out.
     #[cfg(target_os = "macos")]
     web_player: Option<crate::web_player::WebPlayer>,
+    /// Start the helper when the Free plan is known rather than on the first
+    /// press. Off only in tests, which must not launch WebKit.
+    #[cfg(target_os = "macos")]
+    start_web_player_early: bool,
     cancel_signin: Option<watch::Sender<bool>>,
     authorizing_source: Option<ApiSource>,
     pending_authorization: Option<ApiSource>,
@@ -1928,6 +1933,8 @@ impl Worker {
             premium: None,
             #[cfg(target_os = "macos")]
             web_player: None,
+            #[cfg(target_os = "macos")]
+            start_web_player_early: !cfg!(test),
             cancel_signin: None,
             authorizing_source: None,
             pending_authorization: None,
@@ -3876,13 +3883,13 @@ impl Worker {
         })
     }
 
-    /// Starts the Free playback helper on first use and sends it the command.
-    /// Controls Spotify's web player does not offer report why, rather than
-    /// failing silently.
+    /// Starts the Free playback helper if it is not running (it is kept
+    /// running from the moment the plan is known, so presses never wait on a
+    /// cold start), and replaces one that exited. `false` when it could not
+    /// start, after saying why.
     #[cfg(target_os = "macos")]
-    fn web_player_command(&mut self, command: &PlayerCommand) {
-        use crate::web_player::{Unsupported, WebPlayer};
-        // A helper that quit after sitting idle is replaced on the next use.
+    fn ensure_web_player(&mut self) -> bool {
+        use crate::web_player::WebPlayer;
         if self
             .web_player
             .as_mut()
@@ -3891,28 +3898,41 @@ impl Worker {
         {
             player.shutdown();
         }
-        if self.web_player.is_none() {
-            if !WebPlayer::available() {
-                self.emit(Event::Error(PREMIUM_NEEDED.into()));
-                return;
+        if self.web_player.is_some() {
+            return true;
+        }
+        if !WebPlayer::available() {
+            self.emit(Event::Error(PREMIUM_NEEDED.into()));
+            return false;
+        }
+        // Each ad Spotify plays is logged locally, never sent anywhere.
+        let ad_log = Some(self.dirs.volume_dir().join("ads.jsonl"));
+        match WebPlayer::start(self.web_player_notify(), ad_log) {
+            Ok(player) => {
+                log::info!("web player helper started");
+                self.web_player = Some(player);
+                self.emit(Event::Playback(LocalPlayback::Ready {
+                    device_id: crate::web_player::DEVICE_ID.into(),
+                }));
+                true
             }
-            // Each ad Spotify plays is logged locally, never sent anywhere.
-            let ad_log = Some(self.dirs.volume_dir().join("ads.jsonl"));
-            match WebPlayer::start(self.web_player_notify(), ad_log) {
-                Ok(player) => {
-                    log::info!("web player helper started");
-                    self.web_player = Some(player);
-                    self.emit(Event::Playback(LocalPlayback::Ready {
-                        device_id: crate::web_player::DEVICE_ID.into(),
-                    }));
-                }
-                Err(error) => {
-                    self.emit(Event::Error(format!(
-                        "Free playback helper failed: {error}"
-                    )));
-                    return;
-                }
+            Err(error) => {
+                self.emit(Event::Error(format!(
+                    "Free playback helper failed: {error}"
+                )));
+                false
             }
+        }
+    }
+
+    /// Sends a command to the Free playback helper, starting it first if it
+    /// is not running. Controls Spotify's web player does not offer report
+    /// why, rather than failing silently.
+    #[cfg(target_os = "macos")]
+    fn web_player_command(&mut self, command: &PlayerCommand) {
+        use crate::web_player::Unsupported;
+        if !self.ensure_web_player() {
+            return;
         }
         let Some(player) = self.web_player.as_mut() else {
             return;
@@ -3989,9 +4009,9 @@ impl Worker {
             }
             self.stop_kept_player();
             self.pending_playback_grant = None;
-            // Free accounts play through the web player helper. Announce it
-            // now so the app sends plays here; the process itself starts on
-            // the first command.
+            // Free accounts play through the web player helper. Start it now,
+            // so the first press finds Spotify's page loaded and connected
+            // instead of waiting about six seconds for a cold start.
             #[cfg(target_os = "macos")]
             if crate::web_player::WebPlayer::available() {
                 log::info!("free account: local playback through the web player helper");
@@ -3999,15 +4019,18 @@ impl Worker {
                     device_id: crate::web_player::DEVICE_ID.into(),
                 }));
                 // The app holds plays until local playback reports itself
-                // connected, but the helper only starts on the first play.
-                // Say so once, before a helper runs: a later account check
-                // must not blank the song a running helper is playing.
+                // connected. Say so once, before the helper reports its own
+                // state: a later account check must not blank the song a
+                // running helper is playing.
                 if self.web_player.is_none() {
                     self.emit(Event::Local(Box::new(LocalState {
                         connected: true,
                         volume: u16::MAX,
                         ..LocalState::default()
                     })));
+                    if self.start_web_player_early {
+                        self.ensure_web_player();
+                    }
                 }
                 return;
             }

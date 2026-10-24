@@ -46,8 +46,9 @@ circumvention, no alternate audio sources.
    `seek_to`, `set_shuffling_context`, `set_options`), sent by the page with
    its own sign-in to its own device; Spotifast's sign-in is refused there
    (403). Events report Spotify's playback state (track URI and details,
-   shuffle, repeat, position), media state and ads. Started on the first
-   Free Play, stopped after an idle timeout.
+   shuffle, repeat, position), media state and ads. Started as soon as
+   Spotifast knows the account is Free and kept running, so a press never
+   waits on a cold start (about 6 s).
    The compact embed is **not** usable: Spotify's embed code forces 30 s
    previews when it detects Safari.
 5. **Process cost is tracked, not assumed.** The host adds WebKit

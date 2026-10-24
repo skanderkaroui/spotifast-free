@@ -37,10 +37,6 @@ pub fn is_ad(uri: &str) -> bool {
 /// Called with every new state, from the helper's reader thread.
 pub type Notify = Arc<dyn Fn(LocalState) + Send + Sync>;
 
-/// How long the helper may sit paused before it quits to free its memory
-/// (about 700 MB). The next Play starts a new one in about five seconds.
-pub const IDLE_QUIT: std::time::Duration = std::time::Duration::from_secs(5 * 60);
-
 /// How long `shutdown` waits for the helper to quit before killing it.
 const SHUTDOWN_GRACE: std::time::Duration = std::time::Duration::from_secs(2);
 /// How long a just-asked play or pause holds against Spotify's state reports
@@ -149,36 +145,6 @@ impl WebPlayer {
             volume: u16::MAX,
             ..LocalState::default()
         }));
-        let watched = Arc::clone(&state);
-        let quit = Arc::clone(&stdin);
-        // Set by the reader when the helper's output ends, so the idle
-        // watcher stops with its helper. (`connected` stays true after the
-        // helper quits, so it cannot serve as the signal.)
-        let exited = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let idle_exited = Arc::clone(&exited);
-        std::thread::Builder::new()
-            .name("web-player-idle".into())
-            .spawn(move || {
-                let mut paused_since: Option<Instant> = None;
-                loop {
-                    std::thread::sleep(std::time::Duration::from_secs(15));
-                    if idle_exited.load(std::sync::atomic::Ordering::Relaxed) {
-                        return;
-                    }
-                    let playing = {
-                        let state = watched.lock().unwrap_or_else(|p| p.into_inner());
-                        state.playback == Playback::Playing || state.loading || state.signing_in
-                    };
-                    if playing {
-                        paused_since = None;
-                    } else if paused_since.get_or_insert_with(Instant::now).elapsed() >= IDLE_QUIT {
-                        let mut stdin = quit.lock().unwrap_or_else(|p| p.into_inner());
-                        let _ = writeln!(stdin, r#"{{"cmd":"quit"}}"#);
-                        let _ = stdin.flush();
-                        return;
-                    }
-                }
-            })?;
         let shared = Arc::clone(&state);
         let reader_notify = Arc::clone(&notify);
         std::thread::Builder::new()
@@ -221,10 +187,9 @@ impl WebPlayer {
                         notify(state.clone());
                     }
                 }
-                // The helper quit (idle, or killed). Playback stops, but the
+                // The helper quit (crashed, or killed). Playback stops, but the
                 // next command starts a new one, so it stays available:
                 // reporting it disconnected would hold every later play.
-                exited.store(true, std::sync::atomic::Ordering::Relaxed);
                 let mut state = shared.lock().unwrap_or_else(|p| p.into_inner());
                 state.playback = Playback::Stopped;
                 state.loading = false;

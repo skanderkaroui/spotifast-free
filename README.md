@@ -49,8 +49,9 @@ every song and every ad itself, with its own DRM and restrictions.
 | **Hidden** | Other devices and Cast, queue editing and Play next, local files, the equalizer, visualizers and MilkDrop, playback engine settings, pre-save. Spotify plays the audio inside WebKit, so Spotifast Free cannot hear or route it |
 | **Not yet** | Free playback on Windows and Linux. Those builds play Premium only, like Spotifast |
 
-The helper keeps its own Spotify sign-in, separate from your browsers, and
-quits after five idle minutes. How it works, its limits, and how it is
+The helper keeps its own Spotify sign-in, separate from your browsers. It
+starts with Spotifast Free and keeps running, so the first press plays at
+once. How it works, its limits, and how it is
 checked against Spotify's web player: [scope](experiments/SCOPE-free-playback.md)
 and [helper](experiments/macos-playback-host/README.md).
 
