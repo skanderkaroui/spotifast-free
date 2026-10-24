@@ -6497,6 +6497,7 @@ impl App {
             if uri.is_empty()
                 || self.saved.contains_key(&uri)
                 || self.saved_pending.contains(&uri)
+                || uri.starts_with("spotify:local")
                 || !crate::capabilities::is_spotify_item(&uri)
             {
                 continue;
