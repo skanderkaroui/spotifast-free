@@ -32,6 +32,12 @@ the page, to the page's own device:
 `POST https://<spclient>/connect-state/v1/player/command/from/<id>/to/<id>`.
 Spotifast's own sign-in is refused there (403).
 
+If Spotify answers 404 or 410, the page re-reads Spotify's device list, as
+Spotify's own player does. If its device is still listed the command goes
+once more. If it is gone (the page's live connection to Spotify dropped),
+the helper reloads Spotify's page, which registers the device again, and
+replays that command, at most once a minute (`device-recovery` in the log).
+
 ```sh
 node experiments/macos-playback-host/test.mjs
 node experiments/macos-playback-host/diagnostics.test.mjs
