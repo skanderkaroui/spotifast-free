@@ -40,6 +40,11 @@ once more. If it is gone (the page's live connection to Spotify dropped),
 the helper reloads Spotify's page, which registers the device again, and
 replays that command, at most once a minute (`device-recovery` in the log).
 
+Commands go one at a time. As Spotify's own player does, each waits until
+Spotify acknowledges the one before it on the page's live connection (the
+`ack_id`, at most 3.4 s), so a quick pause and play reach the player in the
+order pressed.
+
 ```sh
 node experiments/macos-playback-host/test.mjs
 node experiments/macos-playback-host/diagnostics.test.mjs
