@@ -287,3 +287,62 @@ for (const name of fixtureNames) {
   if (want.upcoming0) assert.equal(got.upcoming[0], want.upcoming0, `${name}: upcoming[0] is the queued song`);
   console.log(`ok: recorded ${name}`);
 }
+
+// 10. Spotify forgot this page's device (its live connection dropped, as in
+// the 24 Oct outage where every command got 404 or 410 until a restart).
+// Spotify's own player answers a 404 by reading the cluster again
+// (REA: _awaitResponseWithAck -> _fetchCluster). The page does the same:
+// still listed, it sends the command once more; gone, it says so, so the
+// helper can reload Spotify's page, which registers again.
+{
+  const outageDevice = 'b'.repeat(40);
+  const out = [];
+  const commands = [];
+  let listed = true;
+  let refuse = 1;
+  const outageCluster = () => ({
+    ...cluster,
+    active_device_id: outageDevice,
+    devices: listed ? { [outageDevice]: { name: 'Web Player (Safari)', license: 'on-demand' } } : {},
+  });
+  const fetchFake = async (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url.endsWith('/cluster')) return { ok: true, status: 200, json: async () => outageCluster() };
+    if (url.endsWith('/melody/v1/time')) return { ok: true, status: 200, json: async () => ({ timestamp: 1000000 }) };
+    if (url.includes('/player/command/')) {
+      commands.push(JSON.parse(init.body).command.endpoint);
+      if (refuse > 0) { refuse -= 1; return { ok: false, status: 404, json: async () => ({}) }; }
+      return { ok: true, status: 200, json: async () => ({}) };
+    }
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+  const page = {
+    ...context,
+    window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } }, fetch: fetchFake },
+    setInterval: () => {},
+    navigator: {},
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer t' } });
+  await page.window.fetch(`https://gew1-spclient.spotify.com/track-playback/v1/devices/${outageDevice}/state`,
+    { method: 'PUT', headers: { authorization: 'Bearer t' } });
+
+  // Still listed: one refusal, then the same command again, accepted.
+  await page.window.__spotifastConnect('pause');
+  assert.deepEqual(commands, ['pause', 'pause'], 'retried once after re-reading the cluster');
+  assert.equal(out.filter((e) => e.event === 'control').at(-1).handled, true);
+
+  // Gone: refused, the cluster no longer lists this device, so no blind retry.
+  commands.length = 0;
+  out.length = 0;
+  listed = false;
+  refuse = 1;
+  await page.window.__spotifastConnect('resume');
+  assert.deepEqual(commands, ['resume'], 'no retry to a device Spotify dropped');
+  const lost = out.filter((e) => e.event === 'control').at(-1);
+  assert.equal(lost.handled, false);
+  assert.equal(lost.how, 'device-lost');
+  assert.equal(lost.action, 'resume');
+  assert.deepEqual({ ...lost.args }, {}, 'the refused command carries its own arguments for the replay');
+  console.log('ok: a forgotten device is retried if Spotify still lists it, and reported lost if not');
+}

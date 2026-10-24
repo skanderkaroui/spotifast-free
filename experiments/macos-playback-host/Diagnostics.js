@@ -190,17 +190,43 @@
 
   // One Connect player command to this page's own device. A rejected token
   // (the page renews it about hourly) is retried once with the renewed one.
+  // A 404 or 410 means Spotify does not know this device under a live
+  // connection. Spotify's own player answers that by reading the cluster
+  // again (REA: _awaitResponseWithAck -> _fetchCluster): if the device is
+  // still listed the command goes once more, and if it is gone the page
+  // reports "device-lost" so the helper can reload it and register again.
   const send = async (endpoint, fields = {}) => {
     const body = JSON.stringify({ command: { endpoint, ...fields, logging_params: { command_id: commandId() } } });
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    let retriedLost = false;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
       const used = connect.auth.authorization;
       const response = await pageFetch(`${base()}/player/command/from/${connect.device}/to/${connect.device}`,
         { method: 'POST', headers: headers(), body });
-      if (response.status !== 401 || attempt === 1) return response.status;
-      const end = Date.now() + 5000;
-      while (connect.auth.authorization === used && Date.now() < end) await sleep(200);
+      if (response.status === 401 && attempt === 0) {
+        const end = Date.now() + 5000;
+        while (connect.auth.authorization === used && Date.now() < end) await sleep(200);
+        continue;
+      }
+      if ((response.status === 404 || response.status === 410) && !retriedLost) {
+        retriedLost = true;
+        if (await deviceListed()) continue;
+        throw Object.assign(new Error('device lost'), { lost: true, status: response.status });
+      }
+      return response.status;
     }
-    return 401;
+    return 404;
+  };
+
+  // Whether Spotify's cluster still lists this page's device.
+  const deviceListed = async () => {
+    try {
+      const response = await pageFetch(`${base()}/cluster`, { headers: headers() });
+      if (!response.ok) return false;
+      const cluster = await response.json();
+      return !!cluster.devices?.[connect.device];
+    } catch (_) {
+      return false;
+    }
   };
 
   // Spotify's clock: the Mac's clock plus an offset measured against
@@ -394,7 +420,11 @@
       const status = await run(args);
       post('control', { action, handled: status >= 200 && status < 300, status });
     } catch (error) {
-      post('control', { action, handled: false, how: 'network', message: text(error) });
+      if (error?.lost) {
+        post('control', { action, args, handled: false, how: 'device-lost', status: error.status });
+      } else {
+        post('control', { action, handled: false, how: 'network', message: text(error) });
+      }
     }
     refresh();
   };
