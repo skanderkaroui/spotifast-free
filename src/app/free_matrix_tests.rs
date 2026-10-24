@@ -585,3 +585,44 @@ fn free_queue_click_follows_the_next_buttons_holds() {
     );
     app.backend.shutdown();
 }
+
+/// A song queued on Free leaves the queue once Spotify plays it, so the
+/// next launch does not queue it again. Spotify's state names it as the
+/// playing song; the queue the app remembers must drop it then.
+#[test]
+fn a_free_queued_song_leaves_the_queue_once_it_plays() {
+    let mut app = app_for("free-queue-consumed", true, SONG);
+    run(
+        &mut app,
+        Action::AddToQueue {
+            uri: "spotify:track:b".into(),
+            label: "B".into(),
+        },
+    );
+    assert_eq!(app.manual_queue, vec!["spotify:track:b".to_string()]);
+    // Spotify plays the queued song when the current one ends.
+    app.handle_local(playing("spotify:track:b", 2));
+    assert!(
+        app.manual_queue.is_empty(),
+        "played, so no longer owed: {:?}",
+        app.manual_queue
+    );
+    app.backend.shutdown();
+}
+
+/// Next onto a song queued on Free consumes it too.
+#[test]
+fn next_onto_a_free_queued_song_consumes_it() {
+    let mut app = app_for("free-queue-next", true, SONG);
+    run(
+        &mut app,
+        Action::AddToQueue {
+            uri: "spotify:track:b".into(),
+            label: "B".into(),
+        },
+    );
+    run(&mut app, Action::Next);
+    app.handle_local(playing("spotify:track:b", 2));
+    assert!(app.manual_queue.is_empty(), "{:?}", app.manual_queue);
+    app.backend.shutdown();
+}
