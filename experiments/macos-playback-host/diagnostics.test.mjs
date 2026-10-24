@@ -452,3 +452,55 @@ for (const name of fixtureNames) {
   assert.ok(waited >= 6000 && waited < 8000, `next waited ${waited} ms`);
   console.log('ok: a command that hangs holds the next one only briefly');
 }
+
+// 13. The ack can arrive on the live connection before the command's own
+// response is read (Spotify's "orphaned acknowledgement"); it still counts.
+// And a response without an ack_id adds no wait at all.
+{
+  const dev = 'e'.repeat(40);
+  const out = [];
+  const log = [];
+  const sockets = [];
+  let withAck = true;
+  let n = 0;
+  class FakeSocket extends EventTarget { constructor() { super(); sockets.push(this); } }
+  const fetchFake = async (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url.endsWith('/cluster')) return { ok: true, status: 200, json: async () => ({ ...cluster, active_device_id: dev, devices: { [dev]: { license: 'on-demand' } } }) };
+    if (url.endsWith('/melody/v1/time')) return { ok: true, status: 200, json: async () => ({ timestamp: 1000000 }) };
+    if (url.includes('/player/command/')) {
+      const id = `early-${n += 1}`;
+      log.push(JSON.parse(init.body).command.endpoint);
+      if (!withAck) return { ok: true, status: 200, json: async () => ({}) };
+      // The dealer delivers the ack first, then the response is read.
+      const event = new Event('message');
+      event.data = JSON.stringify({ type: 'message', uri: 'hm://connect-state/v1/cluster', payloads: [{ ack_id: id, cluster: {} }] });
+      sockets.forEach((s) => s.dispatchEvent(event));
+      return { ok: true, status: 200, json: async () => ({ ack_id: id }) };
+    }
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+  const page = {
+    ...context,
+    window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } }, fetch: fetchFake, WebSocket: FakeSocket },
+    setInterval: () => {},
+    setTimeout,
+    navigator: {},
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  new page.window.WebSocket('wss://dealer.spotify.com/');
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer t' } });
+  await page.window.fetch(`https://gew1-spclient.spotify.com/track-playback/v1/devices/${dev}/state`,
+    { method: 'PUT', headers: { authorization: 'Bearer t' } });
+  let started = Date.now();
+  await page.window.__spotifastConnect('pause');
+  await page.window.__spotifastConnect('resume');
+  assert.ok(Date.now() - started < 1000, `an early ack still counts (${Date.now() - started} ms)`);
+  withAck = false;
+  started = Date.now();
+  await page.window.__spotifastConnect('pause');
+  await page.window.__spotifastConnect('resume');
+  assert.ok(Date.now() - started < 1000, `no ack_id, no wait (${Date.now() - started} ms)`);
+  assert.deepEqual(log, ['pause', 'resume', 'pause', 'resume']);
+  console.log('ok: an early ack counts, and a response without ack_id adds no wait');
+}
