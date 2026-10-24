@@ -30372,7 +30372,7 @@ mod tests {
             .unwrap();
         let call = |uri: &str| {
             client.call_method(
-                Some("org.mpris.MediaPlayer2.spotifast"),
+                Some("org.mpris.MediaPlayer2.spotifast-free"),
                 "/org/mpris/MediaPlayer2",
                 Some("org.mpris.MediaPlayer2.Player"),
                 "OpenUri",
@@ -30399,7 +30399,7 @@ mod tests {
         assert!(matches!(app.actions.as_slice(), [Action::OpenLink(_)]));
         let schemes: Vec<String> = zbus::blocking::Proxy::new(
             &client,
-            "org.mpris.MediaPlayer2.spotifast",
+            "org.mpris.MediaPlayer2.spotifast-free",
             "/org/mpris/MediaPlayer2",
             "org.mpris.MediaPlayer2",
         )
