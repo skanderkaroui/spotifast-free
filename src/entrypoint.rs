@@ -295,7 +295,7 @@ fn write_reply(out: &mut impl std::io::Write, text: &str) -> i32 {
 /// sandbox's app id, which Flatpak always sets in `FLATPAK_ID`.
 #[cfg(target_os = "linux")]
 fn desktop_entry() -> String {
-    fastframe_now_playing::desktop_entry("spotifast")
+    fastframe_now_playing::desktop_entry(spotifast::paths::DESKTOP_ID)
 }
 
 /// The `nowplaying` snapshot as one human-readable line.

@@ -33,8 +33,8 @@ package() {
   install -Dm755 "${dir}/spotifast" "${pkgdir}/usr/bin/spotifast"
   install -Dm644 "${dir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
   install -Dm644 "${dir}/README.md" "${pkgdir}/usr/share/doc/${pkgname}/README.md"
-  install -Dm644 "${dir}/packaging/applications/spotifast.desktop" \
-    "${pkgdir}/usr/share/applications/spotifast.desktop"
+  install -Dm644 "${dir}/packaging/applications/spotifast-free.desktop" \
+    "${pkgdir}/usr/share/applications/spotifast-free.desktop"
   install -Dm644 "${dir}/packaging/icons/spotifast.svg" \
     "${pkgdir}/usr/share/icons/hicolor/scalable/apps/spotifast.svg"
   # Older release fixtures predate the optional integration.

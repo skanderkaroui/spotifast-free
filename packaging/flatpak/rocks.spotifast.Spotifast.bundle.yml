@@ -24,7 +24,7 @@ modules:
     build-commands:
       - install -Dm755 spotifast /app/bin/spotifast
       - install -Dm644 packaging/applications/*.desktop /app/share/applications/rocks.spotifast.Spotifast.desktop
-      - sed -i 's/^Icon=.*$/Icon=rocks.spotifast.Spotifast/;s/^StartupWMClass=spotifast$/StartupWMClass=rocks.spotifast.Spotifast/' /app/share/applications/rocks.spotifast.Spotifast.desktop
+      - sed -i 's/^Icon=.*$/Icon=rocks.spotifast.Spotifast/;s/^StartupWMClass=spotifast-free$/StartupWMClass=rocks.spotifast.Spotifast/' /app/share/applications/rocks.spotifast.Spotifast.desktop
       - install -Dm644 packaging/icons/*.svg /app/share/icons/hicolor/scalable/apps/rocks.spotifast.Spotifast.svg
       - install -Dm644 packaging/flatpak/rocks.spotifast.Spotifast.metainfo.xml /app/share/metainfo/rocks.spotifast.Spotifast.metainfo.xml
       - install -Dm644 LICENSE /app/share/licenses/spotifast/LICENSE

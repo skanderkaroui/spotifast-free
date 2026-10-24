@@ -26,8 +26,8 @@ def yaml(path):
 def payload(root):
     (root / "packaging/applications").mkdir(parents=True)
     (root / "packaging/icons").mkdir(parents=True)
-    shutil.copyfile(ROOT / "packaging/applications/spotifast.desktop",
-                    root / "packaging/applications/spotifast.desktop")
+    shutil.copyfile(ROOT / "packaging/applications/spotifast-free.desktop",
+                    root / "packaging/applications/spotifast-free.desktop")
     shutil.copyfile(ROOT / "packaging/icons/spotifast.svg", root / "packaging/icons/spotifast.svg")
     (root / "target/release").mkdir(parents=True)
     for name in ["spotifast", "target/release/spotifast"]:
@@ -58,7 +58,7 @@ class LauncherInstallTest(unittest.TestCase):
         parser = configparser.ConfigParser(interpolation=None)
         parser.read(entries[0])
         entry = parser["Desktop Entry"]
-        self.assertEqual(entry["Name"], "Spotifast")
+        self.assertEqual(entry["Name"], "Spotifast Free")
         self.assertEqual(entry["Icon"], icon)
         self.assertEqual(entry["StartupWMClass"], window_class)
         self.assertEqual(entry["Exec"], "spotifast %u")
@@ -87,7 +87,7 @@ class LauncherInstallTest(unittest.TestCase):
                     **os.environ, "CARCH": "x86_64", "srcdir": str(root / "src"),
                     "pkgdir": str(root / "pkg"),
                 })
-                self.check_launcher(root / "pkg/usr", "spotifast", "spotifast", "spotifast")
+                self.check_launcher(root / "pkg/usr", "spotifast-free", "spotifast-free", "spotifast")
 
     def test_flatpak_install_commands_keep_app_id_and_icon_aligned(self):
         for manifest in ["rocks.spotifast.Spotifast.yml", "rocks.spotifast.Spotifast.bundle.yml"]:
@@ -114,7 +114,7 @@ class LauncherInstallTest(unittest.TestCase):
                 pattern = entry["src"].replace("@PAYLOAD@/", "").replace("@VERSION@", "9.8.7").replace("@TARGET@", "linux-amd64")
                 files = list(root.glob(pattern))
                 self.assertEqual(len(files), 1)
-                self.assertEqual(files[0].stem, "spotifast")
+                self.assertEqual(files[0].stem, {"desktop": "spotifast-free", "svg": "spotifast"}[files[0].suffix[1:]])
                 self.assertTrue(entry["dst"].endswith("/"))
 
 

@@ -108,7 +108,7 @@ jobs:
           cp packaging/spotifast-portable.txt "dist/$name/"
           if [ "${{ runner.os }}" = "Linux" ]; then
             # Desktop integration for package builds and hand-installs.
-            cp --parents packaging/applications/spotifast.desktop packaging/icons/spotifast.svg "dist/$name/"
+            cp --parents packaging/applications/spotifast-free.desktop packaging/icons/spotifast.svg "dist/$name/"
             cp --parents contrib/omarchy/spotifast.json.tpl contrib/omarchy/spotifast-theme "dist/$name/"
           fi
           cd dist
