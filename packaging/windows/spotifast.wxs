@@ -29,21 +29,21 @@
     throwaway identity so its installs never touch a real Spotifast.
   -->
   <?ifndef Identity ?>
-    <?define Identity = "Spotifast" ?>
+    <?define Identity = "SpotifastFree" ?>
   <?endif?>
   <?ifndef LinkScheme ?>
     <?define LinkScheme = "spotify" ?>
   <?endif?>
   <?ifndef UpgradeCode ?>
     <!-- Never change: it is how Windows tells an update from a new program. -->
-    <?define UpgradeCode = "{3DFFED43-88FE-4A31-9461-50BE03094316}" ?>
+    <?define UpgradeCode = "{EAD5CF9D-8757-4FE8-9CAC-7281EF4BBB3A}" ?>
   <?endif?>
   <?ifndef ProgramComponent ?>
-    <?define ProgramComponent = "{8EC6378E-B3EB-41F9-873B-01AE4466E5EE}" ?>
+    <?define ProgramComponent = "{4399B99F-63F6-4DBE-8AEA-2D3C28FEC557}" ?>
   <?endif?>
   <?ifndef InnoAppId ?>
     <!-- spotifast.iss AppId, without Inno's doubled opening brace. -->
-    <?define InnoAppId = "{FCED1EA0-EBF5-4C32-BA3B-A3AD724BACC3}" ?>
+    <?define InnoAppId = "{2E7059BC-EC1A-4438-8A7E-279C43355921}" ?>
   <?endif?>
   <?define InnoUninstallKey = "Software\Microsoft\Windows\CurrentVersion\Uninstall\$(InnoAppId)_is1" ?>
   <?define InstallerKey = "Software\$(Identity)\Installer" ?>
