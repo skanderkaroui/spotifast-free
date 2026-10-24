@@ -4,7 +4,11 @@ import WebKit
 @MainActor
 final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
     WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
-    private let playerURL = URL(string: "https://open.spotify.com")!
+    // Spotify's own settings page: the same web player, with its player bar
+    // (ads included) and sign-in, but without the home feed's artwork grids
+    // nobody sees in the hidden window. Measured: about 290 MB instead of
+    // 370 MB for the page's process while playing.
+    private let playerURL = URL(string: "https://open.spotify.com/preferences")!
     private var window: NSWindow!
     private var webView: WKWebView!
     /// Commands that arrive before Spotify's page has loaded wait here; the
@@ -266,8 +270,13 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
             if headless {
                 window.orderOut(nil)
                 NSApp.setActivationPolicy(.accessory)
-                // The page that signed in is already registered as this
-                // account's player; Spotifast's next command goes to it.
+                // Spotify's sign-in returns to its home feed. Go back to the
+                // lighter page; it registers this account's player as it
+                // loads, and commands wait for it.
+                if webView.url?.path != playerURL.path {
+                    pageReady = false
+                    webView.load(URLRequest(url: playerURL))
+                }
             } else {
                 NSApp.terminate(nil)
             }
