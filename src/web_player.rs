@@ -29,9 +29,10 @@ pub const DEVICE_ID: &str = "spotifast-web-player";
 /// Stands in for the track URI while Spotify plays an ad.
 pub const AD_URI: &str = "spotifast:ad";
 
-/// Whether the helper's current item is one of Spotify's ads.
+/// Whether the helper's current item is one of Spotify's ads: the bar's
+/// stand-in, or an ad Spotify's own state names (`spotify:ad:<id>`).
 pub fn is_ad(uri: &str) -> bool {
-    uri == AD_URI
+    uri == AD_URI || uri.starts_with("spotify:ad:")
 }
 
 /// Called with every new state, from the helper's reader thread.
@@ -572,10 +573,14 @@ fn apply_event(state: &mut LocalState, event: &serde_json::Value, now: Instant) 
                     changed = true;
                 }
             }
-            // During an ad Spotify's state still names the song it
-            // interrupted; the ad stays until it ends (its "ad end" event,
-            // then the song's metadata, bring the song back).
-            let in_ad = state.track.as_ref().is_some_and(|track| is_ad(&track.uri));
+            // During an ad its bar shows, Spotify's state can still name the
+            // song it interrupted; that ad stays until it ends (its "ad end"
+            // event, then the song's metadata, bring the song back). An ad
+            // the state itself named ends when the state names a song.
+            let in_ad = state
+                .track
+                .as_ref()
+                .is_some_and(|track| track.uri == AD_URI);
             if let Some(uri) = str_of("uri").filter(|uri| uri.starts_with("spotify:"))
                 && !in_ad
                 && !state.track.as_ref().is_some_and(|track| track.uri == uri)
@@ -1261,6 +1266,35 @@ mod tests {
         apply_event(&mut state, &json!({"event":"media","type":"waiting"}), now);
         assert!(!state.loading);
         assert_eq!(state.playback, Playback::Playing);
+    }
+
+    /// Spotify's state can name the ad (`spotify:ad:`) before its bar shows
+    /// the ad controls. That is already an ad: skips and seeks are held, and
+    /// the song after it, named by the next state, replaces it.
+    #[test]
+    fn an_ad_named_by_spotifys_state_is_an_ad() {
+        let now = Instant::now();
+        let mut state = LocalState::default();
+        apply_event(&mut state, &state_event("spotify:track:t", "Song"), now);
+        assert!(apply_event(
+            &mut state,
+            &state_event("spotify:ad:0123456789abcdef", "Brand"),
+            now
+        ));
+        assert!(is_ad(&state.track.as_ref().unwrap().uri));
+        for command in [
+            PlayerCommand::Next,
+            PlayerCommand::Previous,
+            PlayerCommand::Seek(5_000),
+        ] {
+            assert!(helper_lines(&command, true, true).is_err(), "{command:?}");
+        }
+        assert!(apply_event(
+            &mut state,
+            &state_event("spotify:track:u", "Next song"),
+            now
+        ));
+        assert_eq!(state.track.as_ref().unwrap().uri, "spotify:track:u");
     }
 
     /// An ad shows as the item; a late state report of the song it

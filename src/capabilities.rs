@@ -121,10 +121,13 @@ impl Capabilities {
 }
 
 /// Whether `uri` names something Spotify can play, like or look up. The
-/// Free helper shows an ad as `spotifast:ad` and, for a moment after an ad,
-/// a song by name as `web-player:...`; neither is a Spotify item.
+/// Free helper shows an ad as `spotifast:ad` (or Spotify's own
+/// `spotify:ad:` id) and, for a moment after an ad, a song by name as
+/// `web-player:...`; none of those is a Spotify item.
 pub fn is_spotify_item(uri: &str) -> bool {
-    uri.starts_with("spotify:") && !uri.starts_with("spotify:local:")
+    uri.starts_with("spotify:")
+        && !uri.starts_with("spotify:local:")
+        && !uri.starts_with("spotify:ad:")
 }
 
 #[cfg(test)]
@@ -177,6 +180,7 @@ mod tests {
     fn only_spotify_items_count() {
         assert!(is_spotify_item("spotify:track:abc"));
         assert!(!is_spotify_item("spotifast:ad"));
+        assert!(!is_spotify_item("spotify:ad:0123456789abcdef"));
         assert!(!is_spotify_item("web-player:Artist:Title"));
         assert!(!is_spotify_item("spotify:local:a:b:c:1"));
     }
