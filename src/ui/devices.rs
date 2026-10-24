@@ -79,6 +79,19 @@ fn receiver_is_listed(receiver: &crate::zeroconf::Receiver, devices: &[Device]) 
         })
 }
 
+/// The rows the picker offers. When playback cannot move (Spotify Free
+/// plays through the web player helper, and Spotify keeps transfer, Cast,
+/// Sonos and network receivers for Premium), only this computer is left.
+fn offered_devices(devices: Vec<Device>, local_id: Option<&str>, can_move: bool) -> Vec<Device> {
+    if can_move {
+        return devices;
+    }
+    devices
+        .into_iter()
+        .filter(|device| local_id.is_some() && device.id.as_deref() == local_id)
+        .collect()
+}
+
 fn name_devices(devices: &mut [Device], receivers: &[crate::zeroconf::Receiver]) {
     for device in devices {
         if device.id.is_some()
@@ -463,6 +476,8 @@ pub fn popup(app: &mut App, ctx: &egui::Context) {
                 let mut seen = std::collections::HashSet::new();
                 devices
                     .retain(|device| device.id.as_ref().is_none_or(|id| seen.insert(id.clone())));
+                let can_move = app.capabilities().devices;
+                let devices = offered_devices(devices, local_id.as_deref(), can_move);
 
                 // Receivers on the network that Spotify has not listed yet.
                 // They are real speakers the user can see in the official
@@ -470,6 +485,7 @@ pub fn popup(app: &mut App, ctx: &egui::Context) {
                 let waiting: Vec<crate::zeroconf::Receiver> = app
                     .receivers
                     .iter()
+                    .filter(|_| can_move)
                     .filter(|receiver| !receiver_is_listed(receiver, &devices))
                     .cloned()
                     .collect();
@@ -500,7 +516,7 @@ pub fn popup(app: &mut App, ctx: &egui::Context) {
                         if !app.local_ready {
                             enable_playback_row(app, ui);
                         }
-                        if rows.is_empty() && app.local_ready {
+                        if can_move && rows.is_empty() && app.local_ready {
                             ui.add_space(8.0);
                             theme::subtle(
                                 ui,
@@ -532,9 +548,13 @@ pub fn popup(app: &mut App, ctx: &egui::Context) {
                                 };
                                 let (rect, response) = ui.allocate_exact_size(
                                     vec2(ui.available_width(), 52.0),
-                                    Sense::click(),
+                                    if can_move {
+                                        Sense::click()
+                                    } else {
+                                        Sense::hover()
+                                    },
                                 );
-                                if response.hovered() {
+                                if can_move && response.hovered() {
                                     ui.painter().rect_filled(
                                         rect,
                                         CornerRadius::same(6),
@@ -563,6 +583,8 @@ pub fn popup(app: &mut App, ctx: &egui::Context) {
                                     gettext(locale, "Listening on this device").into_owned()
                                 } else if device.is_restricted {
                                     gettext(locale, "Restricted").into_owned()
+                                } else if is_local && !can_move {
+                                    gettext(locale, "This computer").into_owned()
                                 } else if is_local {
                                     gettext(locale, "Play here").into_owned()
                                 } else {
@@ -591,6 +613,15 @@ pub fn popup(app: &mut App, ctx: &egui::Context) {
                                 }
                             });
                         }
+                        if !can_move {
+                            ui.add_space(4.0);
+                            theme::subtle(
+                                ui,
+                                &palette,
+                                &gettext(locale, "Spotify Free plays on this computer."),
+                            );
+                            ui.add_space(4.0);
+                        }
                     },
                 );
                 if app.local_ready {
@@ -614,6 +645,34 @@ pub fn popup(app: &mut App, ctx: &egui::Context) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Premium is offered every device; Free only this computer.
+    #[test]
+    fn free_offers_only_this_computer() {
+        let row = |id: &str, kind: &str| Device {
+            id: Some(id.into()),
+            kind: kind.into(),
+            ..Default::default()
+        };
+        let all = vec![
+            row("local", "computer"),
+            row("kitchen-cast", "cast_audio"),
+            row("sonos", "speaker"),
+            row("phone", "smartphone"),
+        ];
+        let ids = |devices: Vec<Device>| -> Vec<String> {
+            devices.into_iter().filter_map(|device| device.id).collect()
+        };
+        assert_eq!(
+            ids(offered_devices(all.clone(), Some("local"), true)),
+            ["local", "kitchen-cast", "sonos", "phone"]
+        );
+        assert_eq!(
+            ids(offered_devices(all.clone(), Some("local"), false)),
+            ["local"]
+        );
+        assert!(offered_devices(all, None, false).is_empty());
+    }
 
     #[test]
     fn active_then_frequent_outputs_rank_across_both_kinds_of_row() {

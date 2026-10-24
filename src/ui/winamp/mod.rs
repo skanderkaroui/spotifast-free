@@ -735,10 +735,11 @@ fn options_menu(app: &mut App, ui: &mut Ui, unit: f32) {
         }
     }
     let mut milkdrop = app.settings.milkdrop_open;
-    if ui
-        .checkbox(&mut milkdrop, "MilkDrop")
-        .on_hover_text(super::keys::MILKDROP_SHORTCUT)
-        .clicked()
+    if app.capabilities().visualizers
+        && ui
+            .checkbox(&mut milkdrop, "MilkDrop")
+            .on_hover_text(super::keys::MILKDROP_SHORTCUT)
+            .clicked()
     {
         app.actions.push(Action::ToggleWinampMilkdrop);
     }
@@ -920,6 +921,10 @@ fn clutter_bar(app: &mut App, view: &mut View, now: Option<&NowPlaying>) {
         )
         .on_hover_text(gettext(app.locale, "Visualisation").as_ref());
     let locale = app.locale;
+    // Spotify Free's sound never reaches the visualizers.
+    if !app.capabilities().visualizers {
+        return;
+    }
     menu(egui::Popup::menu(&vis), view.skin, unit, |ui| {
         for (mode, label) in [
             (VisMode::Bars, gettext(locale, "Spectrum analyser")),
@@ -952,7 +957,8 @@ fn clutter_bar(app: &mut App, view: &mut View, now: Option<&NowPlaying>) {
 /// leaves the bars flat. Returns whether anything is still moving.
 fn visualiser(app: &mut App, view: &mut View, now: Option<&NowPlaying>) -> bool {
     let area = layout::VISUALIZER;
-    if view.interact(area, "visualiser", Sense::click()).clicked() {
+    if view.interact(area, "visualiser", Sense::click()).clicked() && app.capabilities().visualizers
+    {
         app.actions.push(Action::CycleVisualiser);
     }
     let mode = app.settings.vis;
@@ -968,7 +974,9 @@ fn visualiser(app: &mut App, view: &mut View, now: Option<&NowPlaying>) -> bool 
             view.fill(area.x + x, area.y + y, 1, 1, color(1));
         }
     }
-    let sounding = now.is_some_and(|now| (now.playing || now.loading) && now.local);
+    // Spotify Free's sound never reaches the tap, as on the player bar.
+    let sounding = now.is_some_and(|now| (now.playing || now.loading) && now.local)
+        && app.capabilities().visualizers;
     match mode {
         VisMode::Bars => {
             let samples = if sounding {
@@ -1054,6 +1062,9 @@ fn status(app: &mut App, view: &mut View, now: Option<&NowPlaying>) {
     };
     view.sprite(stereo, layout::STEREO);
     view.sprite(mono_lamp, layout::MONO);
+    if !app.capabilities().sound_effects {
+        return;
+    }
     if view
         .interact(layout::MONO, "mono", Sense::click())
         .on_hover_text(gettext(app.locale, "Play in mono").as_ref())
@@ -1177,7 +1188,7 @@ pub fn marquee_text(
         return notice.to_string();
     }
     let Some(now) = now else {
-        return "Spotifast".to_string();
+        return crate::i18n::APP_NAME.to_string();
     };
     if let Some(fraction) = seek_preview
         && now.duration_ms > 0
@@ -1360,6 +1371,11 @@ fn sliders(app: &mut App, view: &mut View, now: Option<&NowPlaying>) {
     // Balance: the channels' gains in the sound path, with Winamp's snap
     // to the centre.
     let (response, event) = view.slider(layout::BALANCE, "balance", 14);
+    let event = if app.capabilities().sound_effects {
+        event
+    } else {
+        SliderEvent::None
+    };
     match event {
         SliderEvent::Dragging(value) => {
             let balance = balance_of(value);
@@ -1597,7 +1613,7 @@ mod tests {
         );
         assert_eq!(
             marquee_text(Locale::English, None, None, None, None, None),
-            "Spotifast"
+            "Spotifast Free"
         );
         let untitled = now("Episode 12", "", 0);
         assert_eq!(

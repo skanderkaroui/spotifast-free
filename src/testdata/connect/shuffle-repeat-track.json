@@ -1,0 +1,238 @@
+{
+ "_source": "open.spotify.com GET connect-state/v1/cluster, Free account; trimmed by scrub-recordings.mjs, ids, songs and playlists replaced",
+ "cluster": {
+  "active_device_id": "device1000000000000000000000000000000000",
+  "devices": {
+   "device1000000000000000000000000000000000": {
+    "can_play": true,
+    "capabilities": {
+     "can_be_player": true,
+     "command_acks": true,
+     "gaia_eq_connect_id": true,
+     "is_controllable": true,
+     "is_observable": true,
+     "supported_audio_quality": "HIGH",
+     "supported_types": [
+      "audio/track",
+      "audio/episode",
+      "mixed/episode",
+      "video/episode",
+      "video/track",
+      "audio/dj",
+      "audio/media",
+      "audio/agnostic",
+      "video/agnostic",
+      "audio/ad",
+      "audio/interruption"
+     ],
+     "supports_command_request": true,
+     "supports_dj": true,
+     "supports_external_episodes": true,
+     "supports_hifi": {},
+     "supports_logout": true,
+     "supports_playback_speed": true,
+     "supports_remote_audio_quality_control": true,
+     "supports_remote_sleep_timer": true,
+     "supports_set_options_command": true,
+     "supports_smart_shuffle_mode": true,
+     "volume_steps": 64
+    },
+    "device_software_version": "harmony:4.80.0-3cdf02c91/track-playback",
+    "device_type": "COMPUTER",
+    "name": "Web Player (Safari)",
+    "volume": 65535
+   }
+  },
+  "need_full_player_state": true,
+  "needs_local_devices": false,
+  "needs_state_updates": true,
+  "player_state": {
+   "context_restrictions": {},
+   "context_uri": "spotify:playlist:playlist00000000000001",
+   "context_url": "context://spotify:playlist:playlist00000000000001",
+   "duration": "210587",
+   "index": {
+    "page": 0,
+    "track": 2
+   },
+   "is_paused": false,
+   "is_playing": true,
+   "is_system_initiated": false,
+   "next_tracks": [
+    {
+     "metadata": {
+      "album_title": "Album 6",
+      "album_uri": "spotify:album:album00000000000000006",
+      "artist_name": "Artist 8",
+      "artist_uri": "spotify:artist:artist0000000000000008",
+      "context_uri": "spotify:playlist:playlist00000000000001",
+      "duration": "229878",
+      "image_large_url": "https://i.scdn.co/image/image00000000000000000000000000000000016",
+      "image_small_url": "https://i.scdn.co/image/image00000000000000000000000000000000017",
+      "image_url": "https://i.scdn.co/image/image00000000000000000000000000000000018",
+      "is_19_plus": "false",
+      "is_explicit": "false",
+      "title": "Song 6",
+      "video_rendering_enabled": "false"
+     },
+     "provider": "context",
+     "uid": "uid00000000000000002",
+     "uri": "spotify:track:track00000000000000012"
+    },
+    {
+     "metadata": {
+      "context_uri": "spotify:playlist:playlist00000000000001",
+      "video_rendering_enabled": "false"
+     },
+     "provider": "context",
+     "uid": "uid00000000000000002",
+     "uri": "spotify:track:track00000000000000013"
+    },
+    {
+     "metadata": {
+      "context_uri": "spotify:playlist:playlist00000000000001",
+      "video_rendering_enabled": "false"
+     },
+     "provider": "context",
+     "uid": "uid00000000000000002",
+     "uri": "spotify:track:track00000000000000007"
+    },
+    {
+     "metadata": {
+      "hidden": "true"
+     },
+     "provider": "context",
+     "uid": "delimiter0",
+     "uri": "spotify:delimiter"
+    }
+   ],
+   "options": {
+    "modes": {
+     "context_enhancement": "NONE",
+     "jam": "off",
+     "media": "audio"
+    },
+    "playback_speed": 1,
+    "repeating_context": true,
+    "repeating_track": true,
+    "shuffling_context": true
+   },
+   "playback_quality": {
+    "bitrate_level": "high",
+    "file_origin": "internal",
+    "strategy": "best_matching",
+    "target_bitrate_available": true,
+    "target_bitrate_level": "high"
+   },
+   "playback_speed": 1,
+   "position_as_of_timestamp": "12599",
+   "prev_tracks": [
+    {
+     "metadata": {
+      "album_title": "Album 7",
+      "album_uri": "spotify:album:album00000000000000007",
+      "artist_name": "Artist 9",
+      "artist_name:1": "Artist 10",
+      "artist_uri": "spotify:artist:artist0000000000000009",
+      "artist_uri:1": "spotify:artist:artist0000000000000010",
+      "context_uri": "spotify:playlist:playlist00000000000001",
+      "duration": "410080",
+      "image_large_url": "https://i.scdn.co/image/image00000000000000000000000000000000019",
+      "image_small_url": "https://i.scdn.co/image/image00000000000000000000000000000000020",
+      "image_url": "https://i.scdn.co/image/image00000000000000000000000000000000021",
+      "is_19_plus": "false",
+      "is_explicit": "false",
+      "title": "Song 7",
+      "video_rendering_enabled": "false"
+     },
+     "provider": "context",
+     "uid": "uid00000000000000002",
+     "uri": "spotify:track:track00000000000000014"
+    },
+    {
+     "metadata": {
+      "hidden": "true"
+     },
+     "provider": "context",
+     "uid": "delimiter-1",
+     "uri": "spotify:delimiter"
+    }
+   ],
+   "restrictions": {
+    "disallow_resuming_reasons": [
+     "not_paused"
+    ],
+    "disallow_setting_modes": {
+     "context_enhancement": {
+      "values": {
+       "NONE": {
+        "reasons": [
+         "already_set"
+        ]
+       },
+       "RECOMMENDATION": {
+        "reasons": [
+         "not_supported_by_content_type"
+        ]
+       }
+      }
+     },
+     "media": {
+      "values": {
+       "audio": {
+        "reasons": [
+         "already_set"
+        ]
+       },
+       "video": {
+        "reasons": [
+         "not_supported_by_content_type",
+         "mft_disallow",
+         "no_associated_track"
+        ]
+       }
+      }
+     }
+    },
+    "disallow_setting_playback_speed_reasons": [
+     "not_supported_by_content_type"
+    ],
+    "disallow_sleep_timer_clear_reasons": [
+     "no_sleep_timer_set"
+    ]
+   },
+   "sleep_timer": {
+    "none": {}
+   },
+   "state_type": "actual",
+   "suppressions": {},
+   "timestamp": "1791999073423",
+   "track": {
+    "metadata": {
+     "album_title": "Album 3",
+     "album_uri": "spotify:album:album00000000000000003",
+     "artist_name": "Artist 3",
+     "artist_name:1": "Artist 4",
+     "artist_uri": "spotify:artist:artist0000000000000003",
+     "artist_uri:1": "spotify:artist:artist0000000000000004",
+     "context_uri": "spotify:playlist:playlist00000000000001",
+     "duration": "210587",
+     "image_large_url": "https://i.scdn.co/image/image00000000000000000000000000000000007",
+     "image_small_url": "https://i.scdn.co/image/image00000000000000000000000000000000008",
+     "image_url": "https://i.scdn.co/image/image00000000000000000000000000000000009",
+     "is_19_plus": "false",
+     "is_explicit": "false",
+     "title": "Song 3",
+     "video_rendering_enabled": "false"
+    },
+    "provider": "context",
+    "uid": "uid00000000000000002",
+    "uri": "spotify:track:track00000000000000006"
+   }
+  },
+  "server_timestamp_ms": "1791999076895",
+  "started_playing_at": "1791999048105",
+  "timestamp": "1791999073476"
+ },
+ "own_device": "device1000000000000000000000000000000000"
+}

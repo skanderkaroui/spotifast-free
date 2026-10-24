@@ -29,10 +29,10 @@ const OUTLINE: Rgb = [0x2a, 0x30, 0x38];
 const TEXT: Rgb = [0xf2, 0xf4, 0xf6];
 const SECONDARY: Rgb = [0xa9, 0xb1, 0xbc];
 const DIM: Rgb = [0x6e, 0x77, 0x84];
-const ACCENT: Rgb = [0x1e, 0xd7, 0x60];
-const ON_ACCENT: Rgb = [0x0a, 0x14, 0x0e];
+const ACCENT: Rgb = [0x4c, 0x9b, 0xf0];
+const ON_ACCENT: Rgb = [0x0a, 0x0e, 0x14];
 /// Lamps that are off: the accent, nearly out.
-const ACCENT_DARK: Rgb = [0x14, 0x4a, 0x2a];
+const ACCENT_DARK: Rgb = [0x14, 0x2b, 0x4a];
 
 /// The 5x6 bitmap font, drawn four pixels wide with a blank column after
 /// (M, V, and W take the fifth). Rows are separated by `/`; `#` is a pixel.
@@ -338,6 +338,9 @@ fn main_sheet() -> Canvas {
     c
 }
 
+/// The name the skin's title bar and marquee wear.
+const TITLE: &str = "SPOTIFAST FREE";
+
 fn title_bar(c: &mut Canvas, x: i64, y: i64, active: bool, shade: bool) {
     c.rect(x, y, 275, 14, SURFACE);
     c.frame((x, y, 275, 14), OUTLINE);
@@ -360,8 +363,8 @@ fn title_bar(c: &mut Canvas, x: i64, y: i64, active: bool, shade: bool) {
         display(c, (x + 124, y + 2, 36, 10));
         display(c, (x + 226, y + 4, 17, 7));
     } else {
-        c.text_centred((x, y + 1, 275, 12), "SPOTIFAST", color);
-        let width = 5 * 10 - 1;
+        c.text_centred((x, y + 1, 275, 12), TITLE, color);
+        let width = 5 * TITLE.chars().count() as i64 - 1;
         let start = x + (275 - width) / 2;
         title_lines(c, x + 18, start - 8, y + 5);
         title_lines(c, start + width + 8, x + 241, y + 5);
@@ -807,7 +810,7 @@ fn eq_ex_sheet() -> Canvas {
     c
 }
 
-const PLEDIT_TXT: &str = "[Text]\r\nNormal=#A9B1BC\r\nCurrent=#1ED760\r\nNormalBG=#0F1114\r\nSelectedBG=#2F353F\r\nFont=Inter\r\n";
+const PLEDIT_TXT: &str = "[Text]\r\nNormal=#A9B1BC\r\nCurrent=#4C9BF0\r\nNormalBG=#0F1114\r\nSelectedBG=#2F353F\r\nFont=Inter\r\n";
 
 /// Background, grid, sixteen spectrum bands from the top down, the
 /// oscilloscope's five shades, and the peak marks.
@@ -876,7 +879,7 @@ fn preview(skin: &Skin) -> image::RgbaImage {
             }
         }
     };
-    text("SPOTIFAST - A WINAMP SKIN *** ", layout::MARQUEE);
+    text(&format!("{TITLE} - A WINAMP SKIN *** "), layout::MARQUEE);
     text("320", layout::KBPS);
     text("44", layout::KHZ);
     let volume = layout::VOLUME;

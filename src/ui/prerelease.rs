@@ -147,9 +147,15 @@ pub(super) fn show(app: &mut App, ui: &mut egui::Ui, data: &Prerelease) {
     });
     ui.add_space(48.0);
     ui.horizontal(|ui| {
-        let green = Color32::from_rgb(0x1e, 0xd7, 0x60);
+        // Spotifast Free's blue, with the dark palette's ink so the label
+        // reads the same in light and dark mode.
+        let fill = theme::Palette::dark().accent;
         let saved = data.saved == Some(true);
-        let ink = if saved { palette.text } else { Color32::BLACK };
+        let ink = if saved {
+            palette.text
+        } else {
+            theme::Palette::dark().on_accent
+        };
         let save_label = if data.saving {
             gettext(locale, "Saving…")
         } else if data.saved == Some(true) {
@@ -157,7 +163,9 @@ pub(super) fn show(app: &mut App, ui: &mut egui::Ui, data: &Prerelease) {
         } else {
             gettext(locale, "Pre-save")
         };
-        let enabled = data.saved.is_some() && !data.saving && app.local_ready;
+        // Pre-saves go through librespot's session, which Spotify Free lacks.
+        let can_save = app.capabilities().prerelease;
+        let enabled = data.saved.is_some() && !data.saving && app.local_ready && can_save;
         let text_color = if enabled {
             ink
         } else {
@@ -174,7 +182,7 @@ pub(super) fn show(app: &mut App, ui: &mut egui::Ui, data: &Prerelease) {
             .add_enabled(
                 enabled,
                 egui::Button::new("")
-                    .fill(if saved { palette.surface } else { green })
+                    .fill(if saved { palette.surface } else { fill })
                     .stroke(if saved {
                         Stroke::new(1.0, palette.outline)
                     } else {
@@ -183,7 +191,12 @@ pub(super) fn show(app: &mut App, ui: &mut egui::Ui, data: &Prerelease) {
                     .corner_radius(24)
                     .min_size(vec2(content_width + 48.0, 48.0)),
             )
-            .on_hover_text(gettext(locale, "Pre-save on Spotify"));
+            .on_hover_text(gettext(locale, "Pre-save on Spotify"))
+            .on_disabled_hover_text(if can_save {
+                gettext(locale, "Pre-save on Spotify")
+            } else {
+                gettext(locale, "Pre-saving needs Spotify Premium")
+            });
         save_button.widget_info(|| {
             egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, save_label.as_ref())
         });
@@ -210,7 +223,7 @@ pub(super) fn show(app: &mut App, ui: &mut egui::Ui, data: &Prerelease) {
             },
             icon_rect,
             16.0,
-            if saved { green } else { ink },
+            if saved { fill } else { ink },
         );
         if save_button.clicked() {
             app.actions.push(Action::SetPrereleaseSaved {

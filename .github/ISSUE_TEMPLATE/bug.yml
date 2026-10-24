@@ -5,18 +5,23 @@ body:
   - type: markdown
     attributes:
       value: |
+        This fork adds Spotify Free playback on macOS. If the problem also
+        happens in [upstream Spotifast](https://github.com/crmne/spotifast/issues),
+        report it there instead.
+
         Please include the log from Spotifast's last run:
 
-        - Linux: `~/.local/state/spotifast/spotifast.log`
-        - macOS: `~/Library/Application\ Support/me.paolino.spotifast/spotifast.log`
-        - Windows: `%LOCALAPPDATA%\paolino\spotifast\data\spotifast.log`
+        - macOS: `~/Library/Application\ Support/io.github.skanderkaroui.SpotifastFree/spotifast.log`
+        - Linux: `~/.local/state/spotifastfree/spotifast.log`
+        - Windows: `%LOCALAPPDATA%\skanderkaroui\SpotifastFree\data\spotifast.log`
 
         If the app crashed or vanished, include `panic.log` from the same folder.
   - type: input
     id: version
     attributes:
-      label: Spotifast version and how you installed it
-      placeholder: "0.5.0-rc1 from the AUR / the DMG / the Windows installer / Homebrew / the Flatpak bundle"
+      label: Commit you built
+      description: Run `git rev-parse --short HEAD` in your checkout.
+      placeholder: "c428ef5"
     validations:
       required: true
   - type: dropdown
@@ -24,8 +29,8 @@ body:
     attributes:
       label: Operating system
       options:
-        - Linux
         - macOS
+        - Linux
         - Windows
     validations:
       required: true
@@ -34,7 +39,7 @@ body:
     attributes:
       label: System details
       description: Distribution and desktop on Linux, or the OS version.
-      placeholder: "Arch, Hyprland, PipeWire / macOS 15.6 / Windows 11 24H2"
+      placeholder: "macOS 15.6 / Arch, Hyprland, PipeWire / Windows 11 24H2"
     validations:
       required: true
   - type: dropdown
@@ -42,8 +47,8 @@ body:
     attributes:
       label: Spotify plan
       options:
-        - Premium
         - Free
+        - Premium
     validations:
       required: true
   - type: textarea

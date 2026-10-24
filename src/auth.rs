@@ -475,10 +475,10 @@ main{{max-width:28rem;padding:2.5rem;border-radius:1.25rem;background:#181b20;bo
 
 fn success_page() -> String {
     page(
-        "Signed in to Spotifast",
+        "Signed in to Spotifast Free",
         "You're signed in",
-        "You can close this tab and go back to Spotifast.",
-        "#1ed760",
+        "You can close this tab and go back to Spotifast Free.",
+        "#4c9bf0",
     )
 }
 
@@ -486,7 +486,7 @@ fn failure_page(reason: &str) -> String {
     page(
         "Sign-in failed",
         "Sign-in didn't complete",
-        &format!("{reason}. Return to Spotifast and try again."),
+        &format!("{reason}. Return to Spotifast Free and try again."),
         "#f5717f",
     )
 }
@@ -640,6 +640,19 @@ mod tests {
     fn personal_client_id_is_validated_at_the_boundary() {
         assert_eq!(Grant::personal_web_api("  abc ").unwrap().client_id, "abc");
         assert!(Grant::personal_web_api("  ").is_err());
+    }
+
+    /// The pages the browser shows after sign-in name the app it returns
+    /// to, Spotifast Free, never upstream Spotifast on its own.
+    #[test]
+    fn sign_in_pages_name_spotifast_free() {
+        for page in [success_page(), failure_page("Timed out")] {
+            assert!(page.contains("Spotifast Free"), "{page}");
+            assert!(
+                !page.replace("Spotifast Free", "").contains("Spotifast"),
+                "{page}"
+            );
+        }
     }
 
     #[test]

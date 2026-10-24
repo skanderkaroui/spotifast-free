@@ -1,166 +1,168 @@
 <p align="center">
-  <img src="docs/assets/images/logo.svg" alt="Spotifast logo" width="88" height="88">
+  <img src="docs/assets/images/logo.svg" alt="Spotifast Free logo" width="88" height="88">
 </p>
 
-<h1 align="center">Spotifast</h1>
+<h1 align="center">Spotifast Free</h1>
 
-<p align="center"><strong>Spotify, native and fast.</strong><br>A lightweight music app for Linux, macOS, and Windows.</p>
+<p align="center"><strong>Spotify, native and fast, for Free and Premium accounts.</strong><br>A lightweight music app built on top of <a href="https://github.com/crmne/spotifast">Spotifast</a>.</p>
 
 <p align="center">
-  <a href="https://spotifast.rocks/download/"><strong>Download</strong></a> ·
-  <a href="https://spotifast.rocks/getting-started/">Getting started</a> ·
-  <a href="https://spotifast.rocks/using-spotifast/">User guide</a> ·
-  <a href="CONTRIBUTING.md">Contribute</a>
+  <a href="#install"><strong>Install</strong></a> ·
+  <a href="#spotify-free">Spotify Free</a> ·
+  <a href="https://github.com/skanderkaroui/spotifast-free/issues">Issues</a>
 </p>
 
 <p align="center">
-  <a href="Cargo.toml"><img src="https://img.shields.io/badge/Built_with-Rust-1ed760" alt="Built with Rust"></a>
-  <a href="https://spotifast.rocks/download/"><img src="https://img.shields.io/badge/Linux_%C2%B7_macOS_%C2%B7_Windows-24292f" alt="Linux, macOS, and Windows"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-1ed760" alt="MIT license"></a>
+  <a href="Cargo.toml"><img src="https://img.shields.io/badge/Built_with-Rust-1e77d7" alt="Built with Rust"></a>
+  <a href="#spotify-free"><img src="https://img.shields.io/badge/Spotify_Free-macOS-24292f" alt="Spotify Free on macOS"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-1e77d7" alt="MIT license"></a>
 </p>
 
-Spotifast is a Spotify client written in Rust with
-[egui](https://www.egui.rs) and [fastframe](https://fastframe.dev), the
-framework behind a family of native desktop apps. It plays music through
-[librespot](https://github.com/librespot-org/librespot), typically uses
-100–250 MB of RAM, starts in well under a second, and has no browser engine.
+Spotifast Free is a fork of [Spotifast](https://github.com/crmne/spotifast)
+by Carmine Paolino that adds playback for **Spotify Free** accounts.
+Everything else comes from Spotifast: a Spotify client written in Rust with
+[egui](https://www.egui.rs) and [fastframe](https://fastframe.dev) that
+typically uses 100–250 MB of RAM and starts in well under a second.
+
+- **Premium** plays through [librespot](https://github.com/librespot-org/librespot),
+  exactly as in Spotifast.
+- **Free** plays through Spotify's own web player, which Spotifast Free runs
+  unchanged in a small background helper and controls from its native
+  interface. On macOS for now.
 
 The interface includes complete
 [translations for all supported languages](docs/_reference/translating.md#languages-and-coverage).
 
-**Playback needs Spotify Premium.** Free accounts can browse and search, but
-cannot play music through Spotifast.
+![Spotifast Free's Home with the playlist library, recommendations, queue, and player visible](docs/screenshot.png)
 
-![Spotifast Home with the playlist library, recommendations, queue, and player visible](docs/screenshot.png)
+## Spotify Free
 
-<details>
-<summary><strong>Watch Spotifast in action</strong></summary>
+On a Free account, Spotifast Free starts a helper that loads
+open.spotify.com in macOS's built-in WebKit and sends it the same Spotify
+Connect requests the web player sends for its own buttons. Spotify plays
+every song and every ad itself, with its own DRM and restrictions.
 
-https://github.com/user-attachments/assets/a5f669ce-b3b7-4f8e-9933-976a78876c7e
+| On Free | |
+|---|---|
+| **Works** | Play a playlist, album, song, list of songs or Liked Songs; next, previous, seek, shuffle, repeat, volume, add to queue, and Spotify's radio |
+| **Ads** | Played by Spotify and shown as the playing item; skip and seek are held while one plays, as on Spotify |
+| **Hidden** | Other devices and Cast, queue editing and Play next, local files, the equalizer, visualizers and MilkDrop, playback engine settings, pre-save. Spotify plays the audio inside WebKit, so Spotifast Free cannot hear or route it |
+| **Not yet** | Free playback on Windows and Linux. Those builds play Premium only, like Spotifast |
 
-</details>
+The helper keeps its own Spotify sign-in, separate from your browsers, and
+quits after five idle minutes. How it works, its limits, and how it is
+checked against Spotify's web player: [scope](experiments/SCOPE-free-playback.md)
+and [helper](experiments/macos-playback-host/README.md).
 
-[Features](#your-music-on-your-desktop) · [Install](#install) · [First playback](#start-listening) · [Mini player](#the-winamp-mini-player) · [MilkDrop](#music-in-motion) · [Help](#guides-and-help)
+## Install
+
+There are no prebuilt downloads of Spotifast Free yet. The Homebrew, AUR
+and download-page builds are upstream Spotifast, which plays Premium only.
+Build Spotifast Free.app from source on macOS 14 or later with Rust and the
+Xcode command-line tools:
+
+```sh
+git clone https://github.com/skanderkaroui/spotifast-free.git
+cd spotifast-free
+cargo build --release --no-default-features --bin spotifast
+sh experiments/macos-playback-host/build.sh
+bash packaging/macos/bundle.sh target/release/spotifast "Spotifast Free.app" "$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+open "Spotifast Free.app"
+```
+
+`bundle.sh` puts the playback helper inside the app, both with the
+Spotifast Free icon. Move the app to `/Applications` to keep it.
+`--no-default-features` leaves out MilkDrop, which needs cmake, a C++
+compiler and libclang; drop it to build MilkDrop for Premium.
+Spotifast's [build from source](https://spotifast.rocks/getting-started/#build-from-source)
+guide lists every dependency.
+
+Spotifast Free keeps its own settings, Keychain sign-in and log
+(`~/Library/Application Support/io.github.skanderkaroui.SpotifastFree`), so
+it runs alongside upstream Spotifast without sharing anything.
+
+## Start listening
+
+1. Open Spotifast Free and choose **Sign in with Spotify**. Approve access
+   in your browser, then return to the app.
+2. **Premium:** open the device menu in the player bar and choose **Set up
+   playback here**, then approve playback in your browser. Your computer
+   appears as a Spotify Connect device named **Spotifast** (rename it in
+   Settings).
+3. **Free:** press play. The first time, Spotify's own sign-in opens in a
+   small window; sign in there and it closes by itself, and the song you
+   picked starts. You stay signed in after that.
+
+Spotifast Free remembers your sign-in in the macOS Keychain. A local build
+is signed again on every rebuild, so macOS asks once more after each one;
+choose **Always Allow**.
 
 ## Your music, on your desktop
 
 | Feature | What you can do |
 |---|---|
 | **Library and search** | Browse playlists, Liked Songs, albums, artists, and podcasts. Search the catalogue and edit playlists you own. |
-| **Local files** | Play the local files your playlists list from a folder you choose in Settings, at any sample rate. |
-| **Spotify Connect** | Play on this computer or control playback on your other devices, including Google Cast speakers and groups. Cast devices appear as they are discovered; frequently and recently chosen outputs rise to the top. |
-| **Queue** | Add songs to the queue, or choose **Play next** to put a song or selection first when playing on this computer. |
+| **Local files** | Premium: play the local files your playlists list from a folder you choose in Settings, at any sample rate. |
+| **Spotify Connect** | Premium: play on this computer or control your other devices, including Google Cast speakers and groups. Cast devices appear as they are discovered; frequently and recently chosen outputs rise to the top. |
+| **Queue** | Add songs to the queue. On Premium, **Play next** puts a song or selection first when playing on this computer. |
 | **Themes** | Choose light, dark, system appearance, or custom colours, with one theme for light mode and one for dark mode that switch with the system. On Omarchy, follow your desktop theme. |
-| **Desktop controls** | Use keyboard shortcuts and media keys. Keep music playing from the tray when supported by your desktop and settings, and start Spotifast with your computer, with its window or in the tray. |
-| **Winamp mini player** | Use classic skins with an equalizer, playlist, and animated sound displays. |
-| **MilkDrop** | Watch music-reactive visuals in a separate window or full screen. See platform availability below. |
+| **Desktop controls** | Use keyboard shortcuts, media keys and the command line (`spotifast play`, `next`, `now-playing`…; the command is still called `spotifast`). Start Spotifast Free with your computer, with its window or in the tray. |
+| **Winamp mini player** | Use classic skins with an equalizer, playlist, and animated sound displays. Premium only for the equalizer and visuals. |
+| **MilkDrop** | Watch music-reactive visuals, Premium only. See Spotifast's [MilkDrop guide](https://spotifast.rocks/milkdrop/). |
 
-## Install
+Spotifast's [user guide](https://spotifast.rocks/using-spotifast/) covers
+these in detail; everything in it applies to Spotifast Free except the
+install steps, the file locations above and the Premium requirement. Its
+[troubleshooting page](https://spotifast.rocks/troubleshooting/) explains
+"Spotify refused the audio key" and "Spotify is being slow".
 
-| Platform | Installation |
-|---|---|
-| **macOS** | `brew install --cask crmne/tap/spotifast`, or [download the Mac app](https://spotifast.rocks/download/#macos). |
-| **Arch Linux** | `yay -S spotifast-bin` |
-| **Windows** | Choose your build on the [Download page](https://spotifast.rocks/download/). |
-| **Other Linux** | Find Flatpak, AppImage, Nix, and other options on the [Download page](https://spotifast.rocks/download/). |
-| **From source** | Follow [Build from source](https://spotifast.rocks/getting-started/#build-from-source) for dependencies and commands. |
+## Tests
 
-## Start listening
+```sh
+cargo fmt --check
+cargo clippy --no-default-features --all-targets -- -D warnings
+cargo test --no-default-features
 
-1. Open Spotifast and choose **Sign in with Spotify**. Approve access in your
-   browser, then return to the app to see your library.
-2. To listen on this computer, open the device menu in the bottom player bar
-   and choose **Set up playback here**, also available in Settings.
-3. Complete the separate playback approval in your browser. Your computer
-   appears as a Spotify Connect device named **Spotifast**.
+# The helper's page script, offline, against recorded Spotify responses
+node experiments/macos-playback-host/test.mjs
+node experiments/macos-playback-host/diagnostics.test.mjs
 
-Library access and local playback have separate approvals. Spotifast remembers
-both using your computer's protected storage. See
-[Getting started](https://spotifast.rocks/getting-started/) for the full walkthrough
-and [How it connects](https://spotifast.rocks/how-it-connects/) for the details.
+# Live, against a running Spotifast Free signed in with a Free account (the
+# debug build from experiments/run-free.sh, or
+# SPOTIFAST=".../Spotifast Free.app/Contents/MacOS/Spotifast Free")
+bash experiments/free-e2e.sh
+```
 
-## The Winamp mini player
-
-A classic look for your music, with Winamp 2 `.wsz` skins, an equalizer,
-a playlist, and animated sound displays. Switch with **Ctrl+M**
-(**Cmd+Shift+M** on macOS), the shrink button, or Settings.
-
-<p align="center">
-  <img src="docs/assets/images/winamp.png" alt="Spotifast's Winamp mini player with the built-in skin, equalizer, and playlist" width="320">
-</p>
-
-[Explore the mini player](https://spotifast.rocks/winamp/), including skins,
-window sizes, controls, and the return to the main player.
-
-## Music in motion
-
-MilkDrop reacts to music playing on this computer, with more than 10,000
-presets downloaded on first use. Open it from the visualiser button,
-Settings, or the mini player's **V** menu.
-
-![MilkDrop visualiser displaying coloured concentric patterns in Spotifast](docs/assets/images/milkdrop-poster.jpg)
-
-Included on **Linux**, **macOS**, and **Windows Intel/AMD** builds.
-It is not included in the Windows on ARM download.
-[Read the MilkDrop guide](https://spotifast.rocks/milkdrop/) for presets,
-controls, and fullscreen mode.
-
-## Guides and help
-
-The complete guide lives at **[spotifast.rocks](https://spotifast.rocks/)**.
-
-| You want to… | Read |
-|---|---|
-| Sign in, set up playback, or configure themes, fonts, and proxies | [Getting started](https://spotifast.rocks/getting-started/) |
-| Learn shortcuts, command-line controls, and updates | [Everyday use](https://spotifast.rocks/using-spotifast/) |
-| Find configuration and stored files | [Settings and files](https://spotifast.rocks/settings-and-files/) |
-| Understand scrolling performance and reduce loading delays | [Make it even faster](https://spotifast.rocks/make-it-even-faster/) |
-| Fix "Spotify refused the audio key" or "Spotify is being slow" | [When something goes wrong](https://spotifast.rocks/troubleshooting/) |
-| Understand what is stored and sent | [Privacy](https://spotifast.rocks/privacy/) · [How it connects](https://spotifast.rocks/how-it-connects/) |
-| Check Spotify and librespot limitations | [What Spotify allows](https://spotifast.rocks/what-spotify-allows/) |
-| Understand account risk | [Will my account get banned?](https://spotifast.rocks/what-is-spotifast/#will-my-spotify-account-get-banned) |
-| Report a bug or propose a feature | Read [Contributing](CONTRIBUTING.md), then use the [issue forms](https://github.com/crmne/spotifast/issues/new/choose). |
+The Free/Premium test matrix is in `src/app/free_matrix_tests.rs`. Recorded
+Spotify responses go through
+`experiments/macos-playback-host/scrub-recordings.mjs` before they are
+committed, so no account's songs or playlists end up in the repository.
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull
-request. To look at the interface without a Spotify account, run:
+Report Free playback problems in
+[Spotifast Free's issues](https://github.com/skanderkaroui/spotifast-free/issues),
+with the steps and the log. Anything that also happens in upstream Spotifast
+belongs [upstream](https://github.com/crmne/spotifast/issues). See
+[CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
+To look at the interface without a Spotify account, run:
 
 ```sh
 cargo run --features demo -- --demo
 ```
 
-Translations live in `assets/i18n/`; see
-[Translating Spotifast](docs/_reference/translating.md). Release packaging
-is described in [PACKAGING.md](PACKAGING.md).
-
-## More native apps
-
-**Want WhatsApp just as fast and native?** [ZapFast](https://zapfast.rocks)
-is Spotifast's sibling. Both are built on
-[fastframe](https://fastframe.dev).
-
-## Sonos playback
-
-Sonos speakers use the Spotify Connect session for playback control. Enable
-local playback first, then select the speaker in the device picker.
+Upstream Spotifast does not embed a browser engine, so Free playback lives
+in this fork. Spotifast Free follows upstream and rebases on its releases.
 
 ## Acknowledgements
 
-Spotifast uses [librespot](https://github.com/librespot-org/librespot),
+Built on [Spotifast](https://github.com/crmne/spotifast) by Carmine Paolino,
+which uses [librespot](https://github.com/librespot-org/librespot),
 [egui](https://www.egui.rs), [fastframe](https://fastframe.dev), the [Inter](https://rsms.me/inter/)
 typeface (OFL), and [Lucide](https://lucide.dev) icons (ISC).
 
-Spotifast is an independent project and is not affiliated with Spotify.
-Spotify is a trademark of Spotify AB.
+Spotifast Free is independent and is not affiliated with Spotify or with
+upstream Spotifast. Spotify is a trademark of Spotify AB.
 
 Licensed under the [MIT License](LICENSE).
-
-## Star history
-
-<a href="https://www.star-history.com/?repos=crmne%2Fspotifast&amp;type=date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=crmne/spotifast&amp;type=date&amp;theme=dark">
-    <img alt="Spotifast GitHub stars over time" src="https://api.star-history.com/chart?repos=crmne/spotifast&amp;type=date">
-  </picture>
-</a>

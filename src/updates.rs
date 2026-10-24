@@ -14,20 +14,24 @@ use fastframe_update::{MacConfig, ReqwestTransport, UpdateConfig};
 
 pub const CONFIG: UpdateConfig = UpdateConfig {
     macos: MacConfig {
-        bundle_ids: &["rocks.spotifast.Spotifast"],
-        executable_names: &["Spotifast"],
+        bundle_ids: &["io.github.skanderkaroui.SpotifastFree"],
+        executable_names: &["Spotifast Free"],
         legacy_bundle_names: &[],
     },
     // Releases publish an Ed25519 signature for checksums.txt. Require it
     // before downloading an update, using the release workflow's public key.
+    // This fork has no releases or signing key of its own yet, so checks find
+    // nothing to install; they never fetch upstream Spotifast, which would
+    // replace this app with one that cannot play Free.
     publisher_key: Some(include_str!("../assets/update-public-key.hex")),
     // Releases build their AppImages before publishing, so the signed
     // checksums.txt lists them (#737): an AppImage replaces itself with the
     // next one.
     appimage: true,
     ..UpdateConfig::new(
-        "crmne/spotifast",
-        "Spotifast",
+        "skanderkaroui/spotifast-free",
+        "Spotifast Free",
+        // The command is still `spotifast`; `--version` prints this name.
         "spotifast",
         env!("CARGO_PKG_VERSION"),
     )

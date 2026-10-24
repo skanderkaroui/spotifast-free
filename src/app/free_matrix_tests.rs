@@ -1,0 +1,510 @@
+//! Acceptance matrix: every Free/Premium difference in `capabilities`,
+//! checked through the app's real paths for both plans.
+#![cfg(target_os = "macos")]
+
+use super::*;
+use crate::web_player::{AD_URI, DEVICE_ID};
+
+const SONG: &str = "spotify:track:a";
+
+fn app_for(name: &str, free: bool, uri: &str) -> App {
+    let root = std::env::temp_dir().join(format!(
+        "spotifast-matrix-{name}-{free}-{}",
+        std::process::id()
+    ));
+    let _ = std::fs::remove_dir_all(&root);
+    let mut app = App::new(
+        &Waker::default(),
+        AppDirs {
+            config: root.join("config"),
+            state: root.join("state"),
+            cache: root.join("cache"),
+        },
+        Settings::default(),
+        AppOptions {
+            media_controls: false,
+            restore_sign_in: false,
+            tray: false,
+            autostart: false,
+        },
+    );
+    app.reveal_theme_changes = false;
+    app.handle_playback(LocalPlayback::Ready {
+        device_id: if free { DEVICE_ID } else { "local" }.into(),
+    });
+    app.handle_local(playing(uri, 1));
+    app.backend.take_player_commands();
+    app
+}
+
+fn playing(uri: &str, sequence: u64) -> LocalState {
+    LocalState {
+        connected: true,
+        playback: Playback::Playing,
+        track: Some(crate::player::LocalTrack {
+            uri: uri.into(),
+            title: "song".into(),
+            duration_ms: 200_000,
+            ..Default::default()
+        }),
+        track_sequence: sequence,
+        ..LocalState::default()
+    }
+}
+
+fn run(app: &mut App, action: Action) -> Vec<PlayerCommand> {
+    app.actions.push(action);
+    app.apply_actions(&egui::Context::default());
+    app.backend.take_player_commands()
+}
+
+fn both(name: &str, check: impl Fn(bool, &mut App)) {
+    for free in [true, false] {
+        let mut app = app_for(name, free, SONG);
+        check(free, &mut app);
+        app.backend.shutdown();
+    }
+}
+
+#[test]
+fn play_context_from_a_song() {
+    both("play-view", |free, app| {
+        let sent = run(
+            app,
+            Action::PlayFromRow {
+                context: RowContext::View {
+                    uris: vec!["spotify:track:b".to_string(), SONG.to_string()].into(),
+                    context_uri: "spotify:playlist:p".into(),
+                    editable_playlist: None,
+                },
+                uri: SONG.into(),
+                index: 1,
+            },
+        );
+        let Some(PlayerCommand::Load(spec)) = sent.last() else {
+            panic!("free={free}: expected a load, got {sent:?}");
+        };
+        if free {
+            assert_eq!(spec.context_uri.as_deref(), Some("spotify:playlist:p"));
+            assert_eq!(spec.offset_uri.as_deref(), Some(SONG));
+        } else {
+            assert!(spec.context_uri.is_none(), "{spec:?}");
+            assert!(spec.uris.contains(&SONG.to_string()), "{spec:?}");
+        }
+    });
+    both("play-context", |free, app| {
+        let sent = run(
+            app,
+            Action::PlayFromRow {
+                context: RowContext::Context {
+                    uri: "spotify:album:x".into(),
+                    editable_playlist: None,
+                },
+                uri: SONG.into(),
+                index: 0,
+            },
+        );
+        let Some(PlayerCommand::Load(spec)) = sent.last() else {
+            panic!("free={free}: expected a load, got {sent:?}");
+        };
+        assert_eq!(spec.context_uri.as_deref(), Some("spotify:album:x"));
+        assert_eq!(spec.offset_uri.as_deref(), Some(SONG));
+    });
+}
+
+#[test]
+fn transport_controls_reach_both_engines() {
+    both("transport", |free, app| {
+        let next = run(app, Action::Next);
+        assert!(
+            next.iter().any(|c| matches!(c, PlayerCommand::Next)),
+            "free={free}"
+        );
+        let prev = run(app, Action::Previous);
+        assert!(
+            prev.iter().any(|c| matches!(c, PlayerCommand::Previous)),
+            "free={free}"
+        );
+        let seek = run(app, Action::Seek(5_000));
+        assert!(
+            seek.iter().any(|c| matches!(c, PlayerCommand::Seek(5_000))),
+            "free={free}"
+        );
+        let shuffle = run(app, Action::SetShuffle(true));
+        assert!(
+            shuffle
+                .iter()
+                .any(|c| matches!(c, PlayerCommand::Shuffle(true))),
+            "free={free}"
+        );
+        let repeat = run(app, Action::SetRepeat(RepeatMode::Track));
+        assert!(
+            repeat
+                .iter()
+                .any(|c| matches!(c, PlayerCommand::Repeat(RepeatMode::Track))),
+            "free={free}"
+        );
+    });
+}
+
+#[test]
+fn transport_is_blocked_during_a_free_ad() {
+    let mut app = app_for("ad-transport", true, AD_URI);
+    for action in [Action::Next, Action::Previous, Action::Seek(5_000)] {
+        assert!(run(&mut app, action).is_empty());
+    }
+    app.backend.shutdown();
+}
+
+#[test]
+fn free_skip_next_restriction_blocks_next() {
+    let mut app = app_for("restrict-next", true, SONG);
+    let mut state = playing(SONG, 1);
+    state.restrictions.skip_next = true;
+    app.handle_local(state);
+    app.backend.take_player_commands();
+    let sent = run(&mut app, Action::Next);
+    assert!(
+        !sent.iter().any(|c| matches!(c, PlayerCommand::Next)),
+        "{sent:?}"
+    );
+    app.backend.shutdown();
+}
+
+/// Live run on 0.13.2: Previous straight after Next on a list's first song
+/// was dropped, because Spotify's state for the skipped-to song (allowing
+/// it) had not arrived and the first song's "no previous track" still held.
+#[test]
+fn free_previous_right_after_next_is_not_held_by_the_old_song() {
+    let mut app = app_for("prev-after-next", true, SONG);
+    let mut first = playing(SONG, 1);
+    first.restrictions.skip_prev = true;
+    app.handle_local(first);
+    app.backend.take_player_commands();
+    assert!(
+        run(&mut app, Action::Previous).is_empty(),
+        "the first song itself has no previous"
+    );
+    let sent = run(&mut app, Action::Next);
+    assert!(
+        sent.iter().any(|c| matches!(c, PlayerCommand::Next)),
+        "{sent:?}"
+    );
+    let sent = run(&mut app, Action::Previous);
+    assert!(
+        sent.iter().any(|c| matches!(c, PlayerCommand::Previous)),
+        "{sent:?}"
+    );
+    app.backend.shutdown();
+}
+
+/// Live run on 0.14.0: Spotify's report for the song just skipped from,
+/// still saying "no previous track", came in after Next. It must not hold
+/// Previous again before the skipped-to song's own report arrives.
+#[test]
+fn free_previous_is_not_held_by_a_late_report_for_the_skipped_from_song() {
+    let mut app = app_for("prev-late-report", true, SONG);
+    let mut first = playing(SONG, 1);
+    first.restrictions.skip_prev = true;
+    app.handle_local(first.clone());
+    app.backend.take_player_commands();
+    run(&mut app, Action::Next);
+    // The skipped-from song's report, late.
+    app.handle_local(first);
+    app.backend.take_player_commands();
+    let sent = run(&mut app, Action::Previous);
+    assert!(
+        sent.iter().any(|c| matches!(c, PlayerCommand::Previous)),
+        "{sent:?}"
+    );
+    app.backend.shutdown();
+}
+
+#[test]
+fn free_next_right_after_previous_is_not_held_by_the_old_song() {
+    let mut app = app_for("next-after-prev", true, SONG);
+    let mut last = playing(SONG, 1);
+    last.restrictions.skip_next = true;
+    app.handle_local(last);
+    app.backend.take_player_commands();
+    run(&mut app, Action::Previous);
+    let sent = run(&mut app, Action::Next);
+    assert!(
+        sent.iter().any(|c| matches!(c, PlayerCommand::Next)),
+        "{sent:?}"
+    );
+    app.backend.shutdown();
+}
+
+#[test]
+fn volume_is_sent_and_saved_only_for_premium() {
+    for action in [
+        Action::SetVolume(40),
+        Action::VolumeBy(-10),
+        Action::ToggleMute,
+    ] {
+        both("volume", |free, app| {
+            app.settings.volume = 20_000;
+            let sent = run(app, action.clone());
+            let Some(PlayerCommand::Volume(level)) =
+                sent.iter().find(|c| matches!(c, PlayerCommand::Volume(_)))
+            else {
+                panic!("free={free} {action:?}: no volume sent, got {sent:?}");
+            };
+            let expected = if free { 20_000 } else { *level };
+            assert_eq!(app.settings.volume, expected, "free={free} {action:?}");
+        });
+    }
+}
+
+#[test]
+fn add_to_queue() {
+    both("queue-add", |free, app| {
+        app.local.playback = Playback::Stopped;
+        let sent = run(
+            app,
+            Action::AddToQueue {
+                uri: "spotify:track:b".into(),
+                label: "b".into(),
+            },
+        );
+        if free {
+            assert!(
+                matches!(sent.as_slice(), [PlayerCommand::AddToQueue(u)] if u == "spotify:track:b"),
+                "{sent:?}"
+            );
+        } else {
+            // Premium with no active local playback writes through the Web API.
+            assert!(sent.is_empty(), "{sent:?}");
+            assert!(!app.backend.take_queue_requests().is_empty());
+        }
+    });
+    both("queue-many", |free, app| {
+        let sent = run(
+            app,
+            Action::QueueMany {
+                songs: vec![
+                    ("spotify:track:b".into(), "b".into()),
+                    ("spotify:track:c".into(), "c".into()),
+                ],
+            },
+        );
+        let added: Vec<_> = sent
+            .iter()
+            .filter_map(|c| match c {
+                PlayerCommand::AddToQueue(u) => Some(u.as_str()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(added, ["spotify:track:b", "spotify:track:c"], "free={free}");
+    });
+}
+
+#[test]
+fn queue_editing_is_premium_only() {
+    both("queue-edit", |free, app| {
+        app.manual_queue = vec!["spotify:track:b".into()];
+        app.queue = Loadable::Loaded(Queue {
+            currently_playing: None,
+            queue: vec![PlayableItem::Track(Track {
+                uri: "spotify:track:b".into(),
+                ..Default::default()
+            })],
+        });
+        assert_eq!(app.can_clear_queue(), !free);
+        assert_eq!(app.queue_locally_reorderable(), !free);
+        assert_eq!(app.can_remove_from_queue(0), !free);
+        let sent = run(app, Action::MoveInQueue { from: 0, to: 0 });
+        if free {
+            assert!(sent.is_empty(), "{sent:?}");
+        }
+    });
+}
+
+#[test]
+fn free_next_up_comes_from_upcoming() {
+    let mut app = app_for("upcoming", true, SONG);
+    let mut state = playing(SONG, 1);
+    state.upcoming = vec!["spotify:track:b".into(), "spotify:track:c".into()];
+    app.handle_local(state);
+    let uris: Vec<_> = app
+        .queue
+        .get()
+        .expect("loaded")
+        .queue
+        .iter()
+        .map(|item| item.uri().to_string())
+        .collect();
+    assert_eq!(uris, ["spotify:track:b", "spotify:track:c"]);
+    app.backend.shutdown();
+}
+
+#[test]
+fn radio() {
+    let seed = "spotify:track:seed";
+    for open_page in [true, false] {
+        both("radio", |free, app| {
+            let action = if open_page {
+                Action::Open(Page::Radio(seed.into()))
+            } else {
+                Action::OpenSongRadio {
+                    uri: seed.into(),
+                    track: Box::new(Track {
+                        uri: seed.into(),
+                        ..Default::default()
+                    }),
+                }
+            };
+            let sent = run(app, action);
+            if free {
+                assert!(
+                    matches!(sent.as_slice(), [PlayerCommand::Radio(s)] if s == seed),
+                    "{sent:?}"
+                );
+                assert_ne!(app.page(), &Page::Radio(seed.into()));
+            } else {
+                assert!(
+                    !sent.iter().any(|c| matches!(c, PlayerCommand::Radio(_))),
+                    "{sent:?}"
+                );
+                assert_eq!(app.page(), &Page::Radio(seed.into()));
+            }
+        });
+    }
+}
+
+#[test]
+fn device_transfer_is_premium_only() {
+    both("transfer", |free, app| {
+        app.backend.take_transfer_requests();
+        run(app, Action::Transfer("phone".into()));
+        let sent = app.backend.take_transfer_requests();
+        if free {
+            assert!(sent.is_empty(), "{sent:?}");
+        } else {
+            assert!(
+                matches!(sent.as_slice(), [ApiRequest::Transfer { device_id, .. }] if device_id == "phone"),
+                "{sent:?}"
+            );
+        }
+    });
+}
+
+#[test]
+fn capabilities_by_plan() {
+    both("caps", |free, app| {
+        let caps = app.capabilities();
+        for (name, value) in [
+            ("devices", caps.devices),
+            ("sound_effects", caps.sound_effects),
+            ("visualizers", caps.visualizers),
+            ("engine_settings", caps.engine_settings),
+            ("prerelease", caps.prerelease),
+        ] {
+            assert_eq!(value, !free, "free={free} {name}");
+        }
+        for (name, value) in [
+            ("skip_next", caps.skip_next),
+            ("skip_prev", caps.skip_prev),
+            ("seek", caps.seek),
+            ("shuffle", caps.shuffle),
+            ("repeat", caps.repeat),
+            ("volume", caps.volume),
+            ("queue_add", caps.queue_add),
+            ("radio", caps.radio),
+        ] {
+            assert!(value, "free={free} {name}");
+        }
+        assert_eq!(caps.queue_edit, !free);
+    });
+}
+
+#[test]
+fn ads_are_never_resumed_saved_or_recorded() {
+    let mut app = app_for("ads", true, SONG);
+    app.handle_local(playing(AD_URI, 2));
+    app.save_session();
+    assert_eq!(app.resume_track.as_deref(), Some(SONG));
+
+    app.backend.take_player_commands();
+    run(&mut app, Action::ToggleSaved(AD_URI.into()));
+    let queue = std::sync::Arc::new(std::sync::Mutex::new(vec![ControlCommand::ToggleSaved]));
+    app.control_commands = Some(queue);
+    app.handle_control_commands();
+    app.apply_actions(&egui::Context::default());
+    assert!(!app.saved.contains_key(AD_URI));
+    assert!(!app.saved_writes.contains_key(AD_URI));
+
+    app.note_listening();
+    assert!(app.listening.is_none());
+    assert!(
+        app.plays
+            .plays()
+            .iter()
+            .all(|play| play.track.uri != AD_URI)
+    );
+    app.backend.shutdown();
+}
+
+#[test]
+fn free_flip_to_premium_restores_premium_caps() {
+    let mut app = app_for("flip", true, SONG);
+    assert!(!app.capabilities().devices);
+    app.handle_playback(LocalPlayback::Unavailable);
+    app.handle_playback(LocalPlayback::Ready {
+        device_id: "local".into(),
+    });
+    let caps = app.capabilities();
+    assert!(caps.devices && caps.sound_effects && caps.engine_settings && caps.queue_edit);
+    run(&mut app, Action::Transfer("phone".into()));
+    assert!(!app.backend.take_transfer_requests().is_empty());
+    app.backend.shutdown();
+}
+
+/// The words the settings page paints after filtering for `query`.
+fn settings_text(app: &mut App, query: &str) -> String {
+    let ctx = egui::Context::default();
+    app.attach(&ctx);
+    ctx.data_mut(|data| {
+        data.insert_temp(egui::Id::new("settings-filter"), query.to_owned());
+    });
+    let mut text = String::new();
+    for _ in 0..2 {
+        text.clear();
+        let mut output = ctx.run_ui(
+            egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::vec2(1280.0, 2200.0),
+                )),
+                ..Default::default()
+            },
+            |ui| crate::ui::settings::show(app, ui),
+        );
+        output.textures_delta.clear();
+        fn walk(shape: &egui::epaint::Shape, text: &mut String) {
+            match shape {
+                egui::epaint::Shape::Text(shape) => {
+                    text.push_str(&shape.galley.job.text);
+                    text.push('\n');
+                }
+                egui::epaint::Shape::Vec(shapes) => shapes.iter().for_each(|s| walk(s, text)),
+                _ => {}
+            }
+        }
+        for shape in &output.shapes {
+            walk(&shape.shape, &mut text);
+        }
+    }
+    text
+}
+
+/// Local files play through librespot, which Spotify Free's web player
+/// never uses, so the folder setting is Premium's alone.
+#[test]
+fn local_files_setting_is_premium_only() {
+    both("local-files", |free, app| {
+        let text = settings_text(app, "Local files");
+        assert_eq!(text.contains("Choose folder"), !free, "free={free}\n{text}");
+    });
+}
