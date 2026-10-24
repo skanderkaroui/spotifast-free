@@ -26,6 +26,12 @@ const FOLDERS: fastframe_dirs::App = fastframe_dirs::App {
 /// This fork's name for its folders, Keychain entries and window state.
 pub const APP_NAME: &str = "SpotifastFree";
 
+/// The desktop entry Spotifast Free is known by on Linux
+/// (packaging/applications/spotifast-free.desktop): its window's app id,
+/// its media controls and its login item all name it, apart from upstream
+/// Spotifast's `spotifast`.
+pub const DESKTOP_ID: &str = "spotifast-free";
+
 #[derive(Clone, Debug)]
 pub struct AppDirs {
     pub config: PathBuf,

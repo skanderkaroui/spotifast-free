@@ -181,8 +181,8 @@
 
               postInstall =
                 pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
-                  install -Dm644 packaging/applications/spotifast.desktop \
-                    $out/share/applications/spotifast.desktop
+                  install -Dm644 packaging/applications/spotifast-free.desktop \
+                    $out/share/applications/spotifast-free.desktop
                   install -Dm644 packaging/icons/spotifast.svg \
                     $out/share/icons/hicolor/scalable/apps/spotifast.svg
                   install -Dm644 contrib/omarchy/spotifast.json.tpl \

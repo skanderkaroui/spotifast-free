@@ -54,8 +54,8 @@ package() {
   install -Dm755 "target/release/spotifast" "${pkgdir}/usr/bin/spotifast"
   install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
   install -Dm644 "README.md" "${pkgdir}/usr/share/doc/${pkgname}/README.md"
-  install -Dm644 "packaging/applications/spotifast.desktop" \
-    "${pkgdir}/usr/share/applications/spotifast.desktop"
+  install -Dm644 "packaging/applications/spotifast-free.desktop" \
+    "${pkgdir}/usr/share/applications/spotifast-free.desktop"
   install -Dm644 "packaging/icons/spotifast.svg" \
     "${pkgdir}/usr/share/icons/hicolor/scalable/apps/spotifast.svg"
   # Older release fixtures predate the optional integration.

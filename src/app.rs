@@ -817,7 +817,7 @@ const RECENTS_PAGE: u32 = 50;
 /// Who the desktop's media controls belong to. Links to Spotify, as
 /// `spotify:` URIs or web addresses, are what they may ask Spotifast to open.
 fn media_app() -> fastframe_now_playing::App {
-    let mut app = fastframe_now_playing::App::new("spotifast-free", crate::i18n::APP_NAME);
+    let mut app = fastframe_now_playing::App::new(crate::paths::DESKTOP_ID, crate::i18n::APP_NAME);
     app.uri_schemes = vec!["spotify".into(), "https".into(), "http".into()];
     app
 }
