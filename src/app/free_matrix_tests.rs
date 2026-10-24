@@ -531,3 +531,57 @@ fn local_files_setting_is_premium_only() {
         assert_eq!(text.contains("Choose folder"), !free, "free={free}\n{text}");
     });
 }
+
+/// Clicking a row of Next up skips to it. On Free that is Spotify's Next,
+/// once per row, so it must follow the same holds as the Next button: no
+/// skips through an ad, none when Spotify holds Next, and the rows stay.
+#[test]
+fn free_queue_click_follows_the_next_buttons_holds() {
+    let rows = ["spotify:track:b", "spotify:track:c"];
+    let click = || Action::PlayFromRow {
+        context: RowContext::Queue,
+        uri: "spotify:track:c".into(),
+        index: 1,
+    };
+    let queue = || {
+        Loadable::Loaded(Queue {
+            currently_playing: None,
+            queue: rows
+                .iter()
+                .map(|uri| {
+                    crate::api::models::PlayableItem::Track(crate::api::models::Track {
+                        uri: (*uri).into(),
+                        ..Default::default()
+                    })
+                })
+                .collect(),
+        })
+    };
+    // During an ad.
+    let mut app = app_for("queue-click-ad", true, AD_URI);
+    app.queue = queue();
+    assert!(run(&mut app, click()).is_empty(), "no skips through an ad");
+    assert_eq!(app.queue.get().map(|q| q.queue.len()), Some(2), "rows stay");
+    app.backend.shutdown();
+    // Spotify holding Next.
+    let mut app = app_for("queue-click-held", true, SONG);
+    let mut state = playing(SONG, 2);
+    state.restrictions.skip_next = true;
+    app.handle_local(state);
+    app.backend.take_player_commands();
+    app.queue = queue();
+    assert!(run(&mut app, click()).is_empty(), "Next is held");
+    app.backend.shutdown();
+    // Allowed: one Next per row up to the chosen one.
+    let mut app = app_for("queue-click-ok", true, SONG);
+    app.queue = queue();
+    let sent = run(&mut app, click());
+    assert_eq!(
+        sent.iter()
+            .filter(|c| matches!(c, PlayerCommand::Next))
+            .count(),
+        2,
+        "{sent:?}"
+    );
+    app.backend.shutdown();
+}

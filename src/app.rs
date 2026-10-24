@@ -5928,6 +5928,11 @@ impl App {
             self.play_request(PlayRequest::tracks(uris).starting_at_index(index), false);
             return;
         }
+        // A click skips with Next, once per row: the Free web player holds
+        // it as it holds the Next button (an ad, Spotify's restriction).
+        if matches!(self.target(), Target::Local) && !self.capabilities().skip_next {
+            return;
+        }
         let mut skips = index + 1;
         let mut consumed: Vec<String> = Vec::new();
         if let Loadable::Loaded(queue) = &mut self.queue {
