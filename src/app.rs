@@ -13873,6 +13873,29 @@ mod tests {
         Episode, Image, Page as ApiPage, ResumePoint, SavedEpisode, SavedTrack, SearchResults,
     };
 
+    /// On Linux the desktop finds the app behind its media controls by their
+    /// desktop entry. That entry must be the one Spotifast Free ships, under
+    /// its own name, not upstream Spotifast's "spotifast".
+    #[test]
+    fn the_media_controls_name_the_packaged_desktop_entry() {
+        let app = media_app();
+        assert_ne!(app.desktop_entry, "spotifast", "upstream Spotifast's entry");
+        let entry = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("packaging/applications")
+            .join(format!("{}.desktop", app.desktop_entry));
+        let text = std::fs::read_to_string(&entry)
+            .unwrap_or_else(|_| panic!("no packaged entry at {}", entry.display()));
+        assert!(
+            text.lines()
+                .any(|line| line == format!("StartupWMClass={}", app.desktop_entry)),
+            "the window class matches the entry\n{text}"
+        );
+        assert!(
+            text.lines().any(|line| line == "Name=Spotifast Free"),
+            "{text}"
+        );
+    }
+
     /// #623: the missing-output message the sink reports is the one the
     /// catalogues translate.
     #[test]
