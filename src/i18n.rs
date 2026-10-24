@@ -79,7 +79,7 @@ mod brand_tests {
         let b = |s: &'static str| brand(Cow::Borrowed(s)).into_owned();
         assert_eq!(b("Update Spotifast"), "Update Spotifast Free");
         assert_eq!(b("Spotifastをアップデート"), "Spotifast Freeをアップデート");
-        assert_eq!(b("Spotifast'i güncelle"), "Spotifast Free'i güncelle");
+        assert_eq!(b("Spotifast'i güncelle"), "Spotifast Free'yi güncelle");
         assert_eq!(
             b("Spotifast {version} • not affiliated with Spotify"),
             "Spotifast Free {version} • not affiliated with Spotify"
@@ -107,6 +107,38 @@ mod brand_tests {
             gettext(Locale::French, "Update Spotifast"),
             "Mettre à jour Spotifast Free"
         );
+    }
+
+    /// Languages that inflect the name keep their grammar: the ending
+    /// moves to "Free", where it belongs. Swedish "Spotifasts egen" is
+    /// "Spotifast Frees egen", Korean "Spotifast가" is "Spotifast Free가".
+    #[test]
+    fn inflected_names_keep_their_endings() {
+        let swedish = gettext(
+            Locale::Swedish,
+            "Draw Spotifast's own title bar and window buttons instead of the desktop's.",
+        );
+        assert!(
+            swedish.starts_with("Rita Spotifast Frees egen "),
+            "{swedish}"
+        );
+        let korean = gettext(
+            Locale::Korean,
+            "Spotifast will reconnect automatically when your connection returns.",
+        );
+        assert!(korean.contains("Spotifast Free가"), "{korean}");
+        assert!(!korean.contains("Spotifast가"), "{korean}");
+        // Turkish suffixes follow the last vowel and ending of the word they
+        // join: after "Free" (said "fri") they are 'yi, 'nin and 'ye.
+        assert_eq!(
+            gettext(Locale::Turkish, "Update Spotifast"),
+            "Spotifast Free'yi güncelle"
+        );
+        let genitive = gettext(
+            Locale::Turkish,
+            "Couldn't change how Spotifast starts with your computer.",
+        );
+        assert!(genitive.starts_with("Spotifast Free’nin "), "{genitive}");
     }
 }
 
