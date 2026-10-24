@@ -173,12 +173,12 @@ mod brand_tests {
     /// "Free"; a new one fails here rather than coming out ungrammatical.
     #[test]
     fn every_turkish_ending_is_known() {
-        let catalog = include_str!("../assets/i18n/tr.po");
-        let translations = catalog
-            .split("\n\n")
-            .filter(|entry| !entry.starts_with("#~"))
-            .filter_map(|entry| entry.split_once("\nmsgstr ").map(|(_, text)| text));
-        for text in translations {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/i18n/tr.po");
+        let catalog = polib::po_file::parse(&path).unwrap();
+        for text in catalog
+            .messages()
+            .filter_map(|message| message.msgstr().ok())
+        {
             for (at, _) in text.match_indices("Spotifast") {
                 let rest = &text[at + "Spotifast".len()..];
                 let Some(after) = rest.strip_prefix('\'').or_else(|| rest.strip_prefix('’'))
