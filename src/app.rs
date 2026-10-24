@@ -415,11 +415,14 @@ pub struct App {
     pub local_device_id: Option<String>,
     /// Ignore the previous local song until a Connect transfer reports its track.
     local_transfer_sequence: Option<u64>,
-    /// The Free web player's song a skip just left, and whether that was
-    /// Next (true) or Previous. Spotify's reports for it can still arrive
-    /// with its own restrictions (a first song has no previous); until a
-    /// report names another song, they must not hold the way back.
-    free_skipped_from: Option<(String, bool)>,
+    /// When the Free web player last skipped, and whether that was Next
+    /// (true) or Previous. After a skip there is always a way back, but
+    /// Spotify's reports can still name an older song with its own
+    /// restrictions (a list's first song has no previous): the song skipped
+    /// from, or a just-loaded list's first song when the skip beat its
+    /// report. Until Spotify allows the way back itself, or PLAYBACK_HOLD
+    /// passes, those reports must not close it.
+    free_skipped_from: Option<(Instant, bool)>,
     /// Local playback is authorized and the engine is connected.
     pub local_ready: bool,
     pub local_playback: LocalPlayback,
@@ -3256,19 +3259,19 @@ impl App {
             self.audio_key_banner = false;
             self.audio_key_banner_closed = false;
         }
-        // A late report for the song a skip left keeps its restrictions;
-        // the way back stays open until Spotify names the new song.
-        let playing_uri = self.local.track.as_ref().map(|track| track.uri.as_str());
-        match &self.free_skipped_from {
-            Some((uri, next)) if playing_uri == Some(uri.as_str()) => {
-                if *next {
-                    self.local.restrictions.skip_prev = false;
-                } else {
-                    self.local.restrictions.skip_next = false;
-                }
+        // A late report for an older song keeps its restrictions; the way
+        // back stays open until Spotify allows it itself.
+        if let Some((at, next)) = self.free_skipped_from {
+            let held = if next {
+                &mut self.local.restrictions.skip_prev
+            } else {
+                &mut self.local.restrictions.skip_next
+            };
+            if *held && at.elapsed() < PLAYBACK_HOLD {
+                *held = false;
+            } else {
+                self.free_skipped_from = None;
             }
-            Some(_) => self.free_skipped_from = None,
-            None => {}
         }
         if let Some(volume) = held_volume {
             self.local.volume = volume;
@@ -10867,11 +10870,7 @@ impl App {
                 // to, so a quick Previous must not be dropped meanwhile.
                 if self.free_web_player() {
                     self.local.restrictions.skip_prev = false;
-                    self.free_skipped_from = self
-                        .local
-                        .track
-                        .as_ref()
-                        .map(|track| (track.uri.clone(), true));
+                    self.free_skipped_from = Some((Instant::now(), true));
                 }
             }
             // Previous restarts after three seconds and otherwise steps back,
@@ -10903,11 +10902,7 @@ impl App {
                 // leaves what follows as it was.
                 if self.free_web_player() && steps_back {
                     self.local.restrictions.skip_next = false;
-                    self.free_skipped_from = self
-                        .local
-                        .track
-                        .as_ref()
-                        .map(|track| (track.uri.clone(), false));
+                    self.free_skipped_from = Some((Instant::now(), false));
                 }
             }
             Action::Seek(position_ms) => self.seek(position_ms),

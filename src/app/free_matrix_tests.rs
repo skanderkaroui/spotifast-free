@@ -236,6 +236,29 @@ fn free_next_right_after_previous_is_not_held_by_the_old_song() {
     app.backend.shutdown();
 }
 
+/// Live run on 0.14.1: Next pressed right after a playlist started, before
+/// Spotify's first report for it. The app still knew the song before the
+/// playlist, so the playlist's first song ("no previous track") reported
+/// late looked like news and held Previous.
+#[test]
+fn free_previous_is_not_held_when_next_beats_the_new_lists_first_report() {
+    let mut app = app_for("prev-before-first-report", true, SONG);
+    app.handle_local(playing(SONG, 1));
+    app.backend.take_player_commands();
+    run(&mut app, Action::Next);
+    // The newly loaded list's first song, reported after Next was sent.
+    let mut first_of_list = playing("spotify:track:00000000000000000000aa", 1);
+    first_of_list.restrictions.skip_prev = true;
+    app.handle_local(first_of_list);
+    app.backend.take_player_commands();
+    let sent = run(&mut app, Action::Previous);
+    assert!(
+        sent.iter().any(|c| matches!(c, PlayerCommand::Previous)),
+        "{sent:?}"
+    );
+    app.backend.shutdown();
+}
+
 #[test]
 fn volume_is_sent_and_saved_only_for_premium() {
     for action in [
