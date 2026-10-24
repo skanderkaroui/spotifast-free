@@ -16,7 +16,9 @@ pub const APP_NAME: &str = "Spotifast Free";
 
 /// Names the app "Spotifast Free" in an interface message. Messages that
 /// already say "Spotifast Free", or that mean upstream ("upstream
-/// Spotifast"), are left as they are.
+/// Spotifast"), are left as they are. An ending a language puts on the name
+/// moves to "Free": Swedish "Spotifasts" is "Spotifast Frees", Turkish
+/// "Spotifast'i" is "Spotifast Free'yi".
 pub fn brand(text: Cow<'static, str>) -> Cow<'static, str> {
     if !text.contains("Spotifast") {
         return text;
@@ -28,23 +30,49 @@ pub fn brand(text: Cow<'static, str>) -> Cow<'static, str> {
         out.push_str(before);
         let after = &after["Spotifast".len()..];
         let upstream = before.trim_end().ends_with("upstream");
-        // "Spotifast Free" already, or a path or bundle id glued to letters
-        // (SpotifastFree, SpotifastPlaybackProbe): keep as written. Only
-        // ASCII counts: Japanese and Chinese run words together with no
-        // space ("Spotifastをアップデート").
-        let glued = after
+        // "Spotifast Free" already, or a name glued to a capital or digit
+        // (SpotifastFree, SpotifastPlaybackProbe): keep as written.
+        let identifier = after
             .chars()
             .next()
-            .is_some_and(|c| c.is_ascii_alphanumeric());
-        if upstream || glued || after.starts_with(" Free") {
+            .is_some_and(|c| c.is_ascii_uppercase() || c.is_ascii_digit());
+        if upstream || identifier || after.starts_with(" Free") {
             out.push_str("Spotifast");
-        } else {
-            out.push_str(APP_NAME);
+            rest = after;
+            continue;
         }
+        out.push_str(APP_NAME);
         rest = after;
+        // A Turkish case ending after an apostrophe, written for "Spotifast",
+        // in the form "Free" (said "fri") takes.
+        if let Some(mark) = rest.chars().next().filter(|c| matches!(c, '\'' | '’')) {
+            let ending_len = rest[mark.len_utf8()..]
+                .find(|c: char| !c.is_alphabetic())
+                .unwrap_or(rest.len() - mark.len_utf8());
+            let ending = &rest[mark.len_utf8()..mark.len_utf8() + ending_len];
+            if let Some(free) = turkish_ending_after_free(ending) {
+                out.push(mark);
+                out.push_str(free);
+                rest = &rest[mark.len_utf8() + ending_len..];
+            }
+        }
     }
     out.push_str(rest);
     Cow::Owned(out)
+}
+
+/// A Turkish case ending, as the catalogue writes it after "Spotifast", in
+/// the form it takes after "Free": vowel harmony follows its "i", and the
+/// vowel ending adds a buffer y or n.
+fn turkish_ending_after_free(ending: &str) -> Option<&'static str> {
+    Some(match ending {
+        "i" | "ı" => "yi",
+        "in" | "ın" => "nin",
+        "e" | "a" => "ye",
+        "de" | "da" | "te" | "ta" => "de",
+        "den" | "dan" | "ten" | "tan" => "den",
+        _ => return None,
+    })
 }
 
 pub fn gettext<L: CatalogLocale>(locale: L, source: &'static str) -> Cow<'static, str> {
@@ -139,6 +167,31 @@ mod brand_tests {
             "Couldn't change how Spotifast starts with your computer.",
         );
         assert!(genitive.starts_with("Spotifast Free’nin "), "{genitive}");
+    }
+
+    /// Every Turkish ending the catalogue puts on the name has its form after
+    /// "Free"; a new one fails here rather than coming out ungrammatical.
+    #[test]
+    fn every_turkish_ending_is_known() {
+        let catalog = include_str!("../assets/i18n/tr.po");
+        let translations = catalog
+            .split("\n\n")
+            .filter(|entry| !entry.starts_with("#~"))
+            .filter_map(|entry| entry.split_once("\nmsgstr ").map(|(_, text)| text));
+        for text in translations {
+            for (at, _) in text.match_indices("Spotifast") {
+                let rest = &text[at + "Spotifast".len()..];
+                let Some(after) = rest.strip_prefix('\'').or_else(|| rest.strip_prefix('’'))
+                else {
+                    continue;
+                };
+                let ending: String = after.chars().take_while(|c| c.is_alphabetic()).collect();
+                assert!(
+                    turkish_ending_after_free(&ending).is_some(),
+                    "no form after Free for Turkish ending {ending:?}"
+                );
+            }
+        }
     }
 }
 
