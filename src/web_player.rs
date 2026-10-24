@@ -168,6 +168,7 @@ impl WebPlayer {
                                 | "ad"
                                 | "state"
                                 | "radio"
+                                | "device-recovery"
                         )
                     ) || (event.get("event").and_then(|v| v.as_str()) == Some("media")
                         && matches!(

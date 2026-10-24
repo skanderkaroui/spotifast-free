@@ -206,6 +206,11 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
     func userContentController(_ userContentController: WKUserContentController,
                                didReceive message: WKScriptMessage) {
         guard let text = message.body as? String else { return }
+        // Spotify dropped this page's device (its live connection was lost)
+        // and the page could not get it back. Reload Spotify's page, which
+        // registers it again, and replay the press that found it gone, once.
+        // The refusal itself is not passed on: the replay answers for it.
+        if text.contains("\"how\":\"device-lost\""), recoverLostDevice(from: text) { return }
         FileHandle.standardOutput.write(Data(text.utf8) + Data([10]))
         if text.contains("\"event\":\"account\""),
            let data = text.data(using: .utf8),
@@ -213,6 +218,31 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
            let state = event["state"] as? String {
             account(state)
         }
+    }
+
+    /// When the page was last reloaded to get its device back. One reload a
+    /// minute at most: if Spotify still has no device after that (the
+    /// network is down), the refusal goes through to Spotifast.
+    private var lastRecovery: Date?
+
+    /// Reloads Spotify's page and queues the refused command (its own action
+    /// and arguments, as the page reported them) to run once it is ready.
+    private func recoverLostDevice(from text: String) -> Bool {
+        if let last = lastRecovery, Date().timeIntervalSince(last) < 60 { return false }
+        guard let data = text.data(using: .utf8),
+              let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let action = event["action"] as? String else { return false }
+        let replay: [String: Any] = ["cmd": "connect", "action": action, "args": event["args"] ?? [:]]
+        guard let line = try? JSONSerialization.data(withJSONObject: replay),
+              let command = String(data: line, encoding: .utf8) else { return false }
+        lastRecovery = Date()
+        if let note = try? JSONSerialization.data(withJSONObject: ["event": "device-recovery", "action": action]) {
+            FileHandle.standardOutput.write(note + Data([10]))
+        }
+        pageReady = false
+        pending.insert(command, at: 0)
+        webView.reload()
+        return true
     }
 
     /// Spotify's sign-in, as the page reports it. Signed out: show the
