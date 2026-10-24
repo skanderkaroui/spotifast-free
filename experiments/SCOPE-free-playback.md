@@ -83,3 +83,16 @@ automation or change entitlement checks.
    bind control enabled state to reported restrictions and ad state.
 4. Tests: transport selection by tier, restriction-to-control mapping, ad
    state disabling skip/seek. Keep the other two targets compiling.
+
+## Responsiveness and memory (24 Oct)
+
+Goal: every press answers at once because the helper and its Spotify
+connection stay alive, with the helper as light as can be measured. Memory
+is `footprint` (what Activity Monitor shows), helper plus the WebKit
+processes it starts, 5 samples per run.
+
+| Change | Why | Measured before | Measured after |
+|---|---|---|---|
+| Start the helper once the plan is Free; no idle quit | The first press waited on a cold start, and nothing recorded why the helper quit after 5 idle minutes | First press about 6 s | First press accepted in 0.38 s, through the app |
+| On 404/410, re-read the device list; if the device is gone, reload the page and replay the press | A long-lived helper got 404/410 on 34 of 35 presses after its connection to Spotify dropped, until restarted. Spotify's page registers its device again on each load | Stuck until restart | Faked loss against real Spotify: one reload, press accepted 4.7 s later |
+| Smaller hidden window (400x300) | Less to draw | 454 MB idle | 481 MB idle. Worse, dropped |
