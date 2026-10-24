@@ -23681,6 +23681,7 @@ mod tests {
         app.backend.shutdown();
     }
 
+    #[cfg(target_os = "macos")]
     fn playing_app(name: &str, free: bool, uri: &str) -> App {
         let mut app = test_app(name);
         app.handle_playback(LocalPlayback::Ready {
