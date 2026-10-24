@@ -120,14 +120,12 @@ impl Capabilities {
     }
 }
 
-/// Whether `uri` names something Spotify can play, like or look up. The
-/// Free helper shows an ad as `spotifast:ad` (or Spotify's own
-/// `spotify:ad:` id) and, for a moment after an ad, a song by name as
-/// `web-player:...`; none of those is a Spotify item.
+/// Whether `uri` names something Spotify can play, like or look up: not
+/// the Free helper's ad (`spotifast:ad`, or Spotify's own `spotify:ad:`
+/// id), nor, for a moment after an ad, a song by name (`web-player:...`).
+/// A Premium local file (`spotify:local:`) keeps upstream's heart and menu.
 pub fn is_spotify_item(uri: &str) -> bool {
-    uri.starts_with("spotify:")
-        && !uri.starts_with("spotify:local:")
-        && !uri.starts_with("spotify:ad:")
+    uri.starts_with("spotify:") && !uri.starts_with("spotify:ad:")
 }
 
 #[cfg(test)]
@@ -182,6 +180,6 @@ mod tests {
         assert!(!is_spotify_item("spotifast:ad"));
         assert!(!is_spotify_item("spotify:ad:0123456789abcdef"));
         assert!(!is_spotify_item("web-player:Artist:Title"));
-        assert!(!is_spotify_item("spotify:local:a:b:c:1"));
+        assert!(is_spotify_item("spotify:local:a:b:c:1"), "as upstream");
     }
 }
