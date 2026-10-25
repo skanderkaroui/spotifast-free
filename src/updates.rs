@@ -62,6 +62,18 @@ mod tests {
         CONFIG.validate().unwrap();
     }
 
+    /// Spotifast Free signs its releases with its own key. Upstream
+    /// Spotifast's key would let a signed upstream release replace this app
+    /// with one that cannot play Free accounts.
+    #[test]
+    fn updates_trust_spotifast_frees_key_not_upstreams() {
+        const UPSTREAM: &str = "e44c87b1550484c687947bd927ae333ff431cc7adc6cc33533c628f82016b554";
+        let key = CONFIG.publisher_key.unwrap().trim();
+        assert_ne!(key, UPSTREAM);
+        assert_eq!(key.len(), 64);
+        assert!(key.bytes().all(|b| b.is_ascii_hexdigit()));
+    }
+
     /// An AppImage may replace itself only because the release workflow
     /// builds the AppImages into the signed checksums.txt;
     /// packaging/test-release-names.py checks that side.
