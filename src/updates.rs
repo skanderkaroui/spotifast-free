@@ -19,10 +19,9 @@ pub const CONFIG: UpdateConfig = UpdateConfig {
         legacy_bundle_names: &[],
     },
     // Releases publish an Ed25519 signature for checksums.txt. Require it
-    // before downloading an update, using the release workflow's public key.
-    // This fork has no releases or signing key of its own yet, so checks find
-    // nothing to install; they never fetch upstream Spotifast, which would
-    // replace this app with one that cannot play Free.
+    // before downloading an update, using Spotifast Free's own release key;
+    // the release workflow signs with its private half. An upstream
+    // Spotifast release, which cannot play Free, fails the check.
     publisher_key: Some(include_str!("../assets/update-public-key.hex")),
     // Releases build their AppImages before publishing, so the signed
     // checksums.txt lists them (#737): an AppImage replaces itself with the
