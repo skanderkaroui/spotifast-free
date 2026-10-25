@@ -322,7 +322,14 @@ fn section(
         )
         .stroke(Stroke::new(1.0, palette.outline))
         .corner_radius(CornerRadius::same(theme::RADIUS + 2))
-        .inner_margin(Margin::symmetric(20, 16))
+        // Every row leaves 10 points below itself for the next one, so the
+        // bottom margin is that much less than the top one (#1037).
+        .inner_margin(Margin {
+            left: 20,
+            right: 20,
+            top: 16,
+            bottom: 6,
+        })
         .show(ui, |ui| {
             ui.set_width(ui.available_width().min(760.0));
             add_contents(ui);
@@ -682,9 +689,10 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                     locale,
                     "Spotifast hides to the system tray. Quit from the tray menu or with Ctrl+Q.",
                 ),
+                // macOS has a menu bar where the others have a tray (#1006).
                 &gettext(
                     locale,
-                    "Spotifast hides to the system tray. Quit from the tray menu or with Cmd+Q.",
+                    "Spotifast hides to the menu bar. Quit from its menu-bar icon or with Cmd+Q.",
                 ),
             )
             .to_owned(),
@@ -2358,7 +2366,14 @@ fn start_with_computer_choices(
     [
         (None, pgettext(locale, "start with your computer", "Off")),
         (Some(Start::Window), gettext(locale, "With the window")),
-        (Some(Start::Hidden), gettext(locale, "In the tray")),
+        (
+            Some(Start::Hidden),
+            if cfg!(target_os = "macos") {
+                gettext(locale, "In the menu bar")
+            } else {
+                gettext(locale, "In the tray")
+            },
+        ),
     ]
 }
 
@@ -2378,9 +2393,21 @@ fn start_with_computer_detail(
             "Allow Spotifast in System Settings, General, Login Items.",
         )
     } else if choice == Some(Start::Hidden) && !keeps_running {
+        if cfg!(target_os = "macos") {
+            gettext(
+                locale,
+                "Starting in the menu bar needs Keep music playing when the window closes. Until then, the window opens.",
+            )
+        } else {
+            gettext(
+                locale,
+                "Starting in the tray needs Keep music playing when the window closes. Until then, the window opens.",
+            )
+        }
+    } else if cfg!(target_os = "macos") {
         gettext(
             locale,
-            "Starting in the tray needs Keep music playing when the window closes. Until then, the window opens.",
+            "Open Spotifast when you log in, with its window or in the menu bar.",
         )
     } else {
         gettext(
@@ -2655,6 +2682,39 @@ fn eq_curve(ui: &mut egui::Ui, palette: &Palette, settings: &crate::eq::EqSettin
 #[cfg(test)]
 mod tests {
     use super::{RELEASE_NOTES_URL, RowText, row_matches, section_matches};
+
+    /// macOS has a menu bar where Linux and Windows have a tray, and the
+    /// start-up choices say so (#1006).
+    #[test]
+    fn starting_hidden_names_the_menu_bar_on_macos_and_the_tray_elsewhere() {
+        use fastframe_autostart::{Start, State};
+        let locale = crate::i18n::Locale::English;
+        let [_, _, (_, hidden)] = super::start_with_computer_choices(locale);
+        let texts = [
+            hidden.into_owned(),
+            super::start_with_computer_detail(
+                locale,
+                Some(State::On(Start::Hidden)),
+                Some(Start::Hidden),
+                false,
+            )
+            .into_owned(),
+            super::start_with_computer_detail(locale, Some(State::Off), None, true).into_owned(),
+        ];
+        for text in texts {
+            if cfg!(target_os = "macos") {
+                assert!(
+                    text.contains("menu bar") && !text.contains("tray"),
+                    "{text}"
+                );
+            } else {
+                assert!(
+                    text.contains("tray") && !text.contains("menu bar"),
+                    "{text}"
+                );
+            }
+        }
+    }
 
     /// Save preset saves the typed name, and the saved preset in use offers
     /// its Delete (#702).

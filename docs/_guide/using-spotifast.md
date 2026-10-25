@@ -299,6 +299,8 @@ Winamp skins do not yet have equivalent accessibility coverage.
 | `Ctrl+F` or `/` | Search |
 | `Ctrl+B` | Show or hide the sidebar |
 | `Alt+←` / `Alt+→` | Back or forward |
+| `Page Up` / `Page Down` | Scroll the main page one page |
+| `Home` / `End` | Top or bottom of the main page |
 | `Ctrl+H` / `Ctrl+L` | Home / Liked Songs |
 | `Ctrl+Shift+A` / `Ctrl+Shift+B` | Playing artist / album |
 | `Ctrl+A` | Select every song in a playlist, album or Liked Songs |
@@ -312,6 +314,11 @@ Winamp skins do not yet have equivalent accessibility coverage.
 
 On macOS, `Cmd` replaces `Ctrl`. A focused text field keeps its usual keys
 for its own text.
+
+Repeat cycles through off, the whole list, and one song. As in Spotify's own
+apps, choosing another song while one song repeats (Next, Previous, or playing
+a song) turns Repeat One back into repeating the whole list. Previous that
+restarts the song keeps it repeating.
 
 ## Controlling it from the command line
 
@@ -477,7 +484,7 @@ bullet; each artist name remains a separate link.
 **Settings > Playback on this computer > Start with your computer** opens
 Spotifast when you log in. **With the window** opens it as you would;
 **In the tray** starts it without a window, ready for media keys and the tray
-icon. **Off** leaves your login alone.
+icon; on macOS it reads **In the menu bar**. **Off** leaves your login alone.
 
 The setting is your system's own list of what starts at login, read back each
 time Settings opens, so turning Spotifast off there (System Settings on macOS,
