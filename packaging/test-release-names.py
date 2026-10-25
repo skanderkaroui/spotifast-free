@@ -34,6 +34,17 @@ class ReleaseNamesTest(unittest.TestCase):
                         if "gh-releases-zsync|crmne|" in line]
             self.assertEqual(upstream, [], workflow.name)
 
+    def test_the_install_check_expects_the_desktop_entry_spotifast_free_ships(self):
+        # Packaging installs this fork's own releases, so the clean-container
+        # check must look for the desktop entry they carry.
+        root = Path(__file__).resolve().parent.parent
+        entries = sorted(path.name for path in (root / "packaging/applications").glob("*.desktop"))
+        self.assertEqual(entries, ["spotifast-free.desktop"])
+        script = (root / "packaging/test-install.sh").read_text()
+        self.assertIn("/usr/share/applications/spotifast-free.desktop", script)
+        self.assertNotIn("/usr/share/applications/spotifast.desktop", script)
+        self.assertIn('grep -qx "StartupWMClass=spotifast-free"', script)
+
     def test_current_version_has_written_release_notes_before_tagging(self):
         root = Path(__file__).resolve().parent.parent
         version = tomllib.loads((root / "Cargo.toml").read_text())["package"]["version"]
