@@ -104,11 +104,11 @@ choose **Always Allow**.
 |---|---|
 | **Library and search** | Browse playlists, Liked Songs, albums, artists, and podcasts. Search the catalogue and edit playlists you own. |
 | **Local files** | Premium: play the local files your playlists list from a folder you choose in Settings, at any sample rate. |
-| **Spotify Connect** | Premium: play on this computer or control your other devices, including Google Cast speakers and groups. Cast devices appear as they are discovered; frequently and recently chosen outputs rise to the top. |
+| **Spotify Connect** | Premium: play on this computer or control your other devices, including Google Cast speakers and groups. Cast devices appear as they are discovered; frequently and recently chosen outputs rise to the top. Remote volume keeps your chosen level while Spotify updates. |
 | **Queue** | Add songs to the queue. On Premium, **Play next** puts a song or selection first when playing on this computer. |
 | **Themes** | Choose light, dark, system appearance, or custom colours, with one theme for light mode and one for dark mode that switch with the system. On Omarchy, follow your desktop theme. |
 | **Desktop controls** | Use keyboard shortcuts, media keys and the command line (`spotifast play`, `next`, `now-playing`…; the command is still called `spotifast`). Start Spotifast Free with your computer, with its window or in the tray. |
-| **Winamp mini player** | Use classic skins with an equalizer, playlist, and animated sound displays. Premium only for the equalizer and visuals. |
+| **Winamp mini player** | Use classic skins with an equalizer, playlist, and animated sound displays, also in the collapsed title bar. Premium only for the equalizer and visuals. |
 | **MilkDrop** | Watch music-reactive visuals, Premium only. See Spotifast's [MilkDrop guide](https://spotifast.rocks/milkdrop/). |
 
 Spotifast's [user guide](https://spotifast.rocks/using-spotifast/) covers

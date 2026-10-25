@@ -262,8 +262,11 @@ this playlist**. On macOS, both `Delete` and `Fn+Delete` work. Text fields,
 dialogs and open menus keep Delete from acting on the list.
 
 Press and hold the player bar's volume slider to update local volume without
-moving the pointer. Remote volume is sent on release. The seek slider previews
-on press and seeks on release.
+moving the pointer. Remote volume is sent on release and keeps your chosen
+level while Spotify updates, including during rate limits. Fresh updates
+can confirm the level or show a change made on another device. If the volume
+request fails, an error appears and the slider returns to the reported level.
+The seek slider previews on press and seeks on release.
 
 The default local output smooths volume and mute changes over 30 ms. Explicit
 track changes and play/pause/stop use nominal 50 ms fades. Stopping can shorten
@@ -598,6 +601,12 @@ resume playback directly from the notch.
 
 To turn on the notch overlay, check **MacBook notch widget** in
 Settings under **Playback on this computer**.
+
+## Where the music is playing from
+
+Above the current song, the queue panel says what it is playing from: the
+playlist, album, artist or other page. Click the name to open that page. A
+radio has no page, so its name is plain text.
 
 ## Recent
 
