@@ -237,7 +237,11 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           mkdir -p dist/macos-input
-          bash packaging/macos/bundle.sh universal/spotifast dist/macos-input/Spotifast.app "$version"
+          # The Spotify Free playback helper, built here and put inside the
+          # app by bundle.sh; without it Free accounts cannot play.
+          sh experiments/macos-playback-host/build.sh
+          bash packaging/macos/bundle.sh universal/spotifast "dist/macos-input/Spotifast Free.app" "$version"
+          test -d "dist/macos-input/Spotifast Free.app/Contents/Helpers/SpotifastPlaybackProbe.app"
           cp README.md LICENSE dist/macos-input/
 
       - name: Package, sign and notarize macOS app
@@ -331,7 +335,7 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/*
-          name: Spotifast ${{ github.ref_name }}
+          name: Spotifast Free ${{ github.ref_name }}
           # Publish reviewed notes immediately, not a generated PR-only summary.
           body_path: packaging/release-notes/${{ github.ref_name }}.md
           generate_release_notes: false

@@ -10,10 +10,10 @@ abort "usage: dmg.rb PAYLOAD OUTPUT.dmg" unless payload && output
 abort "output already exists: #{output}" if File.exist?(output)
 Dir.mktmpdir("spotifast-dmg-") do |directory|
   FileUtils.cp_r(File.join(payload, "."), directory, preserve: true)
-  app = File.join(directory, "Spotifast.app")
-  abort "expected the signed Spotifast.app input" unless File.directory?(app)
+  app = File.join(directory, "Spotifast Free.app")
+  abort "expected the signed Spotifast Free.app input" unless File.directory?(app)
   File.symlink("/Applications", File.join(directory, "Applications"))
-  abort "DMG creation failed" unless system("hdiutil", "create", "-volname", "Spotifast",
+  abort "DMG creation failed" unless system("hdiutil", "create", "-volname", "Spotifast Free",
     "-srcfolder", directory, "-format", "UDZO", output)
   abort "DMG verification failed" unless system("hdiutil", "verify", output)
 end
