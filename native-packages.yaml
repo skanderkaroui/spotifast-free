@@ -16,8 +16,8 @@ libraries:
 nfpm:
   name: spotifast
   maintainer: Carmine Paolino <carmine@paolino.me>
-  homepage: https://github.com/crmne/spotifast
-  description: A native Spotify client
+  homepage: https://github.com/skanderkaroui/spotifast-free
+  description: A native Spotify client that plays Spotify Free and Premium
   license: MIT
   contents:
   # A glob source makes nFPM append its basename to the destination directory.
@@ -139,7 +139,7 @@ targets:
     compiler_target: x86_64-unknown-linux-gnu
     formats: [appimage]
     appimage:
-      update_information: gh-releases-zsync|crmne|spotifast|latest|spotifast-*-x86_64.AppImage.zsync
+      update_information: gh-releases-zsync|skanderkaroui|spotifast-free|latest|spotifast-*-x86_64.AppImage.zsync
     input:
       local: dist/spotifast-v@VERSION@-x86_64-unknown-linux-gnu.tar.gz
       release_asset: spotifast-v@VERSION@-x86_64-unknown-linux-gnu.tar.gz
@@ -150,7 +150,7 @@ targets:
     compiler_target: aarch64-unknown-linux-gnu
     formats: [appimage]
     appimage:
-      update_information: gh-releases-zsync|crmne|spotifast|latest|spotifast-*-aarch64.AppImage.zsync
+      update_information: gh-releases-zsync|skanderkaroui|spotifast-free|latest|spotifast-*-aarch64.AppImage.zsync
     input:
       local: dist/spotifast-v@VERSION@-aarch64-unknown-linux-gnu.tar.gz
       release_asset: spotifast-v@VERSION@-aarch64-unknown-linux-gnu.tar.gz
@@ -179,7 +179,7 @@ targets:
       command: [python, packaging/windows/build-msi.py, '@PAYLOAD@', '@PACKAGE@', '@VERSION@', '@ARCH@']
       output: 'spotifast-@TAG@-@TARGET@.msi'
 release:
-  repository: crmne/spotifast
+  repository: skanderkaroui/spotifast-free
   prereleases: true
   checksums: checksums.txt
 assets:
@@ -214,7 +214,9 @@ repositories:
       arch/spotifast: "."
     version_file: ".SRCINFO"
     version_pattern: "^\\s*pkgver = (\\S+)"
-    publish: push
+    # Upstream Spotifast's package; Spotifast Free has none here yet.
+    publish: manual
+    notes: Not published for Spotifast Free.
   aur-bin:
     group: aur
     url: https://aur.archlinux.org/spotifast-bin.git
@@ -225,7 +227,9 @@ repositories:
       arch/spotifast-bin: "."
     version_file: ".SRCINFO"
     version_pattern: "^\\s*pkgver = (\\S+)"
-    publish: push
+    # Upstream Spotifast's package; Spotifast Free has none here yet.
+    publish: manual
+    notes: Not published for Spotifast Free.
   aur-git:
     group: aur
     url: https://aur.archlinux.org/spotifast-git.git
@@ -236,7 +240,9 @@ repositories:
       arch/spotifast-git: "."
     version_file: ".SRCINFO"
     version_pattern: "^\\s*pkgver = (\\S+)"
-    publish: push
+    # Upstream Spotifast's package; Spotifast Free has none here yet.
+    publish: manual
+    notes: Not published for Spotifast Free.
   homebrew:
     url: https://github.com/crmne/homebrew-tap.git
     push_url: https://github.com/crmne/homebrew-tap.git
@@ -246,5 +252,7 @@ repositories:
       homebrew/spotifast.rb: Casks/spotifast.rb
     version_file: Casks/spotifast.rb
     version_pattern: version "([^"]+)"
-    publish: push
+    # Upstream Spotifast's package; Spotifast Free has none here yet.
+    publish: manual
+    notes: Not published for Spotifast Free.
 version_file: Cargo.toml
