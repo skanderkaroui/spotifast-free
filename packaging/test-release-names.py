@@ -15,6 +15,18 @@ spec.loader.exec_module(release_names)
 
 
 class ReleaseNamesTest(unittest.TestCase):
+    def test_appimages_update_from_spotifast_frees_own_releases(self):
+        # AppImageUpdate follows this to the newest release: upstream
+        # Spotifast's would replace Spotifast Free with an app that cannot
+        # play Free accounts.
+        for arch in ["x86_64", "aarch64"]:
+            information = release_names.update_information(arch)
+            self.assertTrue(information.startswith("gh-releases-zsync|skanderkaroui|spotifast-free|latest|"),
+                            information)
+        manifest = (Path(__file__).resolve().parent.parent / "native-packages.yaml").read_text()
+        self.assertNotIn("gh-releases-zsync|crmne|", manifest)
+        self.assertIn("repository: skanderkaroui/spotifast-free", manifest)
+
     def test_current_version_has_written_release_notes_before_tagging(self):
         root = Path(__file__).resolve().parent.parent
         version = tomllib.loads((root / "Cargo.toml").read_text())["package"]["version"]
