@@ -134,9 +134,10 @@ jobs:
           set -- dist/appimage/packages/"$TARGET"/appimage/spotifast-*-"$ARCH".AppImage
           test "$#" -eq 1
           "$1" --appimage-extract-and-run --version | grep -Ex 'spotifast [0-9]+\.[0-9]+\.[0-9]+.*'
-          expected="gh-releases-zsync|crmne|spotifast|latest|spotifast-*-$ARCH.AppImage.zsync"
+          # The runtime reads back the update information release-names.py expects.
           found=$("$1" --appimage-updateinformation)
-          test "$found" = "$expected" || { echo "Update information: $found" >&2; exit 1; }
+          expected=$(python3 -c 'import importlib.util as u, sys; s = u.spec_from_file_location("r", "packaging/release-names.py"); m = u.module_from_spec(s); s.loader.exec_module(m); print(m.update_information(sys.argv[1]))' "$ARCH")
+          test "$found" = "$expected" || { echo "Update information: $found, not $expected" >&2; exit 1; }
           python3 packaging/check-appimage.py "$1" "$ARCH"
       - name: Published AppImage
         if: inputs.version != ''
