@@ -229,6 +229,12 @@ jobs:
           test "$status" -eq 1
           test -s "$RUNNER_TEMP/spotifast-helper-check.log"
 
+      # The release puts the Spotify Free playback helper inside a universal
+      # app, so it must build for both architectures.
+      - name: macOS playback helper is universal
+        if: runner.os == 'macOS'
+        run: sh experiments/macos-playback-host/test-build.sh
+
   nix:
     name: Nix package
     runs-on: ubuntu-latest

@@ -3,8 +3,15 @@ set -eu
 probe_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 app_path="$probe_dir/../../.cache/webkit-playback-probe/SpotifastPlaybackProbe.app"
 mkdir -p "$app_path/Contents/MacOS" "$app_path/Contents/Resources"
-xcrun swiftc -O -warnings-as-errors -framework AppKit -framework WebKit \
-    "$probe_dir/Probe.swift" -o "$app_path/Contents/MacOS/SpotifastPlaybackProbe"
+# Universal, like the app that carries it: one slice per architecture,
+# joined with lipo. The deployment target is the helper's own minimum.
+slices=$(mktemp -d)
+for arch in arm64 x86_64; do
+    xcrun swiftc -O -warnings-as-errors -target "$arch-apple-macos14.0" \
+        -framework AppKit -framework WebKit \
+        "$probe_dir/Probe.swift" -o "$slices/$arch"
+done
+lipo -create "$slices/arm64" "$slices/x86_64" -output "$app_path/Contents/MacOS/SpotifastPlaybackProbe"
 cp "$probe_dir/Info.plist" "$app_path/Contents/Info.plist"
 cp "$probe_dir/MediaCapabilities.js" "$app_path/Contents/Resources/MediaCapabilities.js"
 cp "$probe_dir/Diagnostics.js" "$app_path/Contents/Resources/Diagnostics.js"
@@ -19,4 +26,6 @@ if [ -f "$icon_png" ] && command -v iconutil >/dev/null; then
     done
     iconutil -c icns "$iconset" -o "$app_path/Contents/Resources/spotifast.icns"
 fi
+# arm64 runs only signed code; bundle.sh re-signs it inside the app.
+codesign --force --sign - "$app_path" >/dev/null 2>&1
 printf '%s\n' "$app_path"
