@@ -1,21 +1,21 @@
-cask "spotifast" do
+cask "spotifast-free" do
   version "@VERSION@"
   sha256 "@MACOS_SHA256@"
 
-  url "https://github.com/crmne/spotifast/releases/download/v#{version}/spotifast-v#{version}-macos-universal.dmg"
-  name "Spotifast"
-  desc "Native Spotify client"
-  homepage "https://spotifast.rocks"
+  url "https://github.com/skanderkaroui/spotifast-free/releases/download/v#{version}/spotifast-v#{version}-macos-universal.dmg"
+  name "Spotifast Free"
+  desc "Native Spotify client that plays Spotify Free and Premium"
+  homepage "https://github.com/skanderkaroui/spotifast-free"
 
   livecheck do
     url :url
     strategy :github_latest
   end
 
-  app "Spotifast.app"
+  app "Spotifast Free.app"
 
   zap trash: [
-    "~/Library/Application Support/me.paolino.spotifast",
-    "~/Library/Caches/me.paolino.spotifast",
+    "~/Library/Application Support/io.github.skanderkaroui.SpotifastFree",
+    "~/Library/Caches/io.github.skanderkaroui.SpotifastFree",
   ]
 end
