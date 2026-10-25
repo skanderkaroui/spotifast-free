@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Published version (empty tests the pinned v0.11.2 fixture)
+        description: Published version of this fork to package and check
         type: string
         default: ''
       publish:
@@ -38,7 +38,11 @@ permissions:
   contents: read
 
 jobs:
+  # Packaging builds from a published release of this fork. Until its first
+  # one, a pull request has no fixture to build from (v0.11.2 was upstream
+  # Spotifast's), so these checks run on releases and manual runs only.
   packaging:
+    if: inputs.version != ''
     permissions:
       contents: write
     uses: crmne/native-packages/.github/workflows/package.yml@226fb48cb375c7cb309a3e642c7228a6e00e9ebf # v0.10.0
@@ -46,13 +50,14 @@ jobs:
       targets: linux-amd64,linux-arm64
       # Packaging changes exercise real release binaries on both architectures.
       # Update this fixture deliberately; releases use their own tag instead.
-      version: ${{ inputs.version || 'v0.11.2' }}
+      version: ${{ inputs.version }}
       publish: ${{ inputs.publish == true && inputs.version != '' }}
     secrets: inherit
 
   homebrew:
     name: Homebrew install (macOS)
     needs: packaging
+    if: inputs.version != ''
     runs-on: macos-latest
     timeout-minutes: 15
     steps:
@@ -67,13 +72,13 @@ jobs:
           brew tap-new --no-git spotifast/validation
           tap="$(brew --repository)/Library/Taps/spotifast/homebrew-validation"
           mkdir -p "$tap/Casks"
-          cp dist/native-packages/recipes/homebrew/spotifast.rb "$tap/Casks/spotifast.rb"
-          brew install --cask spotifast/validation/spotifast
-          app=/Applications/Spotifast.app
+          cp dist/native-packages/recipes/homebrew/spotifast.rb "$tap/Casks/spotifast-free.rb"
+          brew install --cask spotifast/validation/spotifast-free
+          app="/Applications/Spotifast Free.app"
           executable=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")
           "$app/Contents/MacOS/$executable" --version
           codesign --verify --strict "$app"
-          brew uninstall --cask spotifast/validation/spotifast
+          brew uninstall --cask spotifast/validation/spotifast-free
           test ! -e "$app"
 
   # Releases build their AppImages before publishing (release.yml), not in
@@ -85,6 +90,7 @@ jobs:
   # desktop would. Runners have no FUSE: it unpacks itself to run.
   appimage:
     name: AppImage (${{ matrix.os }})
+    if: inputs.version != ''
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     strategy:
@@ -100,7 +106,7 @@ jobs:
     env:
       TARGET: ${{ matrix.target }}
       ARCH: ${{ matrix.arch }}
-      VERSION: ${{ inputs.version || 'v0.11.2' }}
+      VERSION: ${{ inputs.version }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -150,6 +156,7 @@ jobs:
   installation:
     name: Install (${{ matrix.os }}, ${{ matrix.image }})
     needs: packaging
+    if: inputs.version != ''
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     strategy:
