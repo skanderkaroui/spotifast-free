@@ -23,9 +23,16 @@ class ReleaseNamesTest(unittest.TestCase):
             information = release_names.update_information(arch)
             self.assertTrue(information.startswith("gh-releases-zsync|skanderkaroui|spotifast-free|latest|"),
                             information)
-        manifest = (Path(__file__).resolve().parent.parent / "native-packages.yaml").read_text()
+        root = Path(__file__).resolve().parent.parent
+        manifest = (root / "native-packages.yaml").read_text()
         self.assertNotIn("gh-releases-zsync|crmne|", manifest)
         self.assertIn("repository: skanderkaroui/spotifast-free", manifest)
+        # The release's AppImage checks must expect the same, or they fail
+        # on correct AppImages.
+        for workflow in sorted((root / ".github/workflows").glob("*.yml")):
+            upstream = [line.strip() for line in workflow.read_text().splitlines()
+                        if "gh-releases-zsync|crmne|" in line]
+            self.assertEqual(upstream, [], workflow.name)
 
     def test_current_version_has_written_release_notes_before_tagging(self):
         root = Path(__file__).resolve().parent.parent
