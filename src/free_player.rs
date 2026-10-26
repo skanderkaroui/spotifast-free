@@ -77,20 +77,53 @@ pub async fn handle(
 /// ready, so the answer has to come from here rather than from the app not
 /// asking.
 pub fn local_answer(request: &ApiRequest) -> Option<ApiResponse> {
-    let _ = request;
-    None
+    let refused = || ApiError::Status {
+        status: 403,
+        message: "Spotify Free plays only on this computer.".into(),
+    };
+    Some(match request {
+        ApiRequest::PlaybackState { seq } => ApiResponse::PlaybackState {
+            seq: *seq,
+            result: Ok(None),
+        },
+        ApiRequest::Devices => ApiResponse::Devices(Ok(Vec::new())),
+        ApiRequest::Queue { seq } => ApiResponse::Queue {
+            seq: *seq,
+            result: Err(refused()),
+        },
+        ApiRequest::Remote { action, .. } => ApiResponse::Remote {
+            action: *action,
+            result: Err(refused()),
+        },
+        _ => return None,
+    })
 }
 
 /// The artists Spotify lists as related, from the artist's page.
 pub fn related_artists(body: &Value) -> Result<Vec<Artist>, ApiError> {
-    let _ = body;
-    Err(ApiError::Decode("not read yet".into()))
+    let artist = body
+        .pointer("/data/artistUnion")
+        .filter(|value| value.is_object())
+        .ok_or_else(|| ApiError::Decode("Spotify sent no artist".into()))?;
+    let rows = artist
+        .pointer("/relatedContent/relatedArtists/items")
+        .and_then(Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    // Each row has the shape of an artist page's own header.
+    Ok(rows
+        .iter()
+        .filter_map(|row| {
+            free::artist_overview(&serde_json::json!({"data": {"artistUnion": row}})).ok()
+        })
+        .collect())
 }
 
 /// The playlists a playlist search found.
 pub fn playlists_found(body: &Value) -> Page<Playlist> {
-    let _ = body;
-    Page::default()
+    free::search_results(&[(SearchKind::Playlists, body.clone())])
+        .playlists
+        .unwrap_or_default()
 }
 
 fn search_kind(kind: &str) -> SearchKind {
@@ -104,13 +137,17 @@ fn search_kind(kind: &str) -> SearchKind {
 
 /// The URI of the first thing a search found: what `play-search` plays.
 pub fn best_match(kind: SearchKind, body: &Value) -> Option<String> {
-    let _ = (kind, body);
-    None
+    let found = free::search_results(&[(kind, body.clone())]);
+    match kind {
+        SearchKind::Tracks => first(found.tracks, |track: Track| track.uri),
+        SearchKind::Albums => first(found.albums, |album| album.uri),
+        SearchKind::Artists => first(found.artists, |artist| artist.uri),
+        SearchKind::Playlists => first(found.playlists, |playlist| playlist.uri),
+    }
 }
 
-#[allow(dead_code)]
-fn first_track(page: Option<Page<Track>>) -> Option<String> {
-    page?.items.into_iter().next().map(|track| track.uri)
+fn first<T>(page: Option<Page<T>>, uri: impl FnOnce(T) -> String) -> Option<String> {
+    page?.items.into_iter().next().map(uri)
 }
 
 #[cfg(test)]
@@ -220,5 +257,68 @@ mod tests {
             other => panic!("remote: {other:?}"),
         }
         assert!(local_answer(&ApiRequest::Me).is_none());
+    }
+}
+
+#[cfg(test)]
+mod live {
+    use super::*;
+
+    #[test]
+    #[ignore = "needs the helper signed in to Spotify"]
+    fn the_remaining_reads_answer_through_the_helper() {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let player = crate::web_player::WebPlayer::start(
+            std::sync::Arc::new(|_| {}),
+            std::sync::Arc::new(|_| {}),
+            None,
+        )
+        .unwrap();
+        let reader = player.reader();
+        let ask = |request: ApiRequest| runtime.block_on(handle(&reader, None, &request)).unwrap();
+        let ApiResponse::RelatedArtists { result, .. } = ask(ApiRequest::RelatedArtists {
+            id: "4tZwfgrHOc3mvqYlEYSvVi".into(),
+        }) else {
+            panic!()
+        };
+        let related = result.unwrap();
+        let ApiResponse::AlbumQueueTracks { result, .. } = ask(ApiRequest::AlbumQueueTracks {
+            id: "4m2880jivSbbyEGAKfITCa".into(),
+            offset: 0,
+            request: 1,
+        }) else {
+            panic!()
+        };
+        let queued = result.unwrap();
+        let ApiResponse::SearchPlaylists { result, .. } = ask(ApiRequest::SearchPlaylists {
+            query: "daft punk".into(),
+            serial: 1,
+        }) else {
+            panic!()
+        };
+        let playlists = result.unwrap();
+        let mut matches = Vec::new();
+        for kind in ["track", "album", "artist", "playlist"] {
+            let ApiResponse::PlaySearch { result, .. } = ask(ApiRequest::PlaySearch {
+                kind: kind.into(),
+                query: "daft punk".into(),
+                serial: 1,
+            }) else {
+                panic!()
+            };
+            matches.push(result.unwrap().expect("a match"));
+        }
+        eprintln!(
+            "related artists: {}, album queue songs: {}/{}, playlists found: {}/{}, play-search: {matches:?}",
+            related.len(),
+            queued.items.len(),
+            queued.total,
+            playlists.items.len(),
+            playlists.total,
+        );
+        assert!(!related.is_empty() && !queued.items.is_empty() && !playlists.items.is_empty());
     }
 }
