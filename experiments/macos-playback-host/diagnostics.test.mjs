@@ -578,3 +578,44 @@ for (const name of fixtureNames) {
   assert.equal(answer?.how, 'signed-out');
   console.log('ok: a signed-out page reports itself signed out instead of reading');
 }
+
+// A Free account's playlist edits: the page posts the web player's own
+// playlist-service change to exactly the playlist, rootlist or creation
+// path asked, with its sign-in, and refuses any other target.
+{
+  const out = [];
+  const asked = [];
+  const page = {
+    ...context,
+    document: { ...document, querySelector: (selector) => (selector.includes('user-widget-link') ? {} : null) },
+    window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } },
+      fetch: async (input, init = {}) => {
+        const url = typeof input === 'string' ? input : input.url;
+        if (url.includes('/playlist/v2/')) {
+          asked.push({ url, method: init.method, headers: init.headers, body: JSON.parse(init.body) });
+          return { ok: true, status: 200, text: async () => '{"revision":"AAAA"}' };
+        }
+        return { ok: true, status: 200, json: async () => ({}) };
+      } },
+    setInterval: () => {},
+    setTimeout,
+    navigator: {},
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer first' } });
+  const delta = { deltas: [{ ops: [{ kind: 'UPDATE_LIST_ATTRIBUTES' }] }] };
+  await page.window.__spotifastQuery(1, { playlistChanges: { create: true, body: { ops: [] } } });
+  await page.window.__spotifastQuery(2, { playlistChanges: { playlist: '5cr4tchPl4yl1stF1xtur3', body: delta } });
+  await page.window.__spotifastQuery(3, { playlistChanges: { rootlist: 'owner', body: delta } });
+  await page.window.__spotifastQuery(4, { playlistChanges: { playlist: '../../me', body: delta } });
+  assert.deepEqual(asked.map((a) => a.url), [
+    'https://spclient.wg.spotify.com/playlist/v2/playlist',
+    'https://spclient.wg.spotify.com/playlist/v2/playlist/5cr4tchPl4yl1stF1xtur3/changes',
+    'https://spclient.wg.spotify.com/playlist/v2/user/owner/rootlist/changes',
+  ]);
+  assert.ok(asked.every((a) => a.method === 'POST' && a.headers.authorization === 'Bearer first'));
+  assert.deepEqual(asked[1].body, delta);
+  const answers = out.filter((event) => event.event === 'query');
+  assert.deepEqual(answers.map((a) => [a.id, a.status]), [[1, 200], [2, 200], [3, 200], [4, 400]]);
+  console.log('ok: playlist edits go only to the playlist service paths asked');
+}
