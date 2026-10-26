@@ -538,3 +538,94 @@ mod tests {
         assert!(done.resume_point.unwrap().fully_played);
     }
 }
+
+#[cfg(all(test, target_os = "macos"))]
+mod live {
+    use super::*;
+
+    /// Each podcast read answers through the helper's web player, as the
+    /// backend routes it. Read-only.
+    #[test]
+    #[ignore = "needs the helper signed in to Spotify"]
+    fn podcast_reads_answer_through_the_helper() {
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let player = crate::web_player::WebPlayer::start(
+            std::sync::Arc::new(|_| {}),
+            std::sync::Arc::new(|_| {}),
+            None,
+        )
+        .unwrap();
+        let reader = player.reader();
+        let read = |query: Value| runtime.block_on(reader.query(&query));
+        let profile = crate::free_reads::answer(read(crate::free_reads::profile_query())).unwrap();
+        let account = crate::free_reads::answer(read(crate::free_reads::account_query())).unwrap();
+        let user = crate::free_reads::user(&profile, &account).unwrap();
+        let ask = |request: ApiRequest| {
+            runtime
+                .block_on(handle(&reader, Some(&user.id), &request))
+                .expect("a podcast read")
+        };
+        let rogan = "4rOoJ6Egrf8K2IrywzwOMk".to_string();
+        let ApiResponse::Show { result, .. } = ask(ApiRequest::Show { id: rogan.clone() }) else {
+            panic!("a podcast")
+        };
+        let show = result.unwrap();
+        let ApiResponse::ShowEpisodes { result, .. } = ask(ApiRequest::ShowEpisodes {
+            id: rogan.clone(),
+            offset: 50,
+        }) else {
+            panic!("episodes")
+        };
+        let episodes = result.unwrap();
+        let first = episodes.items[0].id.clone();
+        let ApiResponse::Episode { result, .. } = ask(ApiRequest::Episode { id: first }) else {
+            panic!("an episode")
+        };
+        let episode = result.unwrap();
+        let ApiResponse::HomeEpisodes { result, .. } = ask(ApiRequest::HomeEpisodes {
+            shows: vec![show.clone()],
+            generation: 1,
+        }) else {
+            panic!("Home episodes")
+        };
+        let home = result.unwrap();
+        let ApiResponse::SavedShows { result, .. } = ask(ApiRequest::SavedShows { offset: 0 })
+        else {
+            panic!("saved podcasts")
+        };
+        let saved_shows = result.unwrap();
+        let ApiResponse::SavedEpisodes { result, .. } =
+            ask(ApiRequest::SavedEpisodes { offset: 0 })
+        else {
+            panic!("Your Episodes")
+        };
+        let your_episodes = result.unwrap();
+        player.shutdown();
+        assert_eq!(show.name, "The Joe Rogan Experience");
+        assert_eq!(episodes.items.len(), 50);
+        assert!(episode.show.is_some());
+        assert_eq!(home[0].1.len(), 5);
+        assert_eq!(
+            your_episodes.items.len(),
+            your_episodes.total as usize,
+            "every saved episode has its details"
+        );
+        eprintln!(
+            "podcast reads: {} ({} episodes, page 2 read {}); episode {} min; Home {} shows, {} episodes; \
+             {} saved podcasts ({} read); {} saved episodes ({} read)",
+            show.name,
+            episodes.total,
+            episodes.items.len(),
+            episode.duration_ms / 60_000,
+            home.len(),
+            home[0].1.len(),
+            saved_shows.total,
+            saved_shows.items.len(),
+            your_episodes.total,
+            your_episodes.items.len(),
+        );
+    }
+}
