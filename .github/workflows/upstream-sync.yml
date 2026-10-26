@@ -1,0 +1,79 @@
+name: Upstream sync
+
+# Once a day, looks for new commits on Spotifast (crmne/spotifast) and
+# offers them here as a pull request: a merge commit, as every upstream
+# sync is, which CI then tests like any change. A merge that conflicts
+# opens an issue naming the files instead. Nothing merges by itself.
+on:
+  schedule:
+    - cron: '23 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Merge upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git remote add upstream https://github.com/crmne/spotifast.git
+          git fetch --quiet upstream main
+          new=$(git rev-list --count HEAD..upstream/main)
+          if [ "$new" = 0 ]; then
+            echo "Up to date with upstream."
+            exit 0
+          fi
+          head=$(git rev-parse --short upstream/main)
+          branch="sync/upstream-$head"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            echo "$branch is already offered."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          log=$(git log --format='- %s' HEAD..upstream/main)
+          git switch --quiet -c "$branch"
+          if git merge --no-ff --no-edit -m "Merge upstream Spotifast $head" upstream/main; then
+            git push --quiet origin "$branch"
+            gh pr create --base main --head "$branch" \
+              --title "Merge upstream Spotifast $head" \
+              --body "$new new commits from [crmne/spotifast](https://github.com/crmne/spotifast/compare/$(git rev-parse --short main)...$head), merged without conflicts.
+
+          $log
+
+          Check that the fork's own changes still hold (the Free helper, the app's name and identity) before merging."
+            # A pull request opened with this token starts no workflow, so CI
+            # is asked for by name on the branch.
+            gh workflow run ci.yml --ref "$branch"
+          else
+            conflicts=$(git diff --name-only --diff-filter=U | sed 's/^/- `/; s/$/`/')
+            git merge --abort
+            title="Upstream Spotifast $head conflicts with the fork"
+            if gh issue list --state open --search "in:title \"$title\"" --json number --jq 'length' | grep -qx 0; then
+              gh issue create --title "$title" \
+                --body "$new new commits from [crmne/spotifast](https://github.com/crmne/spotifast/compare/$(git rev-parse --short main)...$head) don't merge cleanly. Conflicting files:
+
+          $conflicts
+
+          New commits:
+
+          $log"
+            fi
+          fi
