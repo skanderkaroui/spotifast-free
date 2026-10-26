@@ -621,7 +621,7 @@ async fn playlist_uris(session: &Session, id: &str) -> anyhow::Result<(Vec<u8>, 
 /// from the start. `None` when a row is not there any more, so nothing is
 /// removed on a guess. Highest index first, so each removal leaves the
 /// indices of the next ones in place.
-fn removal_indices(uris: &[String], rows: &[RemovedRow]) -> Option<Vec<(u32, String)>> {
+pub(crate) fn removal_indices(uris: &[String], rows: &[RemovedRow]) -> Option<Vec<(u32, String)>> {
     let mut indices = rows
         .iter()
         .map(|row| {
