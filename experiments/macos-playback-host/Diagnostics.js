@@ -20,6 +20,30 @@
   const text = (value) => String(value?.message ?? value).slice(0, 300);
   const spotifyPage = location.origin === 'https://open.spotify.com' && window.top === window;
 
+  // Spotify's code page has one box per digit, and each box keeps only the
+  // last character put into it (REA, accounts.spotify.com authn-web chunk
+  // 39: onChange takes value.slice(-1); only onPaste fills every box).
+  // macOS fills a code from Messages or Mail into the focused box whole, so
+  // only its last digit stayed. Such a fill reaches the page as the paste it
+  // handles, before Spotify's own handler sees it.
+  if (location.origin === 'https://accounts.spotify.com') {
+    addEventListener('input', (event) => {
+      const box = event.target;
+      if (box?.getAttribute?.('autocomplete') !== 'one-time-code') return;
+      const digits = String(box.value ?? '').replace(/\D/g, '');
+      if (digits.length < 2) return;
+      event.stopImmediatePropagation();
+      const code = digits.slice(-6);
+      try {
+        const clipboardData = new DataTransfer();
+        clipboardData.setData('text/plain', code);
+        box.dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }));
+      } catch (error) {
+        post('page-error', { message: `code fill: ${text(error)}` });
+      }
+    }, true);
+  }
+
   addEventListener('error', (e) => post('page-error', { message: text(e.error ?? e.message) }));
   addEventListener('unhandledrejection', (e) => post('page-rejection', { message: text(e.reason) }));
   for (const level of ['error', 'warn']) {
