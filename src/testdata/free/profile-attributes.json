@@ -1,0 +1,28 @@
+{
+  "data": {
+    "me": {
+      "profile": {
+        "accountId": "account0000000000001",
+        "avatar": {
+          "sources": [
+            {
+              "height": 64,
+              "url": "https://i.scdn.co/image/avatar64",
+              "width": 64
+            },
+            {
+              "height": 300,
+              "url": "https://i.scdn.co/image/avatar300",
+              "width": 300
+            }
+          ]
+        },
+        "avatarBackgroundColor": 13139285,
+        "name": "Listener One",
+        "socialHandle": null,
+        "uri": "spotify:user:listener1",
+        "username": "listener1"
+      }
+    }
+  }
+}
