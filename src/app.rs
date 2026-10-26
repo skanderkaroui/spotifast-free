@@ -1268,7 +1268,7 @@ impl App {
             sign_in_url: None,
             web_app: None,
             shared_grant: false,
-            free_sign_in: false,
+            free_sign_in: crate::ui::settings::free_helper_available(),
             pending_remote_position: None,
             pending_remote_volume: None,
             remote_volume_request: 0,
@@ -11849,7 +11849,7 @@ impl App {
                 self.request_proxy(true);
             }
             Action::ApplyProxy => self.request_proxy(false),
-            Action::SignInFree => {}
+            Action::SignInFree => self.backend.send(Command::SignInFree),
             Action::ProxyEdited => self.proxy_form_edited = true,
             Action::CancelSignIn => {
                 self.backend.send(Command::CancelSignIn);

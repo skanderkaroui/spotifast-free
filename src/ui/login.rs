@@ -67,7 +67,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui, connecting: bool) {
             let top = super::blend(palette.window, palette.accent, 0.10);
             super::widgets::paint_vertical_gradient(ui, rect, top, palette.window);
             let waiting = connecting || matches!(app.auth, AuthStatus::WaitingForBrowser { .. });
-            let steps = !waiting && show_steps(app, &ctx);
+            let steps = !waiting && !app.free_sign_in && show_steps(app, &ctx);
             // Two columns share what the window has beside the card's
             // margins, down to the smallest main window.
             let column = if steps {
@@ -211,7 +211,7 @@ fn sign_in_column(app: &mut App, ui: &mut egui::Ui, connecting: bool, beside: Op
         theme::bold(if steps { 26.0 } else { 30.0 }),
         palette.text,
     );
-    if !steps {
+    if !steps && !app.free_sign_in {
         theme::text(
             ui,
             gettext(locale, "A native Spotify client."),
@@ -284,6 +284,12 @@ fn sign_in_column(app: &mut App, ui: &mut egui::Ui, connecting: bool, beside: Op
             if let Some(problem) = problem {
                 wrapped(ui, problem, theme::regular(13.0), palette.danger);
                 ui.add_space(4.0);
+            }
+            if app.free_sign_in {
+                if big_button(ui, app, &gettext(locale, "Sign in with Spotify Free")) {
+                    app.actions.push(Action::SignInFree);
+                }
+                return;
             }
             client_id_field(app, ui);
             ui.add_space(4.0);
@@ -682,10 +688,8 @@ mod tests {
         let ctx = egui::Context::default();
         ctx.enable_accesskit();
         theme::install(&ctx);
-        let root = std::env::temp_dir().join(format!(
-            "spotifast-free-sign-in-{}",
-            std::process::id()
-        ));
+        let root =
+            std::env::temp_dir().join(format!("spotifast-free-sign-in-{}", std::process::id()));
         let mut app = App::new(
             &Waker::default(),
             AppDirs {
@@ -704,7 +708,7 @@ mod tests {
         app.auth = AuthStatus::SignedOut;
         app.free_sign_in = true;
         let screen = Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1100.0, 760.0));
-        let mut frame = |app: &mut App, events| {
+        let frame = |app: &mut App, events| {
             let mut output = ctx.run_ui(
                 egui::RawInput {
                     screen_rect: Some(screen),
