@@ -4717,6 +4717,35 @@ impl Worker {
                 result: result.map_err(|message| ApiError::Status { status: 0, message }),
             }))
         };
+        // A Free sign-in removes the rows through its page, by their uids.
+        #[cfg(target_os = "macos")]
+        if let Some(reader) = self
+            .free_session
+            .then(|| {
+                self.web_player
+                    .as_ref()
+                    .map(crate::web_player::WebPlayer::reader)
+            })
+            .flatten()
+        {
+            let events = self.events.clone();
+            let waker = self.waker.clone();
+            let mut cancelled = self.session.subscribe();
+            tokio::spawn(async move {
+                let result = tokio::select! {
+                    biased;
+                    _ = cancelled.changed() => return,
+                    result = crate::free_playlist_edits::remove_rows(&reader, &playlist_id, &rows) => result,
+                };
+                let _ = events.send(Event::Api(Box::new(ApiResponse::PlaylistItemsChanged {
+                    id: playlist_id,
+                    message: "Removed from playlist".to_string(),
+                    result,
+                })));
+                waker.wake();
+            });
+            return;
+        }
         // The Web API would remove every copy, so without the session the
         // change is refused rather than made bigger than asked.
         let Some(engine) = self.engine.clone().filter(|_| self.signed_in) else {
