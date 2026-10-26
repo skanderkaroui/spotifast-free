@@ -396,6 +396,17 @@ fn a_free_home_shows_its_made_for_you_shelf() {
     app.backend.shutdown();
 }
 
+/// Hiding songs needs the Premium playback session. A Free account's player
+/// is the web player, so it is never asked; live it failed with "Hiding
+/// songs needs playback on this computer" on every launch.
+#[test]
+fn free_never_reads_hidden_songs() {
+    both("hidden-songs", |free, app| {
+        app.load_hidden_songs();
+        assert_eq!(app.hidden_songs_requested, !free, "free={free}");
+    });
+}
+
 /// Live, 2026-10-26: a song in Next up whose lookup failed was asked for
 /// again on each of the helper's state reports, 125,000 times in 30 s. A
 /// failed lookup waits until the song is asked for in a new way.
