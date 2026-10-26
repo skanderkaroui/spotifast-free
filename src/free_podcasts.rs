@@ -203,28 +203,98 @@ pub fn episodes_query(uris: &[String]) -> Value {
 
 /// The collection's rows of one kind (`spotify:show:`), newest first, with
 /// when each was saved.
-pub fn saved_rows(_body: &Value, _prefix: &str) -> Vec<(String, Option<String>)> {
-    Vec::new()
+pub fn saved_rows(body: &Value, prefix: &str) -> Vec<(String, Option<String>)> {
+    body.get("items")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|row| {
+            let uri = str_at(row, "/uri")?;
+            uri.starts_with(prefix).then(|| {
+                let added = str_at(row, "/added_at")
+                    .and_then(|seconds| seconds.parse::<i64>().ok())
+                    .and_then(|seconds| jiff::Timestamp::from_second(seconds).ok())
+                    .map(|at| at.to_string());
+                (uri.to_owned(), added)
+            })
+        })
+        .collect()
+}
+
+/// The rows at `offset`, a page of 50.
+fn rows_at(saved: &[(String, Option<String>)], offset: u32) -> &[(String, Option<String>)] {
+    let start = (offset as usize).min(saved.len());
+    &saved[start..(start + PAGE).min(saved.len())]
+}
+
+const PAGE: usize = 50;
+
+fn saved_page<T>(items: Vec<T>, saved: usize, rows: usize, offset: u32) -> Page<T> {
+    let total = u32::try_from(saved).unwrap_or(u32::MAX);
+    Page {
+        items,
+        total,
+        limit: PAGE as u32,
+        offset,
+        next: next(offset, rows, total),
+    }
 }
 
 /// A page of Your Episodes: the saved episodes at `offset`, with their
 /// details.
 pub fn saved_episodes(
-    _saved: &[(String, Option<String>)],
-    _details: &Value,
-    _offset: u32,
+    saved: &[(String, Option<String>)],
+    details: &Value,
+    offset: u32,
 ) -> Page<SavedEpisode> {
-    Page::default()
+    let episodes: std::collections::HashMap<String, Episode> = details
+        .pointer("/data/episodes")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(episode_data)
+        .map(|episode| (episode.uri.clone(), episode))
+        .collect();
+    let rows = rows_at(saved, offset);
+    let items = rows
+        .iter()
+        .filter_map(|(uri, added)| {
+            Some(SavedEpisode {
+                added_at: added.clone(),
+                episode: episodes.get(uri)?.clone(),
+            })
+        })
+        .collect();
+    saved_page(items, saved.len(), rows.len(), offset)
+}
+
+/// The saved rows at `offset`, whose details to read.
+pub fn saved_uris(saved: &[(String, Option<String>)], offset: u32) -> Vec<String> {
+    rows_at(saved, offset)
+        .iter()
+        .map(|(uri, _)| uri.clone())
+        .collect()
 }
 
 /// A page of saved podcasts: the rows at `offset`, each with its own page's
 /// answer, in the same order.
 pub fn saved_shows(
-    _saved: &[(String, Option<String>)],
-    _pages: &[Value],
-    _offset: u32,
+    saved: &[(String, Option<String>)],
+    pages: &[Value],
+    offset: u32,
 ) -> Page<SavedShow> {
-    Page::default()
+    let rows = rows_at(saved, offset);
+    let items = rows
+        .iter()
+        .zip(pages)
+        .filter_map(|((_, added), page)| {
+            Some(SavedShow {
+                added_at: added.clone(),
+                show: show(page).ok()?,
+            })
+        })
+        .collect();
+    saved_page(items, saved.len(), rows.len(), offset)
 }
 
 /// The newest episodes Home lists per saved podcast.
@@ -234,7 +304,7 @@ const HOME_EPISODES_PER_SHOW: u32 = 5;
 /// as the Web API's answers. `None` for any other request.
 pub async fn handle(
     reader: &crate::web_player::Reader,
-    _account: Option<&str>,
+    account: Option<&str>,
     request: &ApiRequest,
 ) -> Option<ApiResponse> {
     let read = |query: Value| {
@@ -243,6 +313,50 @@ pub async fn handle(
     };
     let show_uri = |id: &str| format!("spotify:show:{id}");
     Some(match request {
+        ApiRequest::SavedEpisodes { offset } => ApiResponse::SavedEpisodes {
+            offset: *offset,
+            result: async {
+                let account = account.ok_or(ApiError::NotSignedIn)?;
+                let saved = saved_rows(
+                    &read(collection_query(account, "listenlater")).await?,
+                    "spotify:episode:",
+                );
+                let uris = saved_uris(&saved, *offset);
+                if uris.is_empty() {
+                    return Ok(saved_episodes(&saved, &Value::Null, *offset));
+                }
+                Ok(saved_episodes(
+                    &saved,
+                    &read(episodes_query(&uris)).await?,
+                    *offset,
+                ))
+            }
+            .await,
+        },
+        ApiRequest::SavedShows { offset } => ApiResponse::SavedShows {
+            offset: *offset,
+            result: async {
+                let account = account.ok_or(ApiError::NotSignedIn)?;
+                let saved = saved_rows(
+                    &read(collection_query(account, "show")).await?,
+                    "spotify:show:",
+                );
+                let mut reads = tokio::task::JoinSet::new();
+                for (index, uri) in saved_uris(&saved, *offset).into_iter().enumerate() {
+                    let answer = read(show_query(&uri));
+                    reads.spawn(async move { (index, answer.await) });
+                }
+                // A page that did not answer stays null: its show is left out.
+                let mut pages = vec![Value::Null; reads.len()];
+                while let Some(joined) = reads.join_next().await {
+                    if let Ok((index, Ok(page))) = joined {
+                        pages[index] = page;
+                    }
+                }
+                Ok(saved_shows(&saved, &pages, *offset))
+            }
+            .await,
+        },
         ApiRequest::Show { id } => ApiResponse::Show {
             id: id.clone(),
             result: read(show_query(&show_uri(id)))
