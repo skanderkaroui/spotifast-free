@@ -714,6 +714,106 @@ mod tests {
         assert_eq!(result.unwrap(), [B]);
     }
 
+    /// A new playlist is made on the playlist service and put at the top
+    /// of the library, then answered as the Web API's new playlist.
+    #[test]
+    fn a_new_playlist_is_made_and_listed() {
+        let made = r#"{"uri":"spotify:playlist:5cr4tchPl4yl1stF1xtur3","revision":"AAAA"}"#;
+        let (response, mut sent) = run(
+            &[(200, made), (200, r#"{"revision":"AAAB"}"#)],
+            ApiRequest::CreatePlaylist {
+                name: "Scratch".into(),
+                public: false,
+                description: String::new(),
+            },
+        );
+        assert_eq!(sent[0], create_query("Scratch", ""));
+        assert_eq!(
+            sent[0]["playlistChanges"]["body"]["ops"][0]["updateListAttributes"]["newAttributes"]["values"],
+            json!({"name": "Scratch"})
+        );
+        let item =
+            &mut sent[1]["playlistChanges"]["body"]["deltas"][0]["ops"][0]["add"]["items"][0];
+        assert!(
+            item["attributes"]["timestamp"]
+                .as_str()
+                .unwrap()
+                .parse::<i64>()
+                .is_ok()
+        );
+        item["attributes"]["timestamp"] = json!("0");
+        assert_eq!(
+            sent[1],
+            library_add_query("owner", &playlist_uri(ID), false, 0)
+        );
+        assert_eq!(sent[1]["playlistChanges"]["rootlist"], "owner");
+        let Some(ApiResponse::PlaylistCreated(Ok(playlist))) = response else {
+            panic!("{response:?}");
+        };
+        assert_eq!(playlist.id, ID);
+        assert_eq!(playlist.uri, playlist_uri(ID));
+        assert_eq!(playlist.name, "Scratch");
+        assert_eq!(playlist.owner.id.as_deref(), Some("owner"));
+        assert_eq!(playlist.public, Some(false));
+    }
+
+    /// A rename and a new description go as one list change; `public`
+    /// shows or hides the list on the profile.
+    #[test]
+    fn a_playlist_is_renamed_described_and_published() {
+        let (response, sent) = run(
+            &[
+                (200, r#"{"revision":"AAAB"}"#),
+                (200, r#"{"revision":"AAAC"}"#),
+            ],
+            ApiRequest::UpdatePlaylist {
+                id: ID.into(),
+                name: Some("Renamed".into()),
+                description: Some(String::new()),
+                public: Some(true),
+            },
+        );
+        assert!(matches!(
+            response,
+            Some(ApiResponse::PlaylistUpdated { ref id, result: Ok(()) }) if id == ID
+        ));
+        assert_eq!(
+            sent[0],
+            json!({"playlistChanges": {"playlist": ID, "body": {
+                "deltas": [{"ops": [{"kind": "UPDATE_LIST_ATTRIBUTES", "updateListAttributes": {
+                    "newAttributes": {
+                        "values": {"name": "Renamed"},
+                        "noValue": ["LIST_DESCRIPTION"],
+                    }}}], "info": {"source": {"client": "WEBPLAYER"}}}],
+            }}})
+        );
+        assert_eq!(
+            sent[1]["playlistChanges"]["body"]["deltas"][0]["ops"][0],
+            json!({"kind": "UPDATE_ITEM_ATTRIBUTES", "updateItemAttributes": {
+                "item": {"uri": playlist_uri(ID)},
+                "newAttributes": {"values": {"public": true}}}})
+        );
+    }
+
+    /// Only the public flag changes the library alone.
+    #[test]
+    fn only_publishing_sends_no_list_change() {
+        let (response, sent) = run(
+            &[(200, r#"{"revision":"AAAC"}"#)],
+            ApiRequest::UpdatePlaylist {
+                id: ID.into(),
+                name: None,
+                description: None,
+                public: Some(false),
+            },
+        );
+        assert!(matches!(
+            response,
+            Some(ApiResponse::PlaylistUpdated { result: Ok(()), .. })
+        ));
+        assert_eq!(sent, [published_query("owner", &playlist_uri(ID), false)]);
+    }
+
     /// Picked rows are removed by their own uid, leaving the song's other
     /// copies, and a row no longer there removes nothing.
     #[test]
