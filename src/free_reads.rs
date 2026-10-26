@@ -18,8 +18,9 @@ use serde_json::{Value, json};
 
 use crate::api::ApiError;
 use crate::api::models::{
-    Album, ArtistRef, Image, Owner, Page, PlayableItem, Playlist, PlaylistItem, SavedTrack, Track,
-    TrackCount, User,
+    Album, Artist, ArtistRef, Context, CursorPage, Cursors, Image, Owner, Page, PlayHistory,
+    PlayableItem, Playlist, PlaylistItem, SavedAlbum, SavedTrack, SearchResults, Track, TrackCount,
+    User,
 };
 
 fn persisted(operation: &str, hash: &str, variables: Value) -> Value {
@@ -131,6 +132,433 @@ pub fn library_query(offset: u32, limit: u32) -> Value {
             "folderUri": null, "includeFoldersWhenFlattening": false,
         }),
     )
+}
+
+/// One song.
+pub fn track_query(uri: &str) -> Value {
+    persisted(
+        "getTrack",
+        "fe16b8083eec2305854db612ca75589bcb71e009dc7a4d014f29bd534a4c01f5",
+        json!({"uri": uri, "includeVideoAssociationItems": false}),
+    )
+}
+
+/// A song from its own answer. The web player names its first artist apart
+/// from the others.
+pub fn single_track(body: &Value) -> Result<Track, ApiError> {
+    let data = body
+        .pointer("/data/trackUnion")
+        .filter(|value| value.get("uri").is_some())
+        .ok_or_else(|| ApiError::Decode("Spotify sent no song".into()))?;
+    let mut song =
+        track(data, None).ok_or_else(|| ApiError::Decode("Spotify sent no song".into()))?;
+    song.artists = artists(data.get("firstArtist"));
+    song.artists.extend(artists(data.get("otherArtists")));
+    Ok(song)
+}
+
+/// The account's saved albums, newest first, from the library.
+pub fn saved_albums_query(offset: u32, limit: u32) -> Value {
+    persisted(
+        "libraryV3",
+        "390c78e5b951029bad359785e69b07b536a509c581cbcd0aded5e5067f187455",
+        json!({
+            "filters": ["Albums"], "order": null, "textFilter": "",
+            "features": [], "limit": limit, "offset": offset, "flatten": true,
+            "expandedFolders": [], "folderUri": null, "includeFoldersWhenFlattening": false,
+        }),
+    )
+}
+
+/// An artist's page: profile, avatar and top songs.
+pub fn artist_query(uri: &str) -> Value {
+    persisted(
+        "queryArtistOverview",
+        "9f8134ef565e78621f1e1793555bd6633c5ac144ae0f89604ed3ae3f80b3c8e6",
+        json!({"uri": uri, "locale": "", "preReleaseV2": false}),
+    )
+}
+
+/// One page of an artist's releases, newest first.
+pub fn discography_query(uri: &str, offset: u32, limit: u32) -> Value {
+    persisted(
+        "queryArtistDiscographyAll",
+        "5e07d323febb57b4a56a42abbf781490e58764aa45feb6e3dc0591564fc56599",
+        json!({"uri": uri, "offset": offset, "limit": limit, "order": "DATE_DESC"}),
+    )
+}
+
+/// One kind of search: `searchTracks`, `searchAlbums`, `searchArtists` or
+/// `searchPlaylists`.
+pub fn search_query(kind: SearchKind, term: &str, limit: u32) -> Value {
+    let (operation, hash) = match kind {
+        SearchKind::Tracks => (
+            "searchTracks",
+            "b02683192a98dde7966b5e6655a79eeb62713eab703eda9902c932818dd52751",
+        ),
+        SearchKind::Albums => (
+            "searchAlbums",
+            "202cb3305e31e5a0767ba7925f28bd728cf8f8b0217e6da43909056071cd70e9",
+        ),
+        SearchKind::Artists => (
+            "searchArtists",
+            "7bf95d754fdbe32c8b161fbbe54d1ae50974900df4dce4c8f1afcbcad153224d",
+        ),
+        SearchKind::Playlists => (
+            "searchPlaylists",
+            "d520014e748f9ea44f7707d8df1819867ac1205e8b7f3e28f22fe5fc858921b1",
+        ),
+    };
+    persisted(
+        operation,
+        hash,
+        json!({
+            "searchTerm": term, "offset": 0, "limit": limit, "numberOfTopResults": limit,
+            "includeAudiobooks": false, "includeAuthors": false, "includePreReleases": false,
+            "includeAlbumPreReleases": false, "includeEpisodeContentRatingsV2": false,
+        }),
+    )
+}
+
+/// What a search asks Spotify's web player for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SearchKind {
+    Tracks,
+    Albums,
+    Artists,
+    Playlists,
+}
+
+/// An album header from a list row (library, search, discography).
+fn album_header(data: &Value) -> Option<Album> {
+    let uri = str_at(data, "/uri")?;
+    if !uri.starts_with("spotify:album:") {
+        return None;
+    }
+    Some(Album {
+        id: uri_id(uri)?,
+        uri: uri.to_owned(),
+        name: str_at(data, "/name").unwrap_or_default().to_owned(),
+        album_type: str_at(data, "/type").map(str::to_ascii_lowercase),
+        images: images(data.get("coverArt")),
+        artists: artists(data.get("artists")),
+        release_date: str_at(data, "/date/isoString")
+            .map(|date| date.chars().take(10).collect())
+            .or_else(|| u32_at(data, "/date/year").map(|year| year.to_string())),
+        total_tracks: u32_at(data, "/tracks/totalCount"),
+        ..Album::default()
+    })
+}
+
+/// An artist from a list row or the artist's own page.
+fn artist(data: &Value) -> Option<Artist> {
+    let uri = str_at(data, "/uri")?;
+    Some(Artist {
+        id: uri_id(uri)?,
+        uri: uri.to_owned(),
+        name: str_at(data, "/profile/name").unwrap_or_default().to_owned(),
+        images: images(data.pointer("/visuals/avatarImage")),
+        ..Artist::default()
+    })
+}
+
+fn page<T>(items: Vec<T>, offset: u32, rows: usize, total: u32) -> Page<T> {
+    Page {
+        items,
+        total,
+        limit: u32::try_from(rows).unwrap_or(u32::MAX),
+        offset,
+        next: next(offset, rows, total),
+    }
+}
+
+/// A page of the account's saved albums.
+pub fn saved_albums(body: &Value, offset: u32) -> Result<Page<SavedAlbum>, ApiError> {
+    let library = body
+        .pointer("/data/me/libraryV3")
+        .filter(|value| value.is_object())
+        .ok_or_else(|| ApiError::Decode("Spotify sent no library".into()))?;
+    let rows = library
+        .get("items")
+        .and_then(Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    let items = rows
+        .iter()
+        .filter_map(|row| {
+            Some(SavedAlbum {
+                added_at: str_at(row, "/addedAt/isoString").map(str::to_owned),
+                album: album_header(row.pointer("/item/data")?)?,
+            })
+        })
+        .collect();
+    Ok(page(
+        items,
+        offset,
+        rows.len(),
+        u32_at(library, "/totalCount").unwrap_or_default(),
+    ))
+}
+
+/// An artist from their page.
+pub fn artist_overview(body: &Value) -> Result<Artist, ApiError> {
+    body.pointer("/data/artistUnion")
+        .and_then(artist)
+        .ok_or_else(|| ApiError::Decode("Spotify sent no artist".into()))
+}
+
+/// An artist's top songs from their page.
+pub fn artist_top_tracks(body: &Value) -> Result<Vec<Track>, ApiError> {
+    let rows = body
+        .pointer("/data/artistUnion/discography/topTracks/items")
+        .and_then(Value::as_array)
+        .ok_or_else(|| ApiError::Decode("Spotify sent no top songs".into()))?;
+    Ok(rows
+        .iter()
+        .filter_map(|row| track(row.get("track")?, None))
+        .collect())
+}
+
+/// A page of an artist's releases.
+pub fn discography(body: &Value, offset: u32) -> Result<Page<Album>, ApiError> {
+    let all = body
+        .pointer("/data/artistUnion/discography/all")
+        .filter(|value| value.is_object())
+        .ok_or_else(|| ApiError::Decode("Spotify sent no releases".into()))?;
+    let rows = all
+        .get("items")
+        .and_then(Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    let items = rows
+        .iter()
+        .filter_map(|row| album_header(row.pointer("/releases/items/0")?))
+        .collect();
+    Ok(page(
+        items,
+        offset,
+        rows.len(),
+        u32_at(all, "/totalCount").unwrap_or_default(),
+    ))
+}
+
+/// Search answers, folded into the Web API's search results.
+pub fn search_results(answers: &[(SearchKind, Value)]) -> SearchResults {
+    let mut results = SearchResults::default();
+    for (kind, body) in answers {
+        let (key, rows_at) = match kind {
+            SearchKind::Tracks => ("tracksV2", "/item/data"),
+            SearchKind::Albums => ("albumsV2", "/data"),
+            SearchKind::Artists => ("artists", "/data"),
+            SearchKind::Playlists => ("playlists", "/data"),
+        };
+        let Some(section) = body.pointer(&format!("/data/searchV2/{key}")) else {
+            continue;
+        };
+        let rows = section
+            .get("items")
+            .and_then(Value::as_array)
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        let total = u32_at(section, "/totalCount").unwrap_or_default();
+        let data = rows.iter().filter_map(|row| row.pointer(rows_at));
+        match kind {
+            SearchKind::Tracks => {
+                let items = data.filter_map(|data| track(data, None)).collect();
+                results.tracks = Some(page(items, 0, rows.len(), total));
+            }
+            SearchKind::Albums => {
+                let items = data.filter_map(album_header).collect();
+                results.albums = Some(page(items, 0, rows.len(), total));
+            }
+            SearchKind::Artists => {
+                let items = data.filter_map(artist).collect();
+                results.artists = Some(page(items, 0, rows.len(), total));
+            }
+            SearchKind::Playlists => {
+                let items = data.filter_map(playlist_header).collect();
+                results.playlists = Some(page(items, 0, rows.len(), total));
+            }
+        }
+    }
+    results
+}
+
+/// Whether each of these songs, albums or artists is in the library.
+pub fn contains_query(uris: &[String]) -> Value {
+    persisted(
+        "areEntitiesInLibrary",
+        "134337999233cc6fdd6b1e6dbf94841409f04a946c5c7b744b09ba0dfe5a85ed",
+        json!({"uris": uris}),
+    )
+}
+
+/// The answer to `contains_query`, in the order asked.
+pub fn contains(body: &Value, asked: usize) -> Result<Vec<bool>, ApiError> {
+    let rows = body
+        .pointer("/data/lookup")
+        .and_then(Value::as_array)
+        .filter(|rows| rows.len() == asked)
+        .ok_or_else(|| ApiError::Decode("Spotify sent no library answer".into()))?;
+    Ok(rows
+        .iter()
+        .map(|row| {
+            row.pointer("/data/saved")
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+        })
+        .collect())
+}
+
+/// The artists the account follows, from the library.
+pub fn followed_artists_query(offset: u32, limit: u32) -> Value {
+    persisted(
+        "libraryV3",
+        "390c78e5b951029bad359785e69b07b536a509c581cbcd0aded5e5067f187455",
+        json!({
+            "filters": ["Artists"], "order": null, "textFilter": "",
+            "features": [], "limit": limit, "offset": offset, "flatten": true,
+            "expandedFolders": [], "folderUri": null, "includeFoldersWhenFlattening": false,
+        }),
+    )
+}
+
+/// A page of followed artists, with the next offset as the cursor.
+pub fn followed_artists(body: &Value, offset: u32) -> Result<CursorPage<Artist>, ApiError> {
+    let library = body
+        .pointer("/data/me/libraryV3")
+        .filter(|value| value.is_object())
+        .ok_or_else(|| ApiError::Decode("Spotify sent no library".into()))?;
+    let rows = library
+        .get("items")
+        .and_then(Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    let total = u32_at(library, "/totalCount").unwrap_or_default();
+    let items = rows
+        .iter()
+        .filter_map(|row| artist(row.pointer("/item/data")?))
+        .collect();
+    let fetched = offset.saturating_add(u32::try_from(rows.len()).unwrap_or(u32::MAX));
+    let after = (fetched < total && !rows.is_empty()).then(|| fetched.to_string());
+    Ok(CursorPage {
+        items,
+        total: Some(total),
+        next: after.clone(),
+        cursors: Some(Cursors {
+            after,
+            before: None,
+        }),
+    })
+}
+
+/// The account's recently played lists, newest first. The page sends it to
+/// `recently-played/v3`.
+pub fn recently_played_query(username: &str, limit: u32) -> Value {
+    json!({"recentlyPlayed": {"username": username, "limit": limit}})
+}
+
+/// The last song played in each recently played list, newest first, with
+/// the list it was played from.
+pub fn recent_contexts(body: &Value) -> Vec<(String, String, Option<String>)> {
+    body.get("playContexts")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|row| {
+            let track = str_at(row, "/lastPlayedTrackUri")?;
+            track.starts_with("spotify:track:").then(|| {
+                let played = row
+                    .get("lastPlayedTime")
+                    .and_then(Value::as_i64)
+                    .and_then(|millis| jiff::Timestamp::from_millisecond(millis).ok())
+                    .map(|at| at.to_string());
+                (
+                    track.to_owned(),
+                    str_at(row, "/uri").unwrap_or_default().to_owned(),
+                    played,
+                )
+            })
+        })
+        .collect()
+}
+
+/// Recently played, as the Web API's play history: each list's last song
+/// with its details.
+pub fn recently_played(
+    contexts: &[(String, String, Option<String>)],
+    details: &Value,
+) -> CursorPage<PlayHistory> {
+    let songs: std::collections::HashMap<String, Track> = details
+        .pointer("/data/tracks")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|song| track(song, None))
+        .map(|song| (song.uri.clone(), song))
+        .collect();
+    let items = contexts
+        .iter()
+        .filter_map(|(track, context, played)| {
+            Some(PlayHistory {
+                track: songs.get(track)?.clone(),
+                played_at: played.clone(),
+                context: (!context.is_empty()).then(|| Context {
+                    kind: context.split(':').nth(1).unwrap_or_default().to_owned(),
+                    uri: context.clone(),
+                }),
+            })
+        })
+        .collect();
+    CursorPage {
+        items,
+        ..CursorPage::default()
+    }
+}
+
+/// The web player's Home: its shelves, in order.
+pub fn home_query(timezone: &str) -> Value {
+    persisted(
+        "home",
+        "5fb7da7a03ee2776c0670856609cb85a189a3cecc36cc160b91cde79063b9cf1",
+        json!({
+            "timeZone": timezone, "sp_t": "", "facet": "", "sectionItemsLimit": 20,
+            "includeHomeChapterVideoCards": false,
+            "homeEndUserIntegration": "INTEGRATION_WEB_PLAYER",
+            "includeEpisodeContentRatingsV2": false,
+        }),
+    )
+}
+
+/// Home's first two playlist shelves: the account's Made For mixes and its
+/// top mixes, in the order Spotify's own Home shows them.
+pub fn home_shelves(body: &Value) -> Result<(Vec<Playlist>, Vec<Playlist>), ApiError> {
+    let sections = body
+        .pointer("/data/home/sectionContainer/sections/items")
+        .and_then(Value::as_array)
+        .ok_or_else(|| ApiError::Decode("Spotify sent no Home".into()))?;
+    let mut shelves = sections.iter().filter_map(|section| {
+        if section.pointer("/data/__typename").and_then(Value::as_str)
+            != Some("HomeGenericSectionData")
+        {
+            return None;
+        }
+        let playlists: Vec<Playlist> = section
+            .pointer("/sectionItems/items")
+            .and_then(Value::as_array)?
+            .iter()
+            .filter_map(|item| {
+                let data = item.pointer("/content/data")?;
+                (data.get("__typename").and_then(Value::as_str) == Some("Playlist"))
+                    .then(|| playlist_header(data))
+                    .flatten()
+            })
+            .collect();
+        (!playlists.is_empty()).then_some(playlists)
+    });
+    let made_for_you = shelves.next().unwrap_or_default();
+    let top_mixes = shelves.next().unwrap_or_default();
+    Ok((made_for_you, top_mixes))
 }
 
 /// One page of a playlist.
@@ -583,6 +1011,17 @@ mod tests {
         assert!(saved_page(&saved, &json!(null), 50).items.is_empty());
     }
 
+    /// One song, with its first artist, album and length.
+    #[test]
+    fn a_song_reads_with_its_artist_and_album() {
+        let song = single_track(&body(include_str!("testdata/free/track.json"))).unwrap();
+        assert_eq!(song.name, "One More Time");
+        assert_eq!(song.id.as_deref(), Some("0DiWol3AO6WpXZgp0goxAV"));
+        assert_eq!(song.duration_ms, 320_357);
+        assert_eq!(song.artists[0].name, "Daft Punk");
+        assert_eq!(song.album.as_ref().map(|album| album.images.len()), Some(1));
+    }
+
     /// An album gives its header and its songs, each pointing back at it.
     #[test]
     fn an_album_gives_its_songs() {
@@ -709,7 +1148,104 @@ mod live {
             0,
         )
         .unwrap();
+        let daft = "spotify:artist:4tZwfgrHOc3mvqYlEYSvVi";
+        let artist = artist_overview(&answer(read(artist_query(daft))).unwrap()).unwrap();
+        let top = artist_top_tracks(&answer(read(artist_query(daft))).unwrap()).unwrap();
+        let releases =
+            discography(&answer(read(discography_query(daft, 0, 20))).unwrap(), 0).unwrap();
+        let saved_albums =
+            saved_albums(&answer(read(saved_albums_query(0, 50))).unwrap(), 0).unwrap();
+        let song = single_track(
+            &answer(read(track_query("spotify:track:0DiWol3AO6WpXZgp0goxAV"))).unwrap(),
+        )
+        .unwrap();
+        let kinds = [
+            SearchKind::Tracks,
+            SearchKind::Artists,
+            SearchKind::Albums,
+            SearchKind::Playlists,
+        ];
+        let found: Vec<_> = kinds
+            .iter()
+            .map(|kind| {
+                (
+                    *kind,
+                    answer(read(search_query(*kind, "daft punk", 20))).unwrap(),
+                )
+            })
+            .collect();
+        let search = search_results(&found);
+        let (made_for_you, top_mixes) =
+            home_shelves(&answer(read(home_query("UTC"))).unwrap()).unwrap();
+        let contexts = recent_contexts(&answer(read(recently_played_query(&user.id, 50))).unwrap());
+        let recent_uris: Vec<String> = contexts
+            .iter()
+            .take(50)
+            .map(|(track, _, _)| track.clone())
+            .collect();
+        let recent = recently_played(
+            &contexts,
+            &answer(read(tracks_query(&recent_uris))).unwrap(),
+        );
+        let liked_first = vec![
+            first_fifty[0].clone(),
+            "spotify:track:4uLU6hMCjMI75M1A2tKUQC".into(),
+        ];
+        let saved_flags =
+            contains(&answer(read(contains_query(&liked_first))).unwrap(), 2).unwrap();
+        let followed =
+            followed_artists(&answer(read(followed_artists_query(0, 50))).unwrap(), 0).unwrap();
         player.shutdown();
+        assert!(!made_for_you.is_empty(), "Made For shelf");
+        assert!(!recent.items.is_empty(), "recently played");
+        assert!(saved_flags[0], "a liked song reads as saved");
+        eprintln!(
+            "home: {} made for you, {} top mixes; {} recently played; saved {:?}; {} followed artists",
+            made_for_you.len(),
+            top_mixes.len(),
+            recent.items.len(),
+            saved_flags,
+            followed.total.unwrap_or_default(),
+        );
+        assert_eq!(artist.name, "Daft Punk");
+        assert!(!top.is_empty());
+        assert!(!releases.items.is_empty());
+        assert_eq!(song.name, "One More Time");
+        assert!(
+            search
+                .tracks
+                .as_ref()
+                .is_some_and(|page| !page.items.is_empty())
+        );
+        assert!(
+            search
+                .artists
+                .as_ref()
+                .is_some_and(|page| page.items[0].name == "Daft Punk")
+        );
+        assert!(
+            search
+                .albums
+                .as_ref()
+                .is_some_and(|page| !page.items.is_empty())
+        );
+        assert!(
+            search
+                .playlists
+                .as_ref()
+                .is_some_and(|page| !page.items.is_empty())
+        );
+        eprintln!(
+            "artist {} ({} top songs, {} releases); {} saved albums; search: {} songs, {} artists, {} albums, {} playlists",
+            artist.name,
+            top.len(),
+            releases.total,
+            saved_albums.total,
+            search.tracks.as_ref().map_or(0, |page| page.items.len()),
+            search.artists.as_ref().map_or(0, |page| page.items.len()),
+            search.albums.as_ref().map_or(0, |page| page.items.len()),
+            search.playlists.as_ref().map_or(0, |page| page.items.len()),
+        );
         assert!(!user.id.is_empty());
         assert!(user.product.is_some());
         assert!(library.total > 0);
