@@ -1322,6 +1322,8 @@ pub enum Action {
     ToggleShowAllTop(String),
     Reload(Page),
     SignIn,
+    /// Sign in on Spotify's own page in the Free helper, without an app.
+    SignInFree,
     CancelSignIn,
     SignOut,
     /// Add, replace, or remove the optional personal Web API app.

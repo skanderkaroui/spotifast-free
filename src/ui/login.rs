@@ -673,6 +673,76 @@ mod tests {
     use super::*;
     use crate::{app::AppOptions, backend::Waker, paths::AppDirs, settings::Settings};
 
+    /// Spotify closed the shared app to new sign-ins, and only Premium
+    /// accounts may make an app of their own. A new listener with no Client
+    /// ID can still sign in, on Spotify's own page in the Free helper.
+    #[test]
+    fn a_new_listener_signs_in_without_a_client_id() {
+        use egui::accesskit::{Action as AccessibleAction, ActionRequest, Role, TreeId};
+        let ctx = egui::Context::default();
+        ctx.enable_accesskit();
+        theme::install(&ctx);
+        let root = std::env::temp_dir().join(format!(
+            "spotifast-free-sign-in-{}",
+            std::process::id()
+        ));
+        let mut app = App::new(
+            &Waker::default(),
+            AppDirs {
+                config: root.join("config"),
+                state: root.join("state"),
+                cache: root.join("cache"),
+            },
+            Settings::default(),
+            AppOptions {
+                media_controls: false,
+                restore_sign_in: false,
+                tray: false,
+                autostart: false,
+            },
+        );
+        app.auth = AuthStatus::SignedOut;
+        app.free_sign_in = true;
+        let screen = Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1100.0, 760.0));
+        let mut frame = |app: &mut App, events| {
+            let mut output = ctx.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(screen),
+                    events,
+                    ..Default::default()
+                },
+                |ui| show(app, ui, false),
+            );
+            output.textures_delta.clear();
+            output.platform_output.accesskit_update.unwrap()
+        };
+        let label = "Sign in with Spotify Free";
+        let tree = frame(&mut app, vec![]);
+        let (id, node) = tree
+            .nodes
+            .iter()
+            .find(|(_, node)| node.label() == Some(label) && node.role() == Role::Button)
+            .unwrap_or_else(|| panic!("a {label} button"));
+        assert!(!node.is_disabled(), "it needs no Client ID");
+        let id = *id;
+        frame(
+            &mut app,
+            vec![egui::Event::AccessKitActionRequest(ActionRequest {
+                target_tree: TreeId::ROOT,
+                target_node: id,
+                action: AccessibleAction::Click,
+                data: None,
+            })],
+        );
+        assert!(
+            app.actions
+                .iter()
+                .any(|action| matches!(action, Action::SignInFree)),
+            "pressing it signs in through Spotify's own page"
+        );
+        assert_eq!(app.settings.web_client_id, None);
+    }
+
     #[test]
     fn expanded_proxy_settings_remain_reachable_in_a_short_window() {
         let ctx = egui::Context::default();

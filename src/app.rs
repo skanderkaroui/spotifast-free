@@ -654,6 +654,9 @@ pub struct App {
     /// A shared grant from before 0.14.2 is signed in: Spotify can stop
     /// accepting it at any time, so Settings offers the personal app.
     pub shared_grant: bool,
+    /// Whether a listener can sign in on Spotify's own page in the Free
+    /// helper (macOS, with the helper installed).
+    pub free_sign_in: bool,
     pending_remote_position: Option<(u32, Instant)>,
     pending_remote_volume: Option<PendingRemoteVolume>,
     remote_volume_request: u64,
@@ -1265,6 +1268,7 @@ impl App {
             sign_in_url: None,
             web_app: None,
             shared_grant: false,
+            free_sign_in: false,
             pending_remote_position: None,
             pending_remote_volume: None,
             remote_volume_request: 0,
@@ -11845,6 +11849,7 @@ impl App {
                 self.request_proxy(true);
             }
             Action::ApplyProxy => self.request_proxy(false),
+            Action::SignInFree => {}
             Action::ProxyEdited => self.proxy_form_edited = true,
             Action::CancelSignIn => {
                 self.backend.send(Command::CancelSignIn);
