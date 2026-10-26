@@ -202,7 +202,7 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
         // Spotifast). Never waits for the page.
         if line.contains("\"show-sign-in\"") {
             userAskedSignIn = true
-            if askedToSignIn { showSignIn(onTop: true) }
+            if askedToSignIn { showWhenLoginShows(onTop: true) }
             return
         }
         guard pageReady else {
@@ -305,6 +305,10 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        if let onTop = showOnLogin, showingLogin {
+            showOnLogin = nil
+            showSignIn(onTop: onTop)
+        }
         checkMedia()
         // Spotify's player registers its controls a moment after the page
         // loads; give it that before replaying what waited.
@@ -415,11 +419,12 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
                 if webView.url?.host() != "accounts.spotify.com", let url = login.url {
                     webView.load(URLRequest(url: url))
                 }
-                showSignIn(onTop: userAskedSignIn)
+                showWhenLoginShows(onTop: userAskedSignIn)
             }
         case "signed-in" where askedToSignIn:
             askedToSignIn = false
             userAskedSignIn = false
+            showOnLogin = nil
             if headless {
                 window.orderOut(nil)
                 NSApp.setActivationPolicy(.accessory)
@@ -435,6 +440,30 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
             }
         default:
             break
+        }
+    }
+
+    /// The sign-in window waits for Spotify's login page: shown any earlier,
+    /// it would first show the web player's own signed-out page, then
+    /// switch. `showOnLogin` holds the request until the page has loaded.
+    private var showOnLogin: Bool?
+    private var showingLogin: Bool {
+        webView.url?.host() == "accounts.spotify.com" && !webView.isLoading
+    }
+
+    private func showWhenLoginShows(onTop: Bool) {
+        if showingLogin {
+            showOnLogin = nil
+            showSignIn(onTop: onTop)
+        } else {
+            showOnLogin = (showOnLogin ?? false) || onTop
+            // A login page that never finishes (offline, a slow network)
+            // must not leave the user with nothing: show what there is.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 6) { [weak self] in
+                guard let self, let onTop = self.showOnLogin else { return }
+                self.showOnLogin = nil
+                self.showSignIn(onTop: onTop)
+            }
         }
     }
 
