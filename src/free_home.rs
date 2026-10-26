@@ -11,7 +11,12 @@ use crate::model::TopPeriod;
 
 /// The account's top artists or songs, as its profile page asks for them.
 pub fn top_query(artists: bool, period: TopPeriod, offset: u32, limit: u32) -> Value {
-    let range = period.as_spotify().to_ascii_uppercase();
+    // The web player's names; the Web API's `medium_term` is `MID_TERM`.
+    let range = match period {
+        TopPeriod::ShortTerm => "SHORT_TERM",
+        TopPeriod::MediumTerm => "MID_TERM",
+        TopPeriod::LongTerm => "LONG_TERM",
+    };
     let input = |asked: bool| {
         json!({
             "offset": if asked { offset } else { 0 },
@@ -255,7 +260,7 @@ mod tests {
         let query = top_query(true, TopPeriod::MediumTerm, 0, 20);
         assert_eq!(
             query["variables"]["topArtistsInput"]["timeRange"],
-            "MEDIUM_TERM"
+            "MID_TERM"
         );
     }
 }
@@ -403,5 +408,93 @@ mod release_tests {
             songs[0].album.as_ref().unwrap().name,
             "Random Access Memories"
         );
+    }
+}
+
+#[cfg(test)]
+mod live {
+    use super::*;
+
+    #[test]
+    #[ignore = "needs the helper signed in to Spotify"]
+    fn home_reads_answer_through_the_helper() {
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let player = crate::web_player::WebPlayer::start(
+            std::sync::Arc::new(|_| {}),
+            std::sync::Arc::new(|_| {}),
+            None,
+        )
+        .unwrap();
+        let reader = player.reader();
+        let ask = |request: ApiRequest| runtime.block_on(handle(&reader, None, &request));
+        let Some(ApiResponse::TopArtists { result, .. }) =
+            ask(ApiRequest::TopArtists { generation: 1 })
+        else {
+            panic!("top artists not read")
+        };
+        eprintln!("top artists: {}", result.unwrap().len());
+        let mut seeds = Vec::new();
+        for period in TopPeriod::ALL {
+            for (offset, full) in [(0, false), (0, true), (50, true)] {
+                let Some(ApiResponse::TopTracks { result, .. }) = ask(ApiRequest::TopTracks {
+                    period,
+                    offset,
+                    full,
+                    generation: 1,
+                }) else {
+                    panic!("top songs not read")
+                };
+                let page = result.unwrap();
+                eprintln!(
+                    "top songs {period:?} offset {offset} full {full}: {} of {}",
+                    page.items.len(),
+                    page.total
+                );
+                if seeds.is_empty() {
+                    seeds = page
+                        .items
+                        .iter()
+                        .filter_map(|t| t.id.clone())
+                        .take(5)
+                        .collect();
+                }
+            }
+        }
+        let Some(ApiResponse::Recommendations { result, .. }) = ask(ApiRequest::Recommendations {
+            seed_tracks: seeds,
+            seed_artists: Vec::new(),
+            generation: 1,
+        }) else {
+            panic!("recommendations not read")
+        };
+        eprintln!("recommendations: {}", result.unwrap().len());
+        let Some(ApiResponse::NewReleases { result, .. }) =
+            ask(ApiRequest::NewReleases { generation: 1 })
+        else {
+            panic!("new releases not read")
+        };
+        let mut albums = result.unwrap();
+        eprintln!("new releases: {}", albums.len());
+        // An account that follows no one has an empty What's New feed, on
+        // open.spotify.com too; the songs read still has to answer.
+        if albums.is_empty() {
+            albums.push(Album {
+                id: "4m2880jivSbbyEGAKfITCa".into(),
+                uri: "spotify:album:4m2880jivSbbyEGAKfITCa".into(),
+                ..Album::default()
+            });
+        }
+        let Some(ApiResponse::NewReleaseTracks { result, .. }) =
+            ask(ApiRequest::NewReleaseTracks {
+                albums: albums.into_iter().take(10).collect(),
+                generation: 1,
+            })
+        else {
+            panic!("new release songs not read")
+        };
+        eprintln!("new release songs: {}", result.unwrap().len());
     }
 }
