@@ -1,0 +1,177 @@
+{
+  "data": {
+    "playlistV2": {
+      "__typename": "Playlist",
+      "uri": "spotify:playlist:37i9dQZF1F5p3rmiWPIYgZ",
+      "name": "Playlist 1",
+      "description": "",
+      "images": {
+        "items": []
+      },
+      "ownerV2": {
+        "data": {
+          "__typename": "User",
+          "username": "listener1",
+          "name": "Listener One",
+          "uri": "spotify:user:listener1"
+        }
+      },
+      "content": {
+        "__typename": "PlaylistItemsPage",
+        "totalCount": 463,
+        "items": [
+          {
+            "addedAt": {
+              "isoString": "2026-10-16T19:40:09Z"
+            },
+            "itemV2": {
+              "__typename": "TrackResponseWrapper",
+              "data": {
+                "__typename": "Track",
+                "uri": "spotify:track:3GWeTr5MQe85ybRi9nmCIc",
+                "name": "Song",
+                "trackDuration": {
+                  "totalMilliseconds": 94513
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "trackNumber": 2,
+                "discNumber": 1,
+                "playability": {
+                  "playable": true
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "uri": "spotify:artist:6z7UEPFZV1gNP0xw9KCREB",
+                      "profile": {
+                        "name": "Artist 1"
+                      }
+                    }
+                  ]
+                },
+                "albumOfTrack": {
+                  "uri": "spotify:album:14raNBGwPRRL8PbQXkMYmt",
+                  "name": "Album 1",
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "url": "https://i.scdn.co/image/cover",
+                        "width": 300,
+                        "height": 300
+                      }
+                    ]
+                  },
+                  "artists": {
+                    "items": []
+                  }
+                }
+              }
+            }
+          },
+          {
+            "addedAt": {
+              "isoString": "2026-08-17T08:05:57Z"
+            },
+            "itemV2": {
+              "__typename": "TrackResponseWrapper",
+              "data": {
+                "__typename": "Track",
+                "uri": "spotify:track:10EpXLXKHmNSVKvX7A5hg8",
+                "name": "Song",
+                "trackDuration": {
+                  "totalMilliseconds": 203720
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "trackNumber": 2,
+                "discNumber": 1,
+                "playability": {
+                  "playable": true
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "uri": "spotify:artist:521qvhdobR0GzhvU6TFw76",
+                      "profile": {
+                        "name": "Artist 1"
+                      }
+                    }
+                  ]
+                },
+                "albumOfTrack": {
+                  "uri": "spotify:album:1pCddf4xbF2oOYFXTOZzDS",
+                  "name": "Album 1",
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "url": "https://i.scdn.co/image/cover",
+                        "width": 300,
+                        "height": 300
+                      }
+                    ]
+                  },
+                  "artists": {
+                    "items": []
+                  }
+                }
+              }
+            }
+          },
+          {
+            "addedAt": {
+              "isoString": "2026-07-18T16:08:16Z"
+            },
+            "itemV2": {
+              "__typename": "TrackResponseWrapper",
+              "data": {
+                "__typename": "Track",
+                "uri": "spotify:track:0HKo7Vc6oePilkVcHcFr4v",
+                "name": "Song",
+                "trackDuration": {
+                  "totalMilliseconds": 215655
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "trackNumber": 1,
+                "discNumber": 1,
+                "playability": {
+                  "playable": true
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "uri": "spotify:artist:24DO0PijjITGIEWsO8XaPs",
+                      "profile": {
+                        "name": "Artist 1"
+                      }
+                    }
+                  ]
+                },
+                "albumOfTrack": {
+                  "uri": "spotify:album:591iF8ubwnvPy7Q60V9S9O",
+                  "name": "Album 1",
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "url": "https://i.scdn.co/image/cover",
+                        "width": 300,
+                        "height": 300
+                      }
+                    ]
+                  },
+                  "artists": {
+                    "items": []
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

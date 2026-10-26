@@ -1,0 +1,148 @@
+{
+  "data": {
+    "albumUnion": {
+      "__typename": "Album",
+      "uri": "spotify:album:4m2880jivSbbyEGAKfITCa",
+      "name": "Random Access Memories",
+      "type": "ALBUM",
+      "date": {
+        "isoString": "2013-05-20T00:00:00Z",
+        "precision": "DAY"
+      },
+      "label": "Columbia",
+      "coverArt": {
+        "sources": [
+          {
+            "height": 300,
+            "url": "https://i.scdn.co/image/ab67616d00001e029b9b36b0e22870b9f542d937",
+            "width": 300
+          }
+        ]
+      },
+      "artists": {
+        "items": [
+          {
+            "id": "4tZwfgrHOc3mvqYlEYSvVi",
+            "profile": {
+              "name": "Daft Punk"
+            },
+            "sharingInfo": {
+              "shareUrl": "https://open.spotify.com/artist/4tZwfgrHOc3mvqYlEYSvVi?si=4YGasFcyT-GftBlLAAK_RA"
+            },
+            "uri": "spotify:artist:4tZwfgrHOc3mvqYlEYSvVi",
+            "visuals": {
+              "avatarImage": {
+                "sources": [
+                  {
+                    "height": 640,
+                    "url": "https://i.scdn.co/image/ab6761610000e5ebd3aa7cc0e419b6c459b08e8e",
+                    "width": 640
+                  },
+                  {
+                    "height": 160,
+                    "url": "https://i.scdn.co/image/ab6761610000f178d3aa7cc0e419b6c459b08e8e",
+                    "width": 160
+                  },
+                  {
+                    "height": 320,
+                    "url": "https://i.scdn.co/image/ab67616100005174d3aa7cc0e419b6c459b08e8e",
+                    "width": 320
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "totalCount": 1
+      },
+      "tracksV2": {
+        "totalCount": 13,
+        "items": [
+          {
+            "track": {
+              "artists": {
+                "items": [
+                  {
+                    "profile": {
+                      "name": "Daft Punk"
+                    },
+                    "uri": "spotify:artist:4tZwfgrHOc3mvqYlEYSvVi"
+                  }
+                ]
+              },
+              "associationsV3": {
+                "audioAssociations": {
+                  "totalCount": 0
+                },
+                "videoAssociations": {
+                  "totalCount": 0
+                }
+              },
+              "contentRating": {
+                "label": "NONE"
+              },
+              "discNumber": 1,
+              "duration": {
+                "totalMilliseconds": 275386
+              },
+              "mediaType": "AUDIO",
+              "name": "Give Life Back to Music",
+              "playability": {
+                "playable": true
+              },
+              "playcount": "165635846",
+              "relinkingInformation": null,
+              "saved": false,
+              "trackNumber": 1,
+              "uri": "spotify:track:0dEIca2nhcxDUV8C5QkPYb"
+            },
+            "uid": "e368d41f4549b2886d2d"
+          },
+          {
+            "track": {
+              "artists": {
+                "items": [
+                  {
+                    "profile": {
+                      "name": "Daft Punk"
+                    },
+                    "uri": "spotify:artist:4tZwfgrHOc3mvqYlEYSvVi"
+                  }
+                ]
+              },
+              "associationsV3": {
+                "audioAssociations": {
+                  "totalCount": 0
+                },
+                "videoAssociations": {
+                  "totalCount": 0
+                }
+              },
+              "contentRating": {
+                "label": "NONE"
+              },
+              "discNumber": 1,
+              "duration": {
+                "totalMilliseconds": 322146
+              },
+              "mediaType": "AUDIO",
+              "name": "The Game of Love",
+              "playability": {
+                "playable": true
+              },
+              "playcount": "87400073",
+              "relinkingInformation": null,
+              "saved": false,
+              "trackNumber": 2,
+              "uri": "spotify:track:3ctALmweZBapfBdFiIVpji"
+            },
+            "uid": "543450a07c9d8e49015a"
+          }
+        ]
+      }
+    },
+    "meV2": {
+      "ianaTimezoneId": "Africa/Tunis"
+    }
+  }
+}
