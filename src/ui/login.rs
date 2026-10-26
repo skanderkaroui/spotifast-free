@@ -211,7 +211,7 @@ fn sign_in_column(app: &mut App, ui: &mut egui::Ui, connecting: bool, beside: Op
         theme::bold(if steps { 26.0 } else { 30.0 }),
         palette.text,
     );
-    if !steps && !app.free_sign_in {
+    if !steps {
         theme::text(
             ui,
             gettext(locale, "A native Spotify client."),
@@ -285,45 +285,41 @@ fn sign_in_column(app: &mut App, ui: &mut egui::Ui, connecting: bool, beside: Op
                 wrapped(ui, problem, theme::regular(13.0), palette.danger);
                 ui.add_space(4.0);
             }
-            if app.free_sign_in {
-                if big_button(ui, app, &gettext(locale, "Sign in with Spotify Free")) {
-                    app.actions.push(Action::SignInFree);
-                }
-                return;
+            // With the Free helper, the screen stays as Spotifast Free always
+            // showed it; the button signs in on Spotify's own page instead.
+            if !app.free_sign_in {
+                client_id_field(app, ui);
+                ui.add_space(4.0);
             }
-            client_id_field(app, ui);
-            ui.add_space(4.0);
-            let ready = app
-                .settings
-                .web_client_id
-                .as_deref()
-                .is_some_and(crate::auth::looks_like_client_id);
+            let ready = app.free_sign_in
+                || app
+                    .settings
+                    .web_client_id
+                    .as_deref()
+                    .is_some_and(crate::auth::looks_like_client_id);
             if ui
                 .add_enabled_ui(ready, |ui| {
                     big_button(ui, app, &gettext(locale, "Sign in with Spotify"))
                 })
                 .inner
             {
-                app.actions.push(Action::SignIn);
+                app.actions.push(if app.free_sign_in {
+                    Action::SignInFree
+                } else {
+                    Action::SignIn
+                });
             }
             ui.add_space(10.0);
             wrapped(
                 ui,
-                if super::settings::free_helper_available() {
-                    gettext(
-                        locale,
-                        "Sign in through your browser. Spotifast never sees your password.",
-                    )
-                } else {
-                    gettext(
-                        locale,
-                        "Sign in through your browser. Spotifast never sees your password. Local playback needs Spotify Premium.",
-                    )
-                },
+                gettext(
+                    locale,
+                    "Sign in through your browser. Spotifast never sees your password. Local playback needs Spotify Premium.",
+                ),
                 theme::regular(12.5),
                 palette.secondary,
             );
-            if !steps {
+            if !steps && !app.free_sign_in {
                 ui.add_space(4.0);
                 if theme::link(
                     ui,
@@ -720,7 +716,7 @@ mod tests {
             output.textures_delta.clear();
             output.platform_output.accesskit_update.unwrap()
         };
-        let label = "Sign in with Spotify Free";
+        let label = "Sign in with Spotify";
         let tree = frame(&mut app, vec![]);
         let (id, node) = tree
             .nodes

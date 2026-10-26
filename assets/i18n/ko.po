@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Spotifast\n"
 "Report-Msgid-Bugs-To: https://github.com/crmne/spotifast/issues/new?"
 "template=translation.yml\n"
-"POT-Creation-Date: 2026-10-26 10:32+0100\n"
+"POT-Creation-Date: 2026-10-26 11:23+0100\n"
 "PO-Revision-Date: 2026-10-15 12:00+0900\n"
 "Last-Translator: Spotifast contributors\n"
 "Language-Team: Korean\n"
@@ -656,7 +656,7 @@ msgstr "네트워크 연결 오류입니다. 연결 상태를 확인하세요."
 msgid "Cut"
 msgstr "잘라내기"
 
-#: src/ui/widgets.rs:3171 src/ui/login.rs:551
+#: src/ui/widgets.rs:3171 src/ui/login.rs:547
 msgid "Copy"
 msgstr "복사"
 
@@ -1295,7 +1295,7 @@ msgstr "Spotify Free, 로컬 재생에는 Premium이 필요합니다"
 msgid "Connected as {username}"
 msgstr "{username}(으)로 연결됨"
 
-#: src/ui/settings.rs:537 src/ui/login.rs:382
+#: src/ui/settings.rs:537 src/ui/login.rs:378
 msgid "Client ID"
 msgstr "클라이언트 ID"
 
@@ -1737,7 +1737,7 @@ msgstr ""
 "끄기는 환경 변수를 무시합니다. 시스템은 환경 변수를 사용하며, macOS와 Windows"
 "에서는 OS 프록시도 사용합니다."
 
-#: src/ui/settings.rs:1663 src/ui/login.rs:635
+#: src/ui/settings.rs:1663 src/ui/login.rs:631
 msgid "Apply settings"
 msgstr "설정 적용"
 
@@ -2935,19 +2935,11 @@ msgstr ""
 "Spotify에 “Invalid redirect URI”가 표시되면 앱에 {uri}을(를) 정확히 추가하고 "
 "저장한 뒤 다시 로그인하세요."
 
-#: src/ui/login.rs:289
-msgid "Sign in with Spotify Free"
-msgstr "Spotify Free로 로그인"
-
-#: src/ui/login.rs:303
+#: src/ui/login.rs:302
 msgid "Sign in with Spotify"
 msgstr "Spotify로 로그인"
 
-#: src/ui/login.rs:315
-msgid "Sign in through your browser. Spotifast never sees your password."
-msgstr "브라우저를 통해 로그인합니다. Spotifast는 비밀번호를 볼 수 없습니다."
-
-#: src/ui/login.rs:320
+#: src/ui/login.rs:317
 msgid ""
 "Sign in through your browser. Spotifast never sees your password. Local "
 "playback needs Spotify Premium."
@@ -2955,23 +2947,23 @@ msgstr ""
 "브라우저를 통해 로그인합니다. Spotifast는 비밀번호를 볼 수 없습니다. 로컬 재"
 "생에는 Spotify Premium이 필요합니다."
 
-#: src/ui/login.rs:330
+#: src/ui/login.rs:326
 msgid "How to set up your Spotify app"
 msgstr "Spotify 앱 설정 방법"
 
-#: src/ui/login.rs:350
+#: src/ui/login.rs:346
 msgid "Proxy Settings"
 msgstr "프록시 설정"
 
-#: src/ui/login.rs:400
+#: src/ui/login.rs:396
 msgid "A Client ID is 32 letters and digits. Copy it from your app's page."
 msgstr "클라이언트 ID는 영문자와 숫자 32자입니다. 앱 페이지에서 복사하세요."
 
-#: src/ui/login.rs:452
+#: src/ui/login.rs:448
 msgid "Set up your Spotify app"
 msgstr "Spotify 앱 설정"
 
-#: src/ui/login.rs:460
+#: src/ui/login.rs:456
 msgid ""
 "Spotifast signs in through your own free Spotify app. Spotify requires its "
 "owner to have Premium."
@@ -2979,28 +2971,28 @@ msgstr ""
 "Spotifast는 무료로 만든 내 Spotify 앱으로 로그인합니다. Spotify에서는 앱 소유"
 "자에게 Premium이 필요합니다."
 
-#: src/ui/login.rs:470
+#: src/ui/login.rs:466
 msgid "Open Spotify's developer dashboard."
 msgstr "Spotify 개발자 대시보드를 여세요."
 
-#: src/ui/login.rs:489
+#: src/ui/login.rs:485
 msgid "Click Create app. Any name will do."
 msgstr "“Create app”을 클릭하세요. 이름은 아무거나 괜찮습니다."
 
-#: src/ui/login.rs:496
+#: src/ui/login.rs:492
 msgid "Under Redirect URIs, add exactly:"
 msgstr "“Redirect URIs”에 다음을 정확히 추가하세요:"
 
-#: src/ui/login.rs:505
+#: src/ui/login.rs:501
 msgid "Tick Web API, accept the terms, and save."
 msgstr "“Web API”를 선택하고 약관에 동의한 뒤 저장하세요."
 
-#: src/ui/login.rs:514
+#: src/ui/login.rs:510
 msgid "Paste the app's Client ID into the field and sign in."
 msgstr "앱의 클라이언트 ID를 입력란에 붙여넣고 로그인하세요."
 
 #. Translators: shown on the Copy button for a moment after it copied.
-#: src/ui/login.rs:549
+#: src/ui/login.rs:545
 msgid "Copied"
 msgstr "복사됨"
 
@@ -3674,6 +3666,13 @@ msgstr ""
 "데, 이 PC 또는 가상 머신에서는 제공되지 않습니다. 그래픽 드라이버를 설치하거"
 "나 가상 머신의 GPU 가속을 켜세요. 자세한 내용을 보려면 {url}을(를) 여시겠습니"
 "까?"
+
+#~ msgid "Sign in with Spotify Free"
+#~ msgstr "Spotify Free로 로그인"
+
+#~ msgid "Sign in through your browser. Spotifast never sees your password."
+#~ msgstr ""
+#~ "브라우저를 통해 로그인합니다. Spotifast는 비밀번호를 볼 수 없습니다."
 
 #~ msgid "Sign in on Spotify's own page. No Spotify app or Premium needed."
 #~ msgstr ""
