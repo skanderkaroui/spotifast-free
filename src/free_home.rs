@@ -160,3 +160,37 @@ mod tests {
         );
     }
 }
+
+/// Songs like a seed song, as the song's own page lists them.
+pub fn recommender_query(uri: &str, limit: u32) -> Value {
+    let _ = (uri, limit);
+    Value::Null
+}
+
+/// Songs like the seeds, a few from each seed in turn, without the seeds
+/// themselves or repeats, at most `limit` of them.
+pub fn recommended(answers: &[Value], seeds: &[String], limit: usize) -> Vec<Track> {
+    let _ = (answers, seeds, limit);
+    Vec::new()
+}
+
+#[cfg(test)]
+mod recommendation_tests {
+    use super::*;
+
+    const RECOMMENDED: &str = include_str!("testdata/free/recommended-track.json");
+
+    #[test]
+    fn recommendations_take_turns_between_seeds_without_repeats() {
+        let answer: Value = serde_json::from_str(RECOMMENDED).unwrap();
+        let query = recommender_query("spotify:track:0DiWol3AO6WpXZgp0goxAV", 10);
+        assert_eq!(query["operationName"], "internalLinkRecommenderTrack");
+        assert_eq!(query["variables"]["limit"], 10);
+        let seeds = vec!["49X0LAl6faAusYq02PRAY6".to_owned()];
+        let songs = recommended(&[answer.clone(), answer], &seeds, 20);
+        assert_eq!(songs.len(), 4, "the seed and the repeats are left out");
+        assert_eq!(songs[0].id.as_deref(), Some("303ccTay2FiDTZ9fZ2AdBt"));
+        assert!(songs[0].album.is_some());
+        assert!(!songs[0].artists.is_empty());
+    }
+}
