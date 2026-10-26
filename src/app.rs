@@ -5502,9 +5502,10 @@ impl App {
     }
 
     /// Reads the songs hidden in Spotify's playlists, once per playback
-    /// session.
+    /// session. Only the Premium playback session can read them; a Free
+    /// account's player is the web player.
     fn load_hidden_songs(&mut self) {
-        if self.hidden_songs_requested || !self.local_ready {
+        if self.hidden_songs_requested || !self.local_ready || self.free_web_player() {
             return;
         }
         self.hidden_songs_requested = true;
