@@ -21,6 +21,8 @@ pub mod eq;
 #[cfg(target_os = "macos")]
 pub mod free_home;
 #[cfg(target_os = "macos")]
+pub mod free_player;
+#[cfg(target_os = "macos")]
 pub mod free_podcasts;
 #[cfg(target_os = "macos")]
 pub mod free_reads;

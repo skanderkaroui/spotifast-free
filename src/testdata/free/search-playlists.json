@@ -1,0 +1,71 @@
+{
+  "data": {
+    "searchV2": {
+      "playlists": {
+        "totalCount": 195,
+        "items": [
+          {
+            "__typename": "PlaylistResponseWrapper",
+            "data": {
+              "__typename": "Playlist",
+              "description": "Best hits of this awesome band!",
+              "name": "Daft Punk Greatest Hits",
+              "uri": "spotify:playlist:2jTy5QwqWJ1ZUv2XeJPYbn",
+              "images": {
+                "items": [
+                  {
+                    "sources": [
+                      {
+                        "height": null,
+                        "url": "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000d72cbb071380835cf25eafa2f681",
+                        "width": null
+                      }
+                    ]
+                  }
+                ]
+              },
+              "ownerV2": {
+                "data": {
+                  "__typename": "User",
+                  "name": "Owner 1",
+                  "uri": "spotify:user:owner1",
+                  "username": "owner1"
+                }
+              }
+            }
+          },
+          {
+            "__typename": "PlaylistResponseWrapper",
+            "data": {
+              "__typename": "Playlist",
+              "description": "This is Daft Punk. The essential tracks, all in one playlist.",
+              "name": "This Is Daft Punk",
+              "uri": "spotify:playlist:37i9dQZF1DZ06evO2CNgSk",
+              "images": {
+                "items": [
+                  {
+                    "sources": [
+                      {
+                        "height": null,
+                        "url": "https://pickasso.spotifycdn.com/image/ab67c0de0000deef/dt/v1/img/thisisv3/4tZwfgrHOc3mvqYlEYSvVi/en-GB",
+                        "width": null
+                      }
+                    ]
+                  }
+                ]
+              },
+              "ownerV2": {
+                "data": {
+                  "__typename": "User",
+                  "name": "Owner 1",
+                  "uri": "spotify:user:owner1",
+                  "username": "owner1"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

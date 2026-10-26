@@ -1,0 +1,144 @@
+{
+  "data": {
+    "searchV2": {
+      "tracksV2": {
+        "totalCount": 340,
+        "items": [
+          {
+            "item": {
+              "__typename": "TrackResponseWrapper",
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e029b9b36b0e22870b9f542d937",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048519b9b36b0e22870b9f542d937",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2739b9b36b0e22870b9f542d937",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "id": "4m2880jivSbbyEGAKfITCa",
+                  "name": "Random Access Memories",
+                  "uri": "spotify:album:4m2880jivSbbyEGAKfITCa"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "onPlatformReputationTrait": {
+                        "verification": {
+                          "aiPersona": null
+                        }
+                      },
+                      "profile": {
+                        "name": "Daft Punk"
+                      },
+                      "uri": "spotify:artist:4tZwfgrHOc3mvqYlEYSvVi"
+                    },
+                    {
+                      "onPlatformReputationTrait": {
+                        "verification": {
+                          "aiPersona": null
+                        }
+                      },
+                      "profile": {
+                        "name": "Julian Casablancas"
+                      },
+                      "uri": "spotify:artist:1rAv1GhTQ2rmG94p9lU3rB"
+                    }
+                  ]
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 337560
+                },
+                "id": "2cGxRwrMyEAp8dEbuZaVv6",
+                "trackMediaType": "AUDIO",
+                "name": "Instant Crush (feat. Julian Casablancas)",
+                "playability": {
+                  "playable": true,
+                  "reason": "PLAYABLE"
+                },
+                "uri": "spotify:track:2cGxRwrMyEAp8dEbuZaVv6"
+              }
+            }
+          },
+          {
+            "item": {
+              "__typename": "TrackResponseWrapper",
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e021e81bff9807a9e629fce5ade",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048511e81bff9807a9e629fce5ade",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2731e81bff9807a9e629fce5ade",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "id": "2noRn2Aes5aoNVsU6iWThc",
+                  "name": "Discovery",
+                  "uri": "spotify:album:2noRn2Aes5aoNVsU6iWThc"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "onPlatformReputationTrait": {
+                        "verification": {
+                          "aiPersona": null
+                        }
+                      },
+                      "profile": {
+                        "name": "Daft Punk"
+                      },
+                      "uri": "spotify:artist:4tZwfgrHOc3mvqYlEYSvVi"
+                    }
+                  ]
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 345186
+                },
+                "id": "2LD2gT7gwAurzdQDQtILds",
+                "trackMediaType": "AUDIO",
+                "name": "Veridis Quo",
+                "playability": {
+                  "playable": true,
+                  "reason": "PLAYABLE"
+                },
+                "uri": "spotify:track:2LD2gT7gwAurzdQDQtILds"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
