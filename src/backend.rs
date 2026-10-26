@@ -5589,6 +5589,113 @@ where
     }
 }
 
+/// Live, against Spotify through the real helper and its saved sign-in:
+/// every read the app makes for a Free account answers through Spotify's
+/// web player, by the same route the app's pages use. Read-only.
+/// `SPOTIFAST_PLAYBACK_HELPER=... cargo test --lib free_reads_end_to_end -- --ignored`
+#[cfg(all(test, target_os = "macos"))]
+mod free_live {
+    use super::*;
+
+    #[test]
+    #[ignore = "needs the helper signed in to Spotify"]
+    fn free_reads_end_to_end() {
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let player =
+            crate::web_player::WebPlayer::start(Arc::new(|_| {}), Arc::new(|_| {}), None).unwrap();
+        let reader = player.reader();
+        let me = runtime.block_on(handle_free(&reader, None, &ApiRequest::Me));
+        let Some(ApiResponse::Me(Ok(user))) = me else {
+            panic!("the account: {me:?}");
+        };
+        let account = Some(user.id.as_str());
+        let daft = "4tZwfgrHOc3mvqYlEYSvVi".to_string();
+        let ram = "4m2880jivSbbyEGAKfITCa".to_string();
+        let requests = vec![
+            ApiRequest::MyPlaylists {
+                offset: 0,
+                generation: 1,
+            },
+            ApiRequest::SavedTracks {
+                offset: 0,
+                generation: 1,
+            },
+            ApiRequest::SavedAlbums { offset: 0 },
+            ApiRequest::FollowedArtists { after: None },
+            ApiRequest::SavedShows { offset: 0 },
+            ApiRequest::SavedEpisodes { offset: 0 },
+            ApiRequest::RecentlyPlayed {
+                who: RecentsFor::Home,
+                generation: 1,
+                before: None,
+                limit: 20,
+            },
+            ApiRequest::TopArtists { generation: 1 },
+            ApiRequest::TopTracks {
+                period: crate::model::TopPeriod::ShortTerm,
+                offset: 0,
+                full: false,
+                generation: 1,
+            },
+            ApiRequest::MadeForYou {
+                generation: 1,
+                force: true,
+            },
+            ApiRequest::NewReleases { generation: 1 },
+            ApiRequest::Album { id: ram.clone() },
+            ApiRequest::AlbumTracks {
+                id: ram,
+                offset: 0,
+                generation: 1,
+            },
+            ApiRequest::Artist { id: daft.clone() },
+            ApiRequest::ArtistTopTracks { id: daft.clone() },
+            ApiRequest::ArtistAlbums {
+                id: daft.clone(),
+                groups: "album,single".into(),
+                offset: 0,
+            },
+            ApiRequest::RelatedArtists { id: daft },
+            ApiRequest::Track {
+                id: "0DiWol3AO6WpXZgp0goxAV".into(),
+            },
+            ApiRequest::Search {
+                query: "daft punk".into(),
+                serial: 1,
+            },
+            ApiRequest::SearchPlaylists {
+                query: "daft punk".into(),
+                serial: 1,
+            },
+        ];
+        let mut failures = Vec::new();
+        for request in requests {
+            let name = format!("{request:?}");
+            let name = name
+                .split([' ', '(', '{'])
+                .next()
+                .unwrap_or_default()
+                .to_owned();
+            match runtime.block_on(handle_free(&reader, account, &request)) {
+                None => failures.push(format!("{name}: not read through the web player")),
+                Some(response) => {
+                    let text = format!("{response:?}");
+                    if text.contains("Err(") {
+                        failures.push(format!("{name}: {}", &text[..text.len().min(200)]));
+                    } else {
+                        eprintln!("{name}: ok");
+                    }
+                }
+            }
+        }
+        player.shutdown();
+        assert!(failures.is_empty(), "{failures:#?}");
+    }
+}
+
 /// The reads a Free sign-in answers through Spotify's web player, shaped as
 /// the Web API's answers. `None` for a request it does not cover yet.
 #[cfg(target_os = "macos")]
