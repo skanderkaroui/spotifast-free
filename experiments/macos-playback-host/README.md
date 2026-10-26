@@ -21,7 +21,8 @@ Sign-in is automatic. The helper loads Spotify's settings page
 (`open.spotify.com/preferences`): the same web player and player bar, without
 the home feed's artwork, which nobody sees in the hidden window. The helper runs hidden; when Spotify's page shows
 its **Log in** button (`data-testid="login-button"`), the helper shows its
-window with Spotify's own login page and nothing around it
+window with Spotify's own login page in a bare Safari-style bar (back,
+forward, the site with its lock, reload, and the usual shortcuts)
 (`accounts.spotify.com/login`, continuing back to the player page), and a
 command that arrives meanwhile waits (`control` with
 `how: "signing-in"`). Once the account button appears

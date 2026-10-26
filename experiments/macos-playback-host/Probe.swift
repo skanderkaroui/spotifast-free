@@ -3,7 +3,7 @@ import WebKit
 
 @MainActor
 final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
-    WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
+    WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler, NSToolbarDelegate {
     // Spotify's own settings page: the same web player, with its player bar
     // (ads included) and sign-in, but without the home feed's artwork grids
     // nobody sees in the hidden window. Measured: about 290 MB instead of
@@ -54,6 +54,7 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
             // sign-in: Spotify's page alone, without the probe's tools.
             window.title = "Sign in to Spotify"
             window.contentView = webView
+            browserChrome()
         } else {
             window.title = "Spotifast Free Playback"
             window.contentView = probeTools()
@@ -71,6 +72,82 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
         window.makeKeyAndOrderFront(nil)
         NSApp.activate()
         openPlayer()
+    }
+
+    // The sign-in window's browser bar, laid out as Safari's compact one:
+    // back and forward by the window buttons, the address in the middle
+    // with its lock, reload at its end and a loading line under it.
+    private var backItem: NSToolbarItem?
+    private var forwardItem: NSToolbarItem?
+    private let address = AddressField()
+    private var watching: [NSKeyValueObservation] = []
+
+    private func browserChrome() {
+        address.reload.target = self
+        address.reload.action = #selector(reloadOrStop)
+        let toolbar = NSToolbar(identifier: "SignIn")
+        toolbar.delegate = self
+        toolbar.displayMode = .iconOnly
+        toolbar.allowsUserCustomization = false
+        toolbar.centeredItemIdentifiers = [.address]
+        window.toolbar = toolbar
+        window.toolbarStyle = .unifiedCompact
+        window.titleVisibility = .hidden
+        let refresh: (WKWebView) -> Void = { [weak self] _ in
+            Task { @MainActor in self?.refreshBar() }
+        }
+        watching = [
+            webView.observe(\.url) { view, _ in refresh(view) },
+            webView.observe(\.title) { view, _ in refresh(view) },
+            webView.observe(\.canGoBack) { view, _ in refresh(view) },
+            webView.observe(\.canGoForward) { view, _ in refresh(view) },
+            webView.observe(\.isLoading) { view, _ in refresh(view) },
+            webView.observe(\.estimatedProgress) { view, _ in refresh(view) },
+        ]
+        refreshBar()
+    }
+
+    private func refreshBar() {
+        backItem?.isEnabled = webView.canGoBack
+        forwardItem?.isEnabled = webView.canGoForward
+        address.show(url: webView.url, loading: webView.isLoading, progress: webView.estimatedProgress)
+        if let title = webView.title, !title.isEmpty { window.title = title }
+    }
+
+    @objc private func reloadOrStop() {
+        if webView.isLoading { webView.stopLoading() } else { webView.reload() }
+    }
+
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        [.back, .forward, .flexibleSpace, .address, .flexibleSpace]
+    }
+
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        toolbarDefaultItemIdentifiers(toolbar)
+    }
+
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier identifier: NSToolbarItem.Identifier,
+                 willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        let item = NSToolbarItem(itemIdentifier: identifier)
+        switch identifier {
+        case .back, .forward:
+            let back = identifier == .back
+            item.label = back ? "Back" : "Forward"
+            item.toolTip = back ? "Show the previous page" : "Show the next page"
+            item.image = NSImage(systemSymbolName: back ? "chevron.left" : "chevron.right",
+                                 accessibilityDescription: item.label)
+            item.isNavigational = true
+            item.autovalidates = false
+            item.target = webView
+            item.action = back ? #selector(WKWebView.goBack(_:)) : #selector(WKWebView.goForward(_:))
+            if back { backItem = item } else { forwardItem = item }
+        case .address:
+            item.label = "Address"
+            item.view = address
+        default:
+            return nil
+        }
+        return item
     }
 
     /// The probe window's own tools around Spotify's page, for running it
@@ -157,12 +234,23 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
         case "quit":
             NSApp.terminate(nil)
         case "snapshot":
-            // {"cmd":"snapshot","path":"/x.png"}: the window's content as a
-            // PNG, for checking the sign-in window without a screen capture.
-            guard let path = command["path"] as? String, let view = window.contentView else { return }
-            view.layoutSubtreeIfNeeded()
-            webView.takeSnapshot(with: nil) { image, _ in
-                guard let image, let tiff = image.tiffRepresentation,
+            // {"cmd":"snapshot","path":"/x.png"}: the window as it shows,
+            // bar and page, for checking the sign-in window without a screen
+            // capture. The page draws out of process, so it is snapshotted
+            // on its own and laid over the window's frame.
+            guard let path = command["path"] as? String,
+                  let frame = window.contentView?.superview else { return }
+            frame.layoutSubtreeIfNeeded()
+            webView.takeSnapshot(with: nil) { [weak self] page, _ in
+                guard let self, let page,
+                      let bitmap = frame.bitmapImageRepForCachingDisplay(in: frame.bounds) else { return }
+                frame.cacheDisplay(in: frame.bounds, to: bitmap)
+                let image = NSImage(size: frame.bounds.size)
+                image.addRepresentation(bitmap)
+                image.lockFocus()
+                page.draw(in: self.webView.convert(self.webView.bounds, to: frame))
+                image.unlockFocus()
+                guard let tiff = image.tiffRepresentation,
                       let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:])
                 else { return }
                 try? png.write(to: URL(fileURLWithPath: path))
@@ -332,6 +420,81 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
     func windowWillClose(_ notification: Notification) { NSApp.terminate(nil) }
 }
 
+extension NSToolbarItem.Identifier {
+    static let back = Self("back")
+    static let forward = Self("forward")
+    static let address = Self("address")
+}
+
+/// Safari's address field, read-only: the lock and the site, centred, with
+/// reload at its end and the page's loading progress along its bottom.
+final class AddressField: NSView {
+    let reload = NSButton()
+    private let lock = NSImageView()
+    private let host = NSTextField(labelWithString: "")
+    private let progress = NSView()
+    private var progressWidth: NSLayoutConstraint!
+
+    override var wantsUpdateLayer: Bool { true }
+    override func updateLayer() {
+        layer?.backgroundColor = NSColor.quaternaryLabelColor.cgColor
+        progress.layer?.backgroundColor = NSColor.controlAccentColor.cgColor
+    }
+
+    init() {
+        super.init(frame: .zero)
+        wantsLayer = true
+        layer?.cornerRadius = 7
+        layer?.masksToBounds = true
+        setAccessibilityRole(.group)
+        setAccessibilityLabel("Address")
+        lock.image = NSImage(systemSymbolName: "lock.fill", accessibilityDescription: "Secure")
+        lock.symbolConfiguration = .init(pointSize: 10, weight: .medium)
+        lock.contentTintColor = .secondaryLabelColor
+        host.font = .systemFont(ofSize: 13)
+        host.lineBreakMode = .byTruncatingMiddle
+        reload.isBordered = false
+        reload.imagePosition = .imageOnly
+        reload.symbolConfiguration = .init(pointSize: 11, weight: .medium)
+        reload.contentTintColor = .secondaryLabelColor
+        progress.wantsLayer = true
+        let site = NSStackView(views: [lock, host])
+        site.spacing = 5
+        for view in [site, reload, progress] {
+            view.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(view)
+        }
+        progressWidth = progress.widthAnchor.constraint(equalToConstant: 0)
+        NSLayoutConstraint.activate([
+            widthAnchor.constraint(equalToConstant: 420),
+            heightAnchor.constraint(equalToConstant: 28),
+            site.centerXAnchor.constraint(equalTo: centerXAnchor),
+            site.centerYAnchor.constraint(equalTo: centerYAnchor),
+            site.trailingAnchor.constraint(lessThanOrEqualTo: reload.leadingAnchor, constant: -6),
+            reload.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
+            reload.centerYAnchor.constraint(equalTo: centerYAnchor),
+            progress.leadingAnchor.constraint(equalTo: leadingAnchor),
+            progress.bottomAnchor.constraint(equalTo: bottomAnchor),
+            progress.heightAnchor.constraint(equalToConstant: 2),
+            progressWidth,
+        ])
+        show(url: nil, loading: false, progress: 0)
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    func show(url: URL?, loading: Bool, progress value: Double) {
+        host.stringValue = url?.host() ?? ""
+        lock.isHidden = url?.scheme != "https"
+        toolTip = url?.absoluteString
+        reload.image = NSImage(systemSymbolName: loading ? "xmark" : "arrow.clockwise",
+                               accessibilityDescription: loading ? "Stop" : "Reload")
+        reload.toolTip = loading ? "Stop loading this page" : "Reload this page"
+        progress.isHidden = !loading
+        progressWidth.constant = 420 * min(max(value, 0), 1)
+    }
+}
+
 MainActor.assumeIsolated {
     let application = NSApplication.shared
     application.setActivationPolicy(.regular)
@@ -341,6 +504,31 @@ MainActor.assumeIsolated {
     applicationMenu.addItem(withTitle: "Quit Spotifast Free Helper", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
     applicationItem.submenu = applicationMenu
     menu.addItem(applicationItem)
+    // A browser's own shortcuts: paste an email or password, close the
+    // window, reload, back and forward.
+    func submenu(_ title: String, _ items: [(String, Selector, String)]) {
+        let item = NSMenuItem()
+        let submenu = NSMenu(title: title)
+        for (name, action, key) in items {
+            submenu.addItem(withTitle: name, action: action, keyEquivalent: key)
+        }
+        item.submenu = submenu
+        menu.addItem(item)
+    }
+    submenu("File", [("Close Window", #selector(NSWindow.performClose(_:)), "w")])
+    submenu("Edit", [
+        ("Undo", Selector(("undo:")), "z"),
+        ("Redo", Selector(("redo:")), "Z"),
+        ("Cut", #selector(NSText.cut(_:)), "x"),
+        ("Copy", #selector(NSText.copy(_:)), "c"),
+        ("Paste", #selector(NSText.paste(_:)), "v"),
+        ("Select All", #selector(NSText.selectAll(_:)), "a"),
+    ])
+    submenu("View", [("Reload Page", #selector(WKWebView.reload(_:)), "r")])
+    submenu("History", [
+        ("Back", #selector(WKWebView.goBack(_:)), "["),
+        ("Forward", #selector(WKWebView.goForward(_:)), "]"),
+    ])
     application.mainMenu = menu
     let delegate = PlaybackProbe()
     application.delegate = delegate
