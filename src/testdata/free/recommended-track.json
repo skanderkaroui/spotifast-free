@@ -1,0 +1,348 @@
+{
+  "data": {
+    "seoRecommendedTrack": {
+      "items": [
+        {
+          "data": {
+            "__typename": "Track",
+            "albumOfTrack": {
+              "coverArt": {
+                "sources": [
+                  {
+                    "height": 300,
+                    "url": "https://i.scdn.co/image/ab67616d00001e0254c5c304064df85d61253ac7",
+                    "width": 300
+                  },
+                  {
+                    "height": 64,
+                    "url": "https://i.scdn.co/image/ab67616d0000485154c5c304064df85d61253ac7",
+                    "width": 64
+                  },
+                  {
+                    "height": 640,
+                    "url": "https://i.scdn.co/image/ab67616d0000b27354c5c304064df85d61253ac7",
+                    "width": 640
+                  }
+                ]
+              },
+              "id": "0vwDxngkhZuwNbcxzebCXI",
+              "uri": "spotify:album:0vwDxngkhZuwNbcxzebCXI"
+            },
+            "artists": {
+              "items": [
+                {
+                  "id": "0AkpPlFLnr0VQwZQeMGht0",
+                  "profile": {
+                    "name": "Modjo"
+                  },
+                  "uri": "spotify:artist:0AkpPlFLnr0VQwZQeMGht0"
+                }
+              ]
+            },
+            "associationsV3": {
+              "audioAssociations": {
+                "totalCount": 0
+              },
+              "videoAssociations": {
+                "totalCount": 0
+              }
+            },
+            "contentRating": {
+              "label": "NONE"
+            },
+            "duration": {
+              "totalMilliseconds": 307153
+            },
+            "id": "49X0LAl6faAusYq02PRAY6",
+            "mediaType": "AUDIO",
+            "name": "Lady - Hear Me Tonight",
+            "playability": {
+              "playable": true
+            },
+            "playcount": "999649470",
+            "uri": "spotify:track:49X0LAl6faAusYq02PRAY6"
+          }
+        },
+        {
+          "data": {
+            "__typename": "Track",
+            "albumOfTrack": {
+              "coverArt": {
+                "sources": [
+                  {
+                    "height": 300,
+                    "url": "https://i.scdn.co/image/ab67616d00001e02b98afa12c212cbbda4f1799b",
+                    "width": 300
+                  },
+                  {
+                    "height": 64,
+                    "url": "https://i.scdn.co/image/ab67616d00004851b98afa12c212cbbda4f1799b",
+                    "width": 64
+                  },
+                  {
+                    "height": 640,
+                    "url": "https://i.scdn.co/image/ab67616d0000b273b98afa12c212cbbda4f1799b",
+                    "width": 640
+                  }
+                ]
+              },
+              "id": "7Kusf5plZjl76X5ARWJbNO",
+              "uri": "spotify:album:7Kusf5plZjl76X5ARWJbNO"
+            },
+            "artists": {
+              "items": [
+                {
+                  "id": "2w7IutHv5g4e8LumrwtjWR",
+                  "profile": {
+                    "name": "Stardust"
+                  },
+                  "uri": "spotify:artist:2w7IutHv5g4e8LumrwtjWR"
+                },
+                {
+                  "id": "2XOvFG8pp1XAV1V6ZJABim",
+                  "profile": {
+                    "name": "Benjamin Diamond"
+                  },
+                  "uri": "spotify:artist:2XOvFG8pp1XAV1V6ZJABim"
+                },
+                {
+                  "id": "24JRvbKfTcF2x7c2kCCJrW",
+                  "profile": {
+                    "name": "Alan Braxe"
+                  },
+                  "uri": "spotify:artist:24JRvbKfTcF2x7c2kCCJrW"
+                },
+                {
+                  "id": "41vv2Tj1knysv6MuFUmdwi",
+                  "profile": {
+                    "name": "Thomas Bangalter"
+                  },
+                  "uri": "spotify:artist:41vv2Tj1knysv6MuFUmdwi"
+                }
+              ]
+            },
+            "associationsV3": {
+              "audioAssociations": {
+                "totalCount": 0
+              },
+              "videoAssociations": {
+                "totalCount": 0
+              }
+            },
+            "contentRating": {
+              "label": "NONE"
+            },
+            "duration": {
+              "totalMilliseconds": 403293
+            },
+            "id": "303ccTay2FiDTZ9fZ2AdBt",
+            "mediaType": "AUDIO",
+            "name": "Music Sounds Better With You",
+            "playability": {
+              "playable": true
+            },
+            "playcount": "306322824",
+            "uri": "spotify:track:303ccTay2FiDTZ9fZ2AdBt"
+          }
+        },
+        {
+          "data": {
+            "__typename": "Track",
+            "albumOfTrack": {
+              "coverArt": {
+                "sources": [
+                  {
+                    "height": 300,
+                    "url": "https://i.scdn.co/image/ab67616d00001e0250b5922bdf87ba4213b25234",
+                    "width": 300
+                  },
+                  {
+                    "height": 64,
+                    "url": "https://i.scdn.co/image/ab67616d0000485150b5922bdf87ba4213b25234",
+                    "width": 64
+                  },
+                  {
+                    "height": 640,
+                    "url": "https://i.scdn.co/image/ab67616d0000b27350b5922bdf87ba4213b25234",
+                    "width": 640
+                  }
+                ]
+              },
+              "id": "6zVi5jNALX1GeD3MxiFmqo",
+              "uri": "spotify:album:6zVi5jNALX1GeD3MxiFmqo"
+            },
+            "artists": {
+              "items": [
+                {
+                  "id": "6fXEqmGQEt6ONuqVmwrN46",
+                  "profile": {
+                    "name": "Bag Raiders"
+                  },
+                  "uri": "spotify:artist:6fXEqmGQEt6ONuqVmwrN46"
+                }
+              ]
+            },
+            "associationsV3": {
+              "audioAssociations": {
+                "totalCount": 0
+              },
+              "videoAssociations": {
+                "totalCount": 0
+              }
+            },
+            "contentRating": {
+              "label": "NONE"
+            },
+            "duration": {
+              "totalMilliseconds": 235813
+            },
+            "id": "0UeYCHOETPfai02uskjJ3x",
+            "mediaType": "AUDIO",
+            "name": "Shooting Stars",
+            "playability": {
+              "playable": true
+            },
+            "playcount": "481887822",
+            "uri": "spotify:track:0UeYCHOETPfai02uskjJ3x"
+          }
+        },
+        {
+          "data": {
+            "__typename": "Track",
+            "albumOfTrack": {
+              "coverArt": {
+                "sources": [
+                  {
+                    "height": 300,
+                    "url": "https://i.scdn.co/image/ab67616d00001e0273cbe62524627a0fdfc06a8a",
+                    "width": 300
+                  },
+                  {
+                    "height": 64,
+                    "url": "https://i.scdn.co/image/ab67616d0000485173cbe62524627a0fdfc06a8a",
+                    "width": 64
+                  },
+                  {
+                    "height": 640,
+                    "url": "https://i.scdn.co/image/ab67616d0000b27373cbe62524627a0fdfc06a8a",
+                    "width": 640
+                  }
+                ]
+              },
+              "id": "6g2Ig47IgyqyatDpj7UpHo",
+              "uri": "spotify:album:6g2Ig47IgyqyatDpj7UpHo"
+            },
+            "artists": {
+              "items": [
+                {
+                  "id": "3sgFRtyBnxXD5ESfmbK4dl",
+                  "profile": {
+                    "name": "LMFAO"
+                  },
+                  "uri": "spotify:artist:3sgFRtyBnxXD5ESfmbK4dl"
+                },
+                {
+                  "id": "2jLE4BoXHriQ96JagEtiDP",
+                  "profile": {
+                    "name": "Lauren Bennett"
+                  },
+                  "uri": "spotify:artist:2jLE4BoXHriQ96JagEtiDP"
+                },
+                {
+                  "id": "53sIBaVjXQhfH89Vu6nEGh",
+                  "profile": {
+                    "name": "GoonRock"
+                  },
+                  "uri": "spotify:artist:53sIBaVjXQhfH89Vu6nEGh"
+                }
+              ]
+            },
+            "associationsV3": {
+              "audioAssociations": {
+                "totalCount": 0
+              },
+              "videoAssociations": {
+                "totalCount": 0
+              }
+            },
+            "contentRating": {
+              "label": "NONE"
+            },
+            "duration": {
+              "totalMilliseconds": 262146
+            },
+            "id": "4650WGL6InVqP7YN5POqIz",
+            "mediaType": "AUDIO",
+            "name": "Party Rock Anthem",
+            "playability": {
+              "playable": true
+            },
+            "playcount": "1095408881",
+            "uri": "spotify:track:4650WGL6InVqP7YN5POqIz"
+          }
+        },
+        {
+          "data": {
+            "__typename": "Track",
+            "albumOfTrack": {
+              "coverArt": {
+                "sources": [
+                  {
+                    "height": 300,
+                    "url": "https://i.scdn.co/image/ab67616d00001e02f3aa0e6ca22a382007f61e4d",
+                    "width": 300
+                  },
+                  {
+                    "height": 64,
+                    "url": "https://i.scdn.co/image/ab67616d00004851f3aa0e6ca22a382007f61e4d",
+                    "width": 64
+                  },
+                  {
+                    "height": 640,
+                    "url": "https://i.scdn.co/image/ab67616d0000b273f3aa0e6ca22a382007f61e4d",
+                    "width": 640
+                  }
+                ]
+              },
+              "id": "5B6XfyHHYawyLkEvNvhSPh",
+              "uri": "spotify:album:5B6XfyHHYawyLkEvNvhSPh"
+            },
+            "artists": {
+              "items": [
+                {
+                  "id": "67hb7towEyKvt5Z8Bx306c",
+                  "profile": {
+                    "name": "Empire Of The Sun"
+                  },
+                  "uri": "spotify:artist:67hb7towEyKvt5Z8Bx306c"
+                }
+              ]
+            },
+            "associationsV3": {
+              "audioAssociations": {
+                "totalCount": 0
+              },
+              "videoAssociations": {
+                "totalCount": 0
+              }
+            },
+            "contentRating": {
+              "label": "NONE"
+            },
+            "duration": {
+              "totalMilliseconds": 198440
+            },
+            "id": "5r5cp9IpziiIsR6b93vcnQ",
+            "mediaType": "AUDIO",
+            "name": "Walking On A Dream",
+            "playability": {
+              "playable": true
+            },
+            "playcount": "1671611974",
+            "uri": "spotify:track:5r5cp9IpziiIsR6b93vcnQ"
+          }
+        }
+      ]
+    }
+  }
+}

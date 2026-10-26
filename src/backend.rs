@@ -5819,7 +5819,7 @@ async fn handle_free(
                 .await
                 .and_then(|body| free::single_track(&body)),
         },
-        _ => return None,
+        _ => return crate::free_home::handle(reader, account, request).await,
     })
 }
 

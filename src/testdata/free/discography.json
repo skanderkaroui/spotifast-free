@@ -1,0 +1,249 @@
+{
+  "data": {
+    "artistUnion": {
+      "__typename": "Artist",
+      "discography": {
+        "all": {
+          "items": [
+            {
+              "releases": {
+                "items": [
+                  {
+                    "coverArt": {
+                      "sources": [
+                        {
+                          "height": 300,
+                          "url": "https://i.scdn.co/image/ab67616d00001e02d1ec82bc061a90006584aa9b",
+                          "width": 300
+                        },
+                        {
+                          "height": 64,
+                          "url": "https://i.scdn.co/image/ab67616d00004851d1ec82bc061a90006584aa9b",
+                          "width": 64
+                        },
+                        {
+                          "height": 640,
+                          "url": "https://i.scdn.co/image/ab67616d0000b273d1ec82bc061a90006584aa9b",
+                          "width": 640
+                        }
+                      ]
+                    },
+                    "date": {
+                      "isoString": "2023-11-17T00:00:00Z",
+                      "precision": "DAY",
+                      "year": 2023
+                    },
+                    "id": "5AFf68gtvNgGLZarsyEEL8",
+                    "name": "Random Access Memories (Drumless Edition)",
+                    "playability": {
+                      "playable": true,
+                      "reason": "PLAYABLE"
+                    },
+                    "sharingInfo": {
+                      "shareId": "TpsA5vP-TRCP8Lj10VwWGw",
+                      "shareUrl": "https://open.spotify.com/album/5AFf68gtvNgGLZarsyEEL8?si=TpsA5vP-TRCP8Lj10VwWGw"
+                    },
+                    "tracks": {
+                      "totalCount": 13
+                    },
+                    "type": "ALBUM",
+                    "uri": "spotify:album:5AFf68gtvNgGLZarsyEEL8"
+                  }
+                ]
+              }
+            },
+            {
+              "releases": {
+                "items": [
+                  {
+                    "coverArt": {
+                      "sources": [
+                        {
+                          "height": 300,
+                          "url": "https://i.scdn.co/image/ab67616d00001e027a311579a8814f7683f25a17",
+                          "width": 300
+                        },
+                        {
+                          "height": 64,
+                          "url": "https://i.scdn.co/image/ab67616d000048517a311579a8814f7683f25a17",
+                          "width": 64
+                        },
+                        {
+                          "height": 640,
+                          "url": "https://i.scdn.co/image/ab67616d0000b2737a311579a8814f7683f25a17",
+                          "width": 640
+                        }
+                      ]
+                    },
+                    "date": {
+                      "isoString": "2023-05-12T00:00:00Z",
+                      "precision": "DAY",
+                      "year": 2023
+                    },
+                    "id": "4mAhdh996uW5SnnFKXUmC0",
+                    "name": "Random Access Memories (10th Anniversary Edition)",
+                    "playability": {
+                      "playable": true,
+                      "reason": "PLAYABLE"
+                    },
+                    "sharingInfo": {
+                      "shareId": "jfZ41WLIQ0CzOiPaBi_Rrw",
+                      "shareUrl": "https://open.spotify.com/album/4mAhdh996uW5SnnFKXUmC0?si=jfZ41WLIQ0CzOiPaBi_Rrw"
+                    },
+                    "tracks": {
+                      "totalCount": 22
+                    },
+                    "type": "ALBUM",
+                    "uri": "spotify:album:4mAhdh996uW5SnnFKXUmC0"
+                  }
+                ]
+              }
+            },
+            {
+              "releases": {
+                "items": [
+                  {
+                    "coverArt": {
+                      "sources": [
+                        {
+                          "height": 300,
+                          "url": "https://i.scdn.co/image/ab67616d00001e0234c0c8afee6e2f73ac464df9",
+                          "width": 300
+                        },
+                        {
+                          "height": 64,
+                          "url": "https://i.scdn.co/image/ab67616d0000485134c0c8afee6e2f73ac464df9",
+                          "width": 64
+                        },
+                        {
+                          "height": 640,
+                          "url": "https://i.scdn.co/image/ab67616d0000b27334c0c8afee6e2f73ac464df9",
+                          "width": 640
+                        }
+                      ]
+                    },
+                    "date": {
+                      "isoString": "2023-05-11T00:00:00Z",
+                      "precision": "DAY",
+                      "year": 2023
+                    },
+                    "id": "3YcIVKVDqiVvPobsotuhgx",
+                    "name": "Infinity Repeating (2013 Demo) [feat. Julian Casablancas+The Voidz]",
+                    "playability": {
+                      "playable": true,
+                      "reason": "PLAYABLE"
+                    },
+                    "sharingInfo": {
+                      "shareId": "qHEULfTuQq6arz651vP_Gg",
+                      "shareUrl": "https://open.spotify.com/album/3YcIVKVDqiVvPobsotuhgx?si=qHEULfTuQq6arz651vP_Gg"
+                    },
+                    "tracks": {
+                      "totalCount": 1
+                    },
+                    "type": "SINGLE",
+                    "uri": "spotify:album:3YcIVKVDqiVvPobsotuhgx"
+                  }
+                ]
+              }
+            },
+            {
+              "releases": {
+                "items": [
+                  {
+                    "coverArt": {
+                      "sources": [
+                        {
+                          "height": 300,
+                          "url": "https://i.scdn.co/image/ab67616d00001e020aefda3a92b9c84e47d3f808",
+                          "width": 300
+                        },
+                        {
+                          "height": 64,
+                          "url": "https://i.scdn.co/image/ab67616d000048510aefda3a92b9c84e47d3f808",
+                          "width": 64
+                        },
+                        {
+                          "height": 640,
+                          "url": "https://i.scdn.co/image/ab67616d0000b2730aefda3a92b9c84e47d3f808",
+                          "width": 640
+                        }
+                      ]
+                    },
+                    "date": {
+                      "isoString": "2023-04-20T00:00:00Z",
+                      "precision": "DAY",
+                      "year": 2023
+                    },
+                    "id": "1gDbMxDY14mf9OZzpQfON0",
+                    "name": "GLBTM (Studio Outtakes)",
+                    "playability": {
+                      "playable": true,
+                      "reason": "PLAYABLE"
+                    },
+                    "sharingInfo": {
+                      "shareId": "cwFacqTVTr-oB5fSRcB9yA",
+                      "shareUrl": "https://open.spotify.com/album/1gDbMxDY14mf9OZzpQfON0?si=cwFacqTVTr-oB5fSRcB9yA"
+                    },
+                    "tracks": {
+                      "totalCount": 3
+                    },
+                    "type": "SINGLE",
+                    "uri": "spotify:album:1gDbMxDY14mf9OZzpQfON0"
+                  }
+                ]
+              }
+            },
+            {
+              "releases": {
+                "items": [
+                  {
+                    "coverArt": {
+                      "sources": [
+                        {
+                          "height": 300,
+                          "url": "https://i.scdn.co/image/ab67616d00001e027a33c3612d1b6ae5dddcf1ed",
+                          "width": 300
+                        },
+                        {
+                          "height": 64,
+                          "url": "https://i.scdn.co/image/ab67616d000048517a33c3612d1b6ae5dddcf1ed",
+                          "width": 64
+                        },
+                        {
+                          "height": 640,
+                          "url": "https://i.scdn.co/image/ab67616d0000b2737a33c3612d1b6ae5dddcf1ed",
+                          "width": 640
+                        }
+                      ]
+                    },
+                    "date": {
+                      "isoString": "2023-03-22T00:00:00Z",
+                      "precision": "DAY",
+                      "year": 2023
+                    },
+                    "id": "0URgTo9T2POPAXgjqeVHVv",
+                    "name": "The Writing of Fragments of Time",
+                    "playability": {
+                      "playable": true,
+                      "reason": "PLAYABLE"
+                    },
+                    "sharingInfo": {
+                      "shareId": "7Iv7FWgbRBubAgoAlcrZ1w",
+                      "shareUrl": "https://open.spotify.com/album/0URgTo9T2POPAXgjqeVHVv?si=7Iv7FWgbRBubAgoAlcrZ1w"
+                    },
+                    "tracks": {
+                      "totalCount": 2
+                    },
+                    "type": "SINGLE",
+                    "uri": "spotify:album:0URgTo9T2POPAXgjqeVHVv"
+                  }
+                ]
+              }
+            }
+          ],
+          "totalCount": 36
+        }
+      }
+    }
+  }
+}
