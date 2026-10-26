@@ -705,7 +705,7 @@ for (const name of fixtureNames) {
     ['POST', 'https://image-upload.spotify.com/v4/playlist'],
     ['POST', 'https://spclient.wg.spotify.com/playlist/v2/playlist/5cr4tchPl4yl1stF1xtur3/register-image'],
   ]);
-  assert.deepEqual(asked[0].headers, { authorization: 'Bearer first', 'content-type': 'image/jpeg' });
+  assert.deepEqual(JSON.parse(JSON.stringify(asked[0].headers)), { authorization: 'Bearer first', 'content-type': 'image/jpeg' });
   assert.deepEqual([...asked[0].body], [...jpeg]);
   assert.equal(asked[1].headers.authorization, 'Bearer first');
   assert.deepEqual(JSON.parse(asked[1].body), { uploadToken: 'tok' });
