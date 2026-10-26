@@ -11,20 +11,55 @@ use crate::model::TopPeriod;
 
 /// The account's top artists or songs, as its profile page asks for them.
 pub fn top_query(artists: bool, period: TopPeriod, offset: u32, limit: u32) -> Value {
-    let _ = (artists, period, offset, limit);
-    Value::Null
+    let range = period.as_spotify().to_ascii_uppercase();
+    let input = |asked: bool| {
+        json!({
+            "offset": if asked { offset } else { 0 },
+            "limit": if asked { limit } else { 0 },
+            "sortBy": "AFFINITY",
+            "timeRange": range,
+        })
+    };
+    free::persisted(
+        "userTopContent",
+        "61b7353d3625780022dbc63d459eb64cd609e7e5e2a820f9160d65030efe2e15",
+        json!({
+            "includeTopArtists": artists, "topArtistsInput": input(artists),
+            "includeTopTracks": !artists, "topTracksInput": input(!artists),
+        }),
+    )
+}
+
+fn top_rows<'a>(body: &'a Value, kind: &str) -> Result<(&'a [Value], u32), ApiError> {
+    let list = body
+        .pointer(&format!("/data/me/profile/{kind}"))
+        .filter(|value| value.is_object())
+        .ok_or_else(|| ApiError::Decode("Spotify sent no top list".into()))?;
+    let rows = list
+        .get("items")
+        .and_then(Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    Ok((rows, free::u32_at(list, "/totalCount").unwrap_or_default()))
 }
 
 /// The account's top artists.
 pub fn top_artists(body: &Value) -> Result<Vec<Artist>, ApiError> {
-    let _ = body;
-    Ok(Vec::new())
+    let (rows, _) = top_rows(body, "topArtists")?;
+    Ok(rows
+        .iter()
+        .filter_map(|row| free::artist(row.get("data")?))
+        .collect())
 }
 
 /// A page of the account's top songs.
 pub fn top_tracks(body: &Value, offset: u32) -> Result<Page<Track>, ApiError> {
-    let _ = (body, offset);
-    Ok(Page::default())
+    let (rows, total) = top_rows(body, "topTracks")?;
+    let items = rows
+        .iter()
+        .filter_map(|row| free::track(row.get("data")?, None))
+        .collect();
+    Ok(free::page(items, offset, rows.len(), total))
 }
 
 /// Routes the Home reads; `None` for anything else.
@@ -37,9 +72,35 @@ pub async fn handle(
         let pending = reader.query(&query);
         async move { free::answer(pending.await) }
     };
-    let _ = (read, json!(null), std::marker::PhantomData::<Album>);
-    let _ = request;
-    None
+    let _ = std::marker::PhantomData::<Album>;
+    Some(match request {
+        ApiRequest::TopArtists { generation } => ApiResponse::TopArtists {
+            generation: *generation,
+            result: read(top_query(true, TopPeriod::MediumTerm, 0, 20))
+                .await
+                .and_then(|body| top_artists(&body)),
+        },
+        ApiRequest::TopTracks {
+            period,
+            offset,
+            full,
+            generation,
+        } => ApiResponse::TopTracks {
+            result: read(top_query(
+                false,
+                *period,
+                *offset,
+                if *full { 50 } else { 20 },
+            ))
+            .await
+            .and_then(|body| top_tracks(&body, *offset)),
+            period: *period,
+            offset: *offset,
+            full: *full,
+            generation: *generation,
+        },
+        _ => return None,
+    })
 }
 
 #[cfg(test)]

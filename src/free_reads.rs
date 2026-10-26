@@ -23,7 +23,7 @@ use crate::api::models::{
     User,
 };
 
-fn persisted(operation: &str, hash: &str, variables: Value) -> Value {
+pub(crate) fn persisted(operation: &str, hash: &str, variables: Value) -> Value {
     json!({
         "operationName": operation,
         "variables": variables,
@@ -230,7 +230,7 @@ pub enum SearchKind {
 }
 
 /// An album header from a list row (library, search, discography).
-fn album_header(data: &Value) -> Option<Album> {
+pub(crate) fn album_header(data: &Value) -> Option<Album> {
     let uri = str_at(data, "/uri")?;
     if !uri.starts_with("spotify:album:") {
         return None;
@@ -251,7 +251,7 @@ fn album_header(data: &Value) -> Option<Album> {
 }
 
 /// An artist from a list row or the artist's own page.
-fn artist(data: &Value) -> Option<Artist> {
+pub(crate) fn artist(data: &Value) -> Option<Artist> {
     let uri = str_at(data, "/uri")?;
     Some(Artist {
         id: uri_id(uri)?,
@@ -262,7 +262,7 @@ fn artist(data: &Value) -> Option<Artist> {
     })
 }
 
-fn page<T>(items: Vec<T>, offset: u32, rows: usize, total: u32) -> Page<T> {
+pub(crate) fn page<T>(items: Vec<T>, offset: u32, rows: usize, total: u32) -> Page<T> {
     Page {
         items,
         total,
@@ -589,7 +589,7 @@ fn str_at<'a>(value: &'a Value, pointer: &str) -> Option<&'a str> {
         .filter(|text| !text.is_empty())
 }
 
-fn u32_at(value: &Value, pointer: &str) -> Option<u32> {
+pub(crate) fn u32_at(value: &Value, pointer: &str) -> Option<u32> {
     value
         .pointer(pointer)
         .and_then(Value::as_u64)
@@ -641,7 +641,7 @@ fn artists(value: Option<&Value>) -> Vec<ArtistRef> {
 }
 
 /// A song as the web player gives it, in a playlist or an album.
-fn track(data: &Value, album: Option<&Album>) -> Option<Track> {
+pub(crate) fn track(data: &Value, album: Option<&Album>) -> Option<Track> {
     let uri = str_at(data, "/uri")?;
     if !uri.starts_with("spotify:track:") {
         return None;

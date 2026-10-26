@@ -17,7 +17,7 @@ use crate::api::models::{Album, ArtistRef, Image};
 use crate::http::Http;
 
 const ENDPOINT: &str = "https://api-partner.spotify.com/pathfinder/v2/query";
-const QUERY_HASH: &str = "d889c8c936ab192af8ced595427f5ba2acdf63478fdc0a181c8d477f8322630e";
+pub(crate) const QUERY_HASH: &str = "d889c8c936ab192af8ced595427f5ba2acdf63478fdc0a181c8d477f8322630e";
 const TIMEOUT: Duration = Duration::from_secs(30);
 
 /// The most releases the shelf and its page hold, as many as the feed's
@@ -133,7 +133,7 @@ fn query() -> serde_json::Value {
 /// The releases in a feed answer, newest first. Items that are not albums,
 /// such as episodes or event notices, are passed over; an answer without the
 /// feed at all is an error rather than an empty shelf.
-fn parse(body: &serde_json::Value) -> Result<Vec<Album>, ApiError> {
+pub(crate) fn parse(body: &serde_json::Value) -> Result<Vec<Album>, ApiError> {
     if body.get("errors").is_some_and(|errors| {
         !errors.is_null() && errors.as_array().is_none_or(|errors| !errors.is_empty())
     }) {
