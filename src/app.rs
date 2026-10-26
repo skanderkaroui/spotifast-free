@@ -532,6 +532,9 @@ pub struct App {
     hidden_songs_requested: bool,
     pub track_cache: HashMap<String, Track>,
     track_requests: HashSet<String>,
+    /// Songs Next up asked about and Spotify did not answer. Next up shows
+    /// them by URI rather than asking on each of the player's reports.
+    track_lookups_failed: HashSet<String>,
     /// Album URIs already resolved or attempted through librespot this session.
     album_types_requested: HashSet<String>,
     /// Saved shows Spotify marks as audiobooks, which librespot cannot play;
@@ -1199,6 +1202,7 @@ impl App {
             hidden_songs_requested: false,
             track_cache: HashMap::new(),
             track_requests: HashSet::new(),
+            track_lookups_failed: HashSet::new(),
             album_types_requested: HashSet::new(),
             audiobook_shows: HashSet::new(),
             audiobooks_requested: HashSet::new(),
@@ -3059,6 +3063,7 @@ impl App {
         self.last_album_queue = None;
         self.cover_uploads.clear();
         self.uploaded_covers.clear();
+        self.track_lookups_failed.clear();
         // Pages still on their way belong to the signed-out account's load.
         self.library = Library {
             playlists_generation: self.library.playlists_generation,
@@ -3355,6 +3360,7 @@ impl App {
             if let Some(id) = util::uri_id(uri)
                 && uri.starts_with("spotify:track:")
                 && !self.track_cache.contains_key(id)
+                && !self.track_lookups_failed.contains(id)
                 && self.track_requests.insert(id.to_string())
             {
                 self.backend.api(ApiRequest::Track { id: id.to_string() });
@@ -5554,6 +5560,10 @@ impl App {
     /// Supersedes an older shelf request without clearing its visible cards.
     fn load_made_for_you(&mut self, force: bool) {
         self.home.made_for_you_generation += 1;
+        log::info!(
+            "made for you asked generation={}",
+            self.home.made_for_you_generation
+        );
         if !self.home.made_for_you_loading {
             self.home.awaiting += 1;
         }
@@ -8452,6 +8462,7 @@ impl App {
                         }
                     }
                     Err(error) => {
+                        self.track_lookups_failed.insert(id.clone());
                         self.resolve_pasted_song(&format!("spotify:track:{id}"), None);
                         if self.pending_link.as_deref()
                             == Some(format!("spotify:track:{id}").as_str())
