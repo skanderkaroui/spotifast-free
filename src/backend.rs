@@ -745,6 +745,9 @@ pub enum Command {
         /// The listener's own app, from the sign-in screen.
         client_id: Option<String>,
     },
+    /// Sign in on Spotify's own page in the Free playback helper, with no
+    /// Spotify app of the listener's own.
+    SignInFree,
     CancelSignIn,
     SignOut,
     /// Authorize local playback on this computer (a separate browser grant).
@@ -792,6 +795,10 @@ pub enum Command {
         error: ApiError,
     },
     /// Internal: a Web API browser flow or verification ended (success or not).
+    /// The Free helper's page read the signed-in account.
+    FreeSignedIn(Box<Result<User, ApiError>>),
+    /// The Free helper's page reported a change in Spotify's sign-in.
+    FreeAccount(crate::web_player::Account),
     SignInEnded {
         source: ApiSource,
         attempt: u64,
@@ -1874,6 +1881,9 @@ struct Worker {
     /// attempt was in flight. Its result is stale and must not be installed.
     engine_restart_pending: bool,
     signed_in: bool,
+    /// Signed in on Spotify's own page in the Free helper, with no Web API
+    /// grant: the helper's page answers for the account.
+    free_session: bool,
     /// The plan, once the Web API has answered.
     premium: Option<bool>,
     /// Free accounts on macOS play through Spotify's own web player in a
@@ -1990,6 +2000,7 @@ impl Worker {
             search_tasks: Vec::new(),
             engine_restart_pending: false,
             signed_in: false,
+            free_session: false,
             premium: None,
             #[cfg(target_os = "macos")]
             web_player: None,
@@ -2311,6 +2322,9 @@ impl Worker {
                     config,
                     client_id,
                 } => self.change_proxy(request, config, Some(client_id)),
+                Command::SignInFree => self.sign_in_free(),
+                Command::FreeSignedIn(result) => self.on_free_signed_in(*result),
+                Command::FreeAccount(account) => self.on_free_account(account),
                 Command::CancelSignIn => {
                     self.authorization_attempt += 1;
                     if let Some(cancel) = self.cancel_signin.take() {
@@ -3404,6 +3418,7 @@ impl Worker {
         self.spotify_restore_started = true;
         self.cancel_search();
         self.signed_in = false;
+        self.free_session = false;
         self.rootlist_pending = false;
         self.made_for_you = Arc::new(crate::made_for_you::MadeForYou::new(self.http.clone()));
         self.new_releases = Arc::new(crate::new_releases::NewReleases::new(self.http.clone()));
@@ -4021,6 +4036,96 @@ impl Worker {
         }
     }
 
+    /// Tells the backend when the helper's page signs in or out of Spotify.
+    fn web_player_account(&self) -> crate::web_player::OnAccount {
+        let commands = self.commands.clone();
+        Arc::new(move |account| {
+            let _ = commands.send(Command::FreeAccount(account));
+        })
+    }
+
+    /// Signs in on Spotify's own page in the Free helper. The helper shows
+    /// Spotify's sign-in when its page is signed out, and the account is
+    /// read once the page reports it signed in (`on_free_account`).
+    fn sign_in_free(&mut self) {
+        #[cfg(target_os = "macos")]
+        {
+            self.free_session = true;
+            self.emit(Event::Auth(AuthStatus::Connecting));
+            if self.ensure_web_player() {
+                self.read_free_account();
+            } else {
+                self.free_session = false;
+                self.emit(Event::Auth(AuthStatus::SignedOut));
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        self.emit(Event::Auth(AuthStatus::Failed(PREMIUM_NEEDED.into())));
+    }
+
+    /// Reads the account through the helper's page. A page still signed out
+    /// answers `NotSignedIn`, and the read runs again when the page reports
+    /// the sign-in.
+    #[cfg(target_os = "macos")]
+    fn read_free_account(&mut self) {
+        let Some(player) = self.web_player.as_ref() else {
+            return;
+        };
+        let profile = player.query(&crate::free_reads::profile_query());
+        let account = player.query(&crate::free_reads::account_query());
+        let commands = self.commands.clone();
+        tokio::spawn(async move {
+            let (profile, account) = tokio::join!(profile, account);
+            let result = crate::free_reads::answer(profile).and_then(|profile| {
+                let account = crate::free_reads::answer(account)?;
+                crate::free_reads::user(&profile, &account)
+            });
+            let _ = commands.send(Command::FreeSignedIn(Box::new(result)));
+        });
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    fn read_free_account(&mut self) {}
+
+    fn on_free_account(&mut self, account: crate::web_player::Account) {
+        if !self.free_session {
+            return;
+        }
+        match account {
+            crate::web_player::Account::SignedIn if !self.signed_in => self.read_free_account(),
+            crate::web_player::Account::SignedIn => {}
+            // Signed out on Spotify's page while signed in here: the helper
+            // shows Spotify's sign-in again and the app keeps what it shows.
+            crate::web_player::Account::SignedOut => {}
+        }
+    }
+
+    fn on_free_signed_in(&mut self, result: Result<User, ApiError>) {
+        if !self.free_session || self.signed_in {
+            return;
+        }
+        match result {
+            Ok(user) => {
+                log::info!("signed in through Spotify's web player");
+                self.signed_in = true;
+                self.emit(Event::Auth(AuthStatus::Connected {
+                    username: user.name().to_string(),
+                }));
+                let premium = user.product.as_deref().map(|product| product == "premium");
+                self.emit(Event::Api(Box::new(ApiResponse::Me(Ok(user)))));
+                self.on_account_checked(premium);
+            }
+            // Still on Spotify's sign-in in the helper's window.
+            Err(ApiError::NotSignedIn) => {}
+            Err(error) => {
+                self.free_session = false;
+                self.emit(Event::Auth(AuthStatus::Failed(format!(
+                    "Spotify's web player sign-in failed: {error}"
+                ))));
+            }
+        }
+    }
+
     /// Sends the helper's playback state to the app the way the librespot
     /// engine's notify does.
     #[cfg(target_os = "macos")]
@@ -4057,7 +4162,7 @@ impl Worker {
         }
         // Each ad Spotify plays is logged locally, never sent anywhere.
         let ad_log = Some(self.dirs.volume_dir().join("ads.jsonl"));
-        match WebPlayer::start(self.web_player_notify(), ad_log) {
+        match WebPlayer::start(self.web_player_notify(), self.web_player_account(), ad_log) {
             Ok(player) => {
                 log::info!("web player helper started");
                 self.web_player = Some(player);
@@ -8543,6 +8648,42 @@ mod authorization_tests {
             Waker::default(),
         );
         (runtime, worker, events)
+    }
+
+    /// A Free sign-in signs the app in with the account the web player's
+    /// page reads, and starts Free playback for it. A page still on
+    /// Spotify's sign-in signs nothing in; it is read again once in.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_free_sign_in_uses_the_account_the_page_reads() {
+        let (runtime, mut worker, events) = worker("free-sign-in");
+        let _entered = runtime.enter();
+        worker.free_session = true;
+        worker.on_free_signed_in(Err(ApiError::NotSignedIn));
+        assert!(!worker.signed_in, "still on Spotify's sign-in");
+        assert!(events.try_iter().all(|event| !matches!(
+            event,
+            Event::Auth(AuthStatus::Connected { .. } | AuthStatus::Failed(_))
+        )));
+        worker.on_free_signed_in(Ok(User {
+            id: "listener1".into(),
+            display_name: Some("Listener One".into()),
+            product: Some("free".into()),
+            ..User::default()
+        }));
+        assert!(worker.signed_in);
+        assert_eq!(worker.premium, Some(false));
+        let events: Vec<_> = events.try_iter().collect();
+        assert!(events.iter().any(|event| matches!(
+            event,
+            Event::Auth(AuthStatus::Connected { username }) if username == "Listener One"
+        )));
+        assert!(events.iter().any(|event| matches!(
+            event,
+            Event::Api(response) if matches!(response.as_ref(), ApiResponse::Me(Ok(user)) if user.id == "listener1")
+        )));
+        worker.sign_out();
+        assert!(!worker.free_session, "signing out ends the Free session");
     }
 
     /// A Premium account must keep librespot: it is never routed to the Free
