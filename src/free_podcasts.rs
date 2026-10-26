@@ -6,7 +6,8 @@
 use serde_json::{Value, json};
 
 use crate::api::ApiError;
-use crate::api::models::{Episode, Page, Show};
+use crate::api::models::{Episode, ExternalUrls, Image, Page, ResumePoint, Show};
+use crate::backend::{ApiRequest, ApiResponse};
 
 fn persisted(operation: &str, hash: &str, variables: Value) -> Value {
     json!({
@@ -43,19 +44,216 @@ pub fn episode_query(uri: &str) -> Value {
     )
 }
 
+fn str_at<'a>(value: &'a Value, pointer: &str) -> Option<&'a str> {
+    value
+        .pointer(pointer)
+        .and_then(Value::as_str)
+        .filter(|text| !text.is_empty())
+}
+
+fn u32_at(value: &Value, pointer: &str) -> Option<u32> {
+    value
+        .pointer(pointer)
+        .and_then(Value::as_u64)
+        .and_then(|n| u32::try_from(n).ok())
+}
+
+/// The id at the end of a `spotify:kind:id` URI.
+fn uri_id(uri: &str) -> String {
+    uri.rsplit(':').next().unwrap_or_default().to_owned()
+}
+
+/// The web player's link to a `spotify:kind:id` URI.
+fn link(uri: &str) -> ExternalUrls {
+    let mut parts = uri.split(':').skip(1);
+    ExternalUrls {
+        spotify: match (parts.next(), parts.next()) {
+            (Some(kind), Some(id)) => Some(format!("https://open.spotify.com/{kind}/{id}")),
+            _ => None,
+        },
+    }
+}
+
+/// Images from the web player's `{sources: [{url, width, height}]}`.
+fn images(value: Option<&Value>) -> Vec<Image> {
+    value
+        .and_then(|value| value.get("sources"))
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|source| {
+            Some(Image {
+                url: str_at(source, "/url")?.to_owned(),
+                width: u32_at(source, "/width"),
+                height: u32_at(source, "/height"),
+            })
+        })
+        .collect()
+}
+
+/// A podcast as the web player describes it, on its page or under an
+/// episode.
+fn podcast(data: &Value) -> Option<Show> {
+    let uri = str_at(data, "/uri")?.to_owned();
+    Some(Show {
+        id: uri_id(&uri),
+        name: str_at(data, "/name").unwrap_or_default().to_owned(),
+        publisher: str_at(data, "/publisher/name")
+            .unwrap_or_default()
+            .to_owned(),
+        description: str_at(data, "/description").unwrap_or_default().to_owned(),
+        images: images(data.get("coverArt")),
+        external_urls: link(&uri),
+        uri,
+        ..Show::default()
+    })
+}
+
+/// An episode as the web player describes it. Its place is Spotify's own
+/// (`playedState`): started, finished, or not begun.
+fn episode_data(data: &Value) -> Option<Episode> {
+    let uri = str_at(data, "/uri")?.to_owned();
+    if !uri.starts_with("spotify:episode:") {
+        return None;
+    }
+    let resume_point = data.get("playedState").and_then(|state| {
+        let place = str_at(state, "/state")?;
+        Some(ResumePoint {
+            fully_played: place == "COMPLETED",
+            resume_position_ms: u32_at(state, "/playPositionMilliseconds").unwrap_or_default(),
+        })
+    });
+    Some(Episode {
+        id: uri_id(&uri),
+        name: str_at(data, "/name").unwrap_or_default().to_owned(),
+        duration_ms: u32_at(data, "/duration/totalMilliseconds").unwrap_or_default(),
+        description: str_at(data, "/description").unwrap_or_default().to_owned(),
+        images: images(data.get("coverArt")),
+        release_date: str_at(data, "/releaseDate/isoString")
+            .map(|date| date.chars().take(10).collect()),
+        explicit: str_at(data, "/contentRating/label") == Some("EXPLICIT"),
+        resume_point,
+        show: data.pointer("/podcastV2/data").and_then(podcast),
+        external_urls: link(&uri),
+        uri,
+    })
+}
+
+fn next(offset: u32, count: usize, total: u32) -> Option<String> {
+    let fetched = offset.saturating_add(u32::try_from(count).unwrap_or(u32::MAX));
+    (fetched < total && count > 0).then(|| format!("offset:{fetched}"))
+}
+
 /// A podcast from its page.
-pub fn show(_body: &Value) -> Result<Show, ApiError> {
-    Err(ApiError::Decode("not read yet".into()))
+pub fn show(body: &Value) -> Result<Show, ApiError> {
+    body.pointer("/data/podcastUnionV2")
+        .filter(|data| str_at(data, "/__typename") == Some("Podcast"))
+        .and_then(podcast)
+        .ok_or_else(|| ApiError::Decode("Spotify sent no podcast".into()))
 }
 
 /// A page of a podcast's episodes.
-pub fn show_episodes(_body: &Value, _offset: u32) -> Result<Page<Episode>, ApiError> {
-    Err(ApiError::Decode("not read yet".into()))
+pub fn show_episodes(body: &Value, offset: u32) -> Result<Page<Episode>, ApiError> {
+    let list = body
+        .pointer("/data/podcastUnionV2/episodesV2")
+        .filter(|value| value.is_object())
+        .ok_or_else(|| ApiError::Decode("Spotify sent no episodes".into()))?;
+    let rows = list
+        .get("items")
+        .and_then(Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    let total = u32_at(list, "/totalCount").unwrap_or_default();
+    Ok(Page {
+        items: rows
+            .iter()
+            .filter_map(|row| episode_data(row.pointer("/entity/data")?))
+            .collect(),
+        total,
+        limit: u32::try_from(rows.len()).unwrap_or(u32::MAX),
+        offset,
+        next: next(offset, rows.len(), total),
+    })
 }
 
 /// One episode from its own answer.
-pub fn episode(_body: &Value) -> Result<Episode, ApiError> {
-    Err(ApiError::Decode("not read yet".into()))
+pub fn episode(body: &Value) -> Result<Episode, ApiError> {
+    body.pointer("/data/episodeUnionV2")
+        .and_then(episode_data)
+        .ok_or_else(|| ApiError::Decode("Spotify sent no episode".into()))
+}
+
+/// The newest episodes Home lists per saved podcast.
+const HOME_EPISODES_PER_SHOW: u32 = 5;
+
+/// The podcast reads a Free sign-in answers through the web player, shaped
+/// as the Web API's answers. `None` for any other request.
+pub async fn handle(
+    reader: &crate::web_player::Reader,
+    _account: Option<&str>,
+    request: &ApiRequest,
+) -> Option<ApiResponse> {
+    let read = |query: Value| {
+        let pending = reader.query(&query);
+        async move { crate::free_reads::answer(pending.await) }
+    };
+    let show_uri = |id: &str| format!("spotify:show:{id}");
+    Some(match request {
+        ApiRequest::Show { id } => ApiResponse::Show {
+            id: id.clone(),
+            result: read(show_query(&show_uri(id)))
+                .await
+                .and_then(|body| show(&body)),
+        },
+        ApiRequest::ShowEpisodes { id, offset } => ApiResponse::ShowEpisodes {
+            id: id.clone(),
+            offset: *offset,
+            result: read(show_episodes_query(&show_uri(id), *offset, 50))
+                .await
+                .and_then(|body| show_episodes(&body, *offset)),
+        },
+        ApiRequest::Episode { id } => ApiResponse::Episode {
+            id: id.clone(),
+            result: read(episode_query(&format!("spotify:episode:{id}")))
+                .await
+                .and_then(|body| episode(&body)),
+        },
+        ApiRequest::HomeEpisodes { shows, generation } => {
+            // The shows are read together; each answers for itself, in the
+            // order asked for.
+            let mut reads = tokio::task::JoinSet::new();
+            for (index, asked) in shows.iter().enumerate() {
+                let query = show_episodes_query(&show_uri(&asked.id), 0, HOME_EPISODES_PER_SHOW);
+                let answer = read(query);
+                reads.spawn(async move { (index, answer.await) });
+            }
+            let mut answers = Vec::new();
+            while let Some(joined) = reads.join_next().await {
+                if let Ok(answer) = joined {
+                    answers.push(answer);
+                }
+            }
+            answers.sort_by_key(|(index, _)| *index);
+            let mut failure = None;
+            let mut found = Vec::new();
+            for (index, answer) in answers {
+                match answer.and_then(|body| show_episodes(&body, 0)) {
+                    Ok(page) => found.push((shows[index].clone(), page.items)),
+                    Err(error) => {
+                        failure.get_or_insert(error);
+                    }
+                }
+            }
+            ApiResponse::HomeEpisodes {
+                generation: *generation,
+                result: match failure {
+                    Some(error) if found.is_empty() && !shows.is_empty() => Err(error),
+                    _ => Ok(found),
+                },
+            }
+        }
+        _ => return None,
+    })
 }
 
 #[cfg(test)]

@@ -20,7 +20,9 @@ pub mod emoji;
 pub mod eq;
 #[cfg(target_os = "macos")]
 pub mod free_home;
+#[cfg(target_os = "macos")]
 pub mod free_podcasts;
+#[cfg(target_os = "macos")]
 pub mod free_reads;
 pub mod history;
 pub mod http;
