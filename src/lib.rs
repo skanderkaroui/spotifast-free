@@ -18,6 +18,7 @@ pub mod demo;
 pub mod device_history;
 pub mod emoji;
 pub mod eq;
+#[cfg(target_os = "macos")]
 pub mod free_reads;
 pub mod history;
 pub mod http;
