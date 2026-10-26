@@ -114,17 +114,16 @@
               version = (pkgs.lib.importTOML ./Cargo.toml).package.version;
               src = self;
 
-              # The lock file contains git dependencies. fetchCargoVendor includes
-              # them in the fixed-output dependency tree, unlike cargoLock alone.
-              cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
-                pname = "spotifast";
-                version = (pkgs.lib.importTOML ./Cargo.toml).package.version;
-                src = self;
-                hash = "sha256-bxOgyYQJyVZr1X4iN0zTLyXfn8xc19te3LZGkVESgrY=";
+              # Read straight from the lock file, so a dependency update needs
+              # no vendor hash. Git dependencies are fetched by their pinned
+              # commit, which needs no hash either.
+              cargoLock = {
+                lockFile = ./Cargo.lock;
+                allowBuiltinFetchGit = true;
               };
               # projectm-sys only searches lib, while CMake may otherwise install to lib64.
               postPatch = ''
-                substituteInPlace "$cargoDepsCopy"/source-git-*/projectm-sys-*/build.rs \
+                substituteInPlace "$cargoDepsCopy"/projectm-sys-*/build.rs \
                   --replace-fail \
                   '.define("BUILD_SHARED_LIBS", build_shared_libs)' \
                   '.define("CMAKE_INSTALL_LIBDIR", "lib").define("BUILD_SHARED_LIBS", build_shared_libs)'
@@ -181,8 +180,8 @@
 
               postInstall =
                 pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
-                  install -Dm644 packaging/applications/spotifast-free.desktop \
-                    $out/share/applications/spotifast-free.desktop
+                  install -Dm644 packaging/applications/spotifast.desktop \
+                    $out/share/applications/spotifast.desktop
                   install -Dm644 packaging/icons/spotifast.svg \
                     $out/share/icons/hicolor/scalable/apps/spotifast.svg
                   install -Dm644 contrib/omarchy/spotifast.json.tpl \
