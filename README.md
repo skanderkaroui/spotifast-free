@@ -84,8 +84,12 @@ it runs alongside upstream Spotifast without sharing anything.
 
 ## Start listening
 
-1. Open Spotifast Free and choose **Sign in with Spotify**. Approve access
-   in your browser, then return to the app.
+1. **Premium:** make your own free Spotify app, as the sign-in screen
+   shows: in the [Spotify developer dashboard](https://developer.spotify.com/dashboard),
+   create an app with the redirect URI `http://127.0.0.1:8989/login` and
+   **Web API** ticked, paste its Client ID into Spotifast Free and choose
+   **Sign in with Spotify**. Spotify closed the shared app Spotifast used to
+   new sign-ins, and only Premium accounts can make an app of their own.
 2. **Premium:** open the device menu in the player bar and choose **Set up
    playback here**, then approve playback in your browser. Your computer
    appears as a Spotify Connect device named **Spotifast** (rename it in
