@@ -1,0 +1,69 @@
+{
+ "data": {
+  "episodes": [
+   {
+    "__typename": "Episode",
+    "contentRating": {
+     "label": "EXPLICIT"
+    },
+    "coverArt": {
+     "sources": [
+      {
+       "height": 64,
+       "url": "https://i.scdn.co/image/ab6765630000f68de3dfbd869a297cdc95fd1077",
+       "width": 64
+      },
+      {
+       "height": 300,
+       "url": "https://i.scdn.co/image/ab67656300005f1fe3dfbd869a297cdc95fd1077",
+       "width": 300
+      },
+      {
+       "height": 640,
+       "url": "https://i.scdn.co/image/ab6765630000ba8ae3dfbd869a297cdc95fd1077",
+       "width": 640
+      }
+     ]
+    },
+    "duration": {
+     "totalMilliseconds": 9821140
+    },
+    "mediaTypes": [
+     "VIDEO",
+     "AUDIO"
+    ],
+    "name": "#2570 - Mystery Boys",
+    "podcastV2": {
+     "data": {
+      "__typename": "Podcast",
+      "coverArt": {
+       "sources": [
+        {
+         "height": 64,
+         "url": "https://i.scdn.co/image/ab6765630000f68de7c95712f4940a9bf439467e",
+         "width": 64
+        },
+        {
+         "height": 300,
+         "url": "https://i.scdn.co/image/ab67656300005f1fe7c95712f4940a9bf439467e",
+         "width": 300
+        },
+        {
+         "height": 640,
+         "url": "https://i.scdn.co/image/ab6765630000ba8ae7c95712f4940a9bf439467e",
+         "width": 640
+        }
+       ]
+      },
+      "name": "The Joe Rogan Experience",
+      "publisher": {
+       "name": "Joe Rogan"
+      },
+      "uri": "spotify:show:4rOoJ6Egrf8K2IrywzwOMk"
+     }
+    },
+    "uri": "spotify:episode:2rKMiQw2A58GL5ZHH8jfHo"
+   }
+  ]
+ }
+}

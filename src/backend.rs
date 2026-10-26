@@ -5819,7 +5819,12 @@ async fn handle_free(
                 .await
                 .and_then(|body| free::single_track(&body)),
         },
-        _ => return crate::free_home::handle(reader, account, request).await,
+        _ => {
+            if let Some(response) = crate::free_home::handle(reader, account, request).await {
+                return Some(response);
+            }
+            return crate::free_podcasts::handle(reader, account, request).await;
+        }
     })
 }
 
