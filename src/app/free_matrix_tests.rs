@@ -344,6 +344,94 @@ fn queue_editing_is_premium_only() {
     });
 }
 
+/// Live, 2026-10-26: a Free sign-in read its Made For shelf through the web
+/// player, yet Home kept its placeholders. The helper became ready after
+/// Home asked, which asked again, and the first answer was dropped as
+/// stale while the second never came.
+#[test]
+fn a_free_home_shows_its_made_for_you_shelf() {
+    let root = std::env::temp_dir().join(format!("spotifast-free-home-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let mut app = App::new(
+        &Waker::default(),
+        AppDirs {
+            config: root.join("config"),
+            state: root.join("state"),
+            cache: root.join("cache"),
+        },
+        Settings::default(),
+        AppOptions {
+            media_controls: false,
+            restore_sign_in: false,
+            tray: false,
+            autostart: false,
+        },
+    );
+    app.load_home(false);
+    let asked = app.home.made_for_you_generation;
+    app.handle_playback(LocalPlayback::Ready {
+        device_id: DEVICE_ID.into(),
+    });
+    let body: serde_json::Value =
+        serde_json::from_str(include_str!("../testdata/free/home.json")).unwrap();
+    let (made_for_you, top_mixes) = crate::free_reads::home_shelves(&body).unwrap();
+    for generation in [asked, app.home.made_for_you_generation] {
+        app.handle_api(ApiResponse::MadeForYou {
+            generation,
+            personalized: true,
+            result: Ok(made_for_you.clone()),
+            top_mixes: Ok(top_mixes.clone()),
+        });
+    }
+    let shown: Vec<_> = app
+        .home
+        .made_for_you
+        .get()
+        .expect("the shelf has its cards")
+        .iter()
+        .map(|playlist| playlist.name.clone())
+        .collect();
+    assert_eq!(shown, ["Mix Uk2", "Mix iP5", "Mix Opz"]);
+    assert_eq!(app.home.top_mixes.get().map(Vec::len), Some(3));
+    app.backend.shutdown();
+}
+
+/// Live, 2026-10-26: a song in Next up whose lookup failed was asked for
+/// again on each of the helper's state reports, 125,000 times in 30 s. A
+/// failed lookup waits until the song is asked for in a new way.
+#[test]
+fn a_failed_next_up_lookup_is_not_repeated_on_every_report() {
+    let mut app = app_for("upcoming-failed", true, SONG);
+    let mut state = playing(SONG, 1);
+    state.upcoming = vec!["spotify:track:b".into()];
+    app.handle_local(state.clone());
+    assert!(app.track_requests.contains("b"), "asked once");
+    app.handle_api(ApiResponse::Track {
+        id: "b".into(),
+        result: Err(crate::api::ApiError::Network("no answer".into())),
+    });
+    for sequence in 0..50 {
+        // Each report differs (position, next up rotating back), as live.
+        let mut report = state.clone();
+        report.position_ms = sequence * 1000;
+        report.upcoming = if sequence % 2 == 0 {
+            vec!["spotify:track:b".into(), "spotify:track:c".into()]
+        } else {
+            vec!["spotify:track:b".into()]
+        };
+        app.handle_local(report);
+        app.handle_api(ApiResponse::Track {
+            id: "c".into(),
+            result: Err(crate::api::ApiError::Network("no answer".into())),
+        });
+    }
+    assert!(
+        !app.track_requests.contains("b"),
+        "a failed song is not asked for again on each report"
+    );
+    app.backend.shutdown();
+}
+
 #[test]
 fn free_next_up_comes_from_upcoming() {
     let mut app = app_for("upcoming", true, SONG);
