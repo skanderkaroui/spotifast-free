@@ -5962,6 +5962,11 @@ async fn handle_free(
             if let Some(response) = crate::free_podcasts::handle(reader, account, request).await {
                 return Some(response);
             }
+            if let Some(response) =
+                crate::free_library_saves::handle(reader, account, request).await
+            {
+                return Some(response);
+            }
             if let Some(response) = crate::free_player::handle(reader, account, request).await {
                 return Some(response);
             }
