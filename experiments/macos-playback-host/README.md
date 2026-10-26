@@ -21,7 +21,9 @@ Sign-in is automatic. The helper loads Spotify's settings page
 (`open.spotify.com/preferences`): the same web player and player bar, without
 the home feed's artwork, which nobody sees in the hidden window. The helper runs hidden; when Spotify's page shows
 its **Log in** button (`data-testid="login-button"`), the helper shows its
-window, and a command that arrives meanwhile waits (`control` with
+window with Spotify's own login page and nothing around it
+(`accounts.spotify.com/login`, continuing back to the player page), and a
+command that arrives meanwhile waits (`control` with
 `how: "signing-in"`). Once the account button appears
 (`user-widget-link`), the window hides again and the waiting command runs.
 Closing the window by hand only hides it.
@@ -54,6 +56,9 @@ APP=.cache/webkit-playback-probe/SpotifastPlaybackProbe.app/Contents/MacOS/Spoti
 # Visible (sign-in, debugging); it closes itself once signed in:
 $APP --web-player
 
+# The app's sign-in window, in a store that keeps nothing (stays signed out):
+$APP --headless --web-player --signed-out
+
 # Live check of every control (not while Spotifast's helper is playing):
 sh experiments/macos-playback-host/connect-check.sh OUTPUT_DIR
 
@@ -76,6 +81,7 @@ Commands, one JSON object per line on stdin:
 | `{"cmd":"connect","action":"queue","args":{"uri":"spotify:track:ID"}}` | `add_to_queue` |
 | `{"cmd":"media","action":"play"}` | Spotify's Media Session handler (media keys) |
 | `{"cmd":"quit"}` | Exit, even before the page has loaded |
+| `{"cmd":"snapshot","path":"/tmp/x.png"}` | Save the page as the window shows it (a check of the sign-in window that needs no screen capture) |
 
 Events on stdout:
 
