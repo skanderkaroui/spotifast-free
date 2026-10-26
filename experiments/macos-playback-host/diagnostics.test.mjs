@@ -608,14 +608,17 @@ for (const name of fixtureNames) {
   await page.window.__spotifastQuery(2, { playlistChanges: { playlist: '5cr4tchPl4yl1stF1xtur3', body: delta } });
   await page.window.__spotifastQuery(3, { playlistChanges: { rootlist: 'owner', body: delta } });
   await page.window.__spotifastQuery(4, { playlistChanges: { playlist: '../../me', body: delta } });
+  // The helper hands the app's JSON true over as 1.
+  await page.window.__spotifastQuery(5, { playlistChanges: { create: 1, body: { ops: [] } } });
   assert.deepEqual(asked.map((a) => a.url), [
     'https://spclient.wg.spotify.com/playlist/v2/playlist',
     'https://spclient.wg.spotify.com/playlist/v2/playlist/5cr4tchPl4yl1stF1xtur3/changes',
     'https://spclient.wg.spotify.com/playlist/v2/user/owner/rootlist/changes',
+    'https://spclient.wg.spotify.com/playlist/v2/playlist',
   ]);
   assert.ok(asked.every((a) => a.method === 'POST' && a.headers.authorization === 'Bearer first'));
   assert.deepEqual(asked[1].body, delta);
   const answers = out.filter((event) => event.event === 'query');
-  assert.deepEqual(answers.map((a) => [a.id, a.status]), [[1, 200], [2, 200], [3, 200], [4, 400]]);
+  assert.deepEqual(answers.map((a) => [a.id, a.status]), [[1, 200], [2, 200], [3, 200], [4, 400], [5, 200]]);
   console.log('ok: playlist edits go only to the playlist service paths asked');
 }
