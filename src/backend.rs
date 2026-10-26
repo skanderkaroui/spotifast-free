@@ -99,10 +99,34 @@ fn defer_engine_replace(engine_busy: bool, restart_pending: &mut bool) -> bool {
 pub enum AuthStatus {
     Starting,
     SignedOut,
-    WaitingForBrowser { url: String },
+    WaitingForBrowser {
+        url: String,
+    },
     Connecting,
-    Connected { username: String },
+    Connected {
+        username: String,
+    },
     Failed(String),
+    /// Spotify turned the sign-in down for a reason the sign-in screen
+    /// explains in the listener's language and shows how to fix.
+    Refused(SignInProblem),
+}
+
+/// Why Spotify turned a sign-in down, for the sign-in screen to explain.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SignInProblem {
+    /// What was pasted is not shaped like a Client ID.
+    MalformedClientId,
+    /// Spotify has never issued the Client ID.
+    UnknownClient,
+    /// The personal app does not let this account in: it is not the
+    /// account that created the app, or that account has no Premium.
+    AccountNotAllowed,
+    /// Spotify refused the grant from before 0.14.2 that came through the
+    /// app Spotifast used to share, and there is no personal app to go on.
+    SharedRetired,
+    /// Spotify refused the personal app's saved grant.
+    Expired,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -718,6 +742,8 @@ pub enum Command {
     SignIn {
         request: u64,
         config: ProxyConfig,
+        /// The listener's own app, from the sign-in screen.
+        client_id: Option<String>,
     },
     CancelSignIn,
     SignOut,
@@ -1090,6 +1116,8 @@ pub enum Event {
     WebApp {
         client_id: Option<String>,
     },
+    /// Whether a shared grant from before 0.14.2 is signed in.
+    SharedGrant(bool),
     LikedSongsCache {
         account_id: String,
         generation: u64,
@@ -1999,7 +2027,9 @@ impl Worker {
         Ok(restart)
     }
 
-    fn change_proxy(&mut self, request: u64, proxy: ProxyConfig, sign_in: bool) {
+    /// Applies a proxy, then signs in with `sign_in`'s Client ID when that
+    /// is the sign-in screen's button.
+    fn change_proxy(&mut self, request: u64, proxy: ProxyConfig, sign_in: Option<Option<String>>) {
         let result = self.apply_proxy(proxy.clone());
         if result.as_ref().is_ok_and(|restart| *restart) {
             self.replace_engine();
@@ -2016,8 +2046,8 @@ impl Worker {
         if applied {
             self.persist_proxy_password(&proxy);
             self.finish_proxy_restore();
-            if sign_in {
-                self.sign_in();
+            if let Some(client_id) = sign_in {
+                self.sign_in(client_id);
             }
         }
     }
@@ -2276,7 +2306,11 @@ impl Worker {
                     });
                 }
                 Command::Shutdown => break,
-                Command::SignIn { request, config } => self.change_proxy(request, config, true),
+                Command::SignIn {
+                    request,
+                    config,
+                    client_id,
+                } => self.change_proxy(request, config, Some(client_id)),
                 Command::CancelSignIn => {
                     self.authorization_attempt += 1;
                     if let Some(cancel) = self.cancel_signin.take() {
@@ -2316,9 +2350,7 @@ impl Worker {
                     self.engine_config = config;
                     self.replace_engine();
                 }
-                Command::ApplyProxy { request, config } => {
-                    self.change_proxy(request, config, false)
-                }
+                Command::ApplyProxy { request, config } => self.change_proxy(request, config, None),
                 Command::Player(command) => {
                     if matches!(&command, PlayerCommand::Load(_)) {
                         self.resume = None;
@@ -2398,13 +2430,25 @@ impl Worker {
                     }
                     for source in expired {
                         self.forget_web_grant(source);
-                        if source == ApiSource::Personal {
-                            self.emit(Event::WebApp { client_id: None });
-                        } else {
+                        self.emit(match source {
+                            ApiSource::Personal => Event::WebApp { client_id: None },
+                            ApiSource::Shared => Event::SharedGrant(false),
+                        });
+                        // Either grant carries the session alone when the
+                        // other is gone; only losing the last one signs out.
+                        let other_ready = match source {
+                            ApiSource::Shared => self.api.personal_ready(),
+                            ApiSource::Personal => matches!(
+                                self.api.state(ApiSource::Shared),
+                                SessionState::Ready { .. }
+                            ),
+                        };
+                        if !other_ready {
                             self.signed_in = false;
-                            self.emit(Event::Auth(AuthStatus::Failed(
-                                "Your Spotify sign-in expired. Please sign in again.".into(),
-                            )));
+                            self.emit(Event::Auth(AuthStatus::Refused(match source {
+                                ApiSource::Shared => SignInProblem::SharedRetired,
+                                ApiSource::Personal => SignInProblem::Expired,
+                            })));
                         }
                     }
                     if let ApiResponse::Me(Ok(user)) = response.as_ref()
@@ -2528,6 +2572,15 @@ impl Worker {
                         }
                         if let Some(pending) = self.pending_authorization.take() {
                             self.sign_in_source(pending);
+                        } else if self.signed_in
+                            && self.api.state(ApiSource::Personal) == SessionState::Unavailable
+                            && self.api.state(ApiSource::Shared) == SessionState::Unavailable
+                        {
+                            // Choosing another app in Settings let go of the
+                            // only grant, and its sign-in never finished:
+                            // nothing is left to answer the app.
+                            self.signed_in = false;
+                            self.emit(Event::Auth(AuthStatus::SignedOut));
                         }
                     }
                 }
@@ -2923,14 +2976,15 @@ impl Worker {
                         }
                         self.on_web_signed_in(source, token);
                     } else {
-                        // Signing in renews only the shared app's grant, so a
-                        // personal app has to be authorized again where it was
-                        // set up (#634).
+                        // A shared grant cannot be renewed any more, and a
+                        // personal app's is renewed by signing in with it, or
+                        // in Settings while a shared grant keeps the app
+                        // signed in (#634).
                         let message = if source == ApiSource::Shared {
-                            "Spotify permissions changed. Sign in again."
+                            "Spotify permissions changed. Sign in with your own Spotify app."
                         } else {
-                            "Spotify permissions changed for your personal app. \
-                             Authorize it again in Settings, under Account."
+                            "Spotify permissions changed for your personal app. Authorize it \
+                             again, with Sign in or in Settings, under Account."
                         };
                         self.emit(Event::Error(message.into()));
                     }
@@ -3048,6 +3102,9 @@ impl Worker {
         } else {
             self.api.clear(source);
         }
+        if source == ApiSource::Shared {
+            self.emit(Event::SharedGrant(false));
+        }
         let message = match source {
             ApiSource::Shared => format!("Shared Spotify sign-in failed: {error}"),
             ApiSource::Personal => format!("Personal app authorization failed: {error}"),
@@ -3059,9 +3116,27 @@ impl Worker {
                 SessionState::Ready { .. }
             ),
         };
-        if source == ApiSource::Shared || !other_ready {
+        let problem = match (source, &error) {
+            (ApiSource::Shared, ApiError::SignInExpired { .. }) => {
+                Some(SignInProblem::SharedRetired)
+            }
+            // Development Mode lets in only the accounts the app's owner
+            // allows, and none while the owner has no Premium.
+            (ApiSource::Personal, error) if error.status() == Some(403) => {
+                Some(SignInProblem::AccountNotAllowed)
+            }
+            (ApiSource::Personal, ApiError::SignInExpired { .. }) => Some(SignInProblem::Expired),
+            _ => None,
+        };
+        if !other_ready {
             self.signed_in = false;
-            self.emit(Event::Auth(AuthStatus::Failed(message.clone())));
+            self.emit(Event::Auth(match problem {
+                Some(problem) => AuthStatus::Refused(problem),
+                None => AuthStatus::Failed(message.clone()),
+            }));
+            if problem.is_some() {
+                return;
+            }
         }
         self.emit(Event::Error(message));
     }
@@ -3093,6 +3168,7 @@ impl Worker {
         }
         match source {
             ApiSource::Shared => {
+                self.emit(Event::SharedGrant(true));
                 if !self.signed_in {
                     self.signed_in = true;
                     self.emit(Event::Auth(AuthStatus::Connected {
@@ -3141,8 +3217,28 @@ impl Worker {
         }
     }
 
-    fn sign_in(&mut self) {
-        self.sign_in_source(ApiSource::Shared);
+    /// The sign-in screen's button: with the listener's own app, the only
+    /// way to sign in. Shared access takes no new sign-ins.
+    fn sign_in(&mut self, client_id: Option<String>) {
+        let client_id = client_id
+            .map(|id| id.trim().to_string())
+            .filter(|id| !id.is_empty());
+        if !client_id
+            .as_deref()
+            .is_some_and(crate::auth::looks_like_client_id)
+        {
+            self.emit(Event::Auth(AuthStatus::Refused(
+                SignInProblem::MalformedClientId,
+            )));
+            return;
+        }
+        if client_id != self.web_client_id {
+            // The same steps as choosing another app in Settings, which also
+            // starts its sign-in.
+            self.configure_personal_web_app(client_id);
+        } else {
+            self.sign_in_source(ApiSource::Personal);
+        }
     }
 
     fn sign_in_source(&mut self, source: ApiSource) {
@@ -3156,25 +3252,27 @@ impl Worker {
         if self.cancel_signin.is_some() {
             return;
         }
-        let grant = match source {
-            ApiSource::Shared => crate::auth::Grant::shared_web_api(),
-            ApiSource::Personal => {
-                let Some(client_id) = self.web_client_id.as_deref() else {
-                    return;
-                };
-                match crate::auth::Grant::personal_web_api(client_id) {
-                    Ok(grant) => grant,
-                    Err(error) => {
-                        self.emit(Event::Error(error.to_string()));
-                        return;
-                    }
-                }
+        // Signing in from the sign-in screen, rather than authorizing a
+        // personal app in Settings while already signed in.
+        let primary = !self.signed_in;
+        // A shared grant is only ever restored, never made.
+        if source == ApiSource::Shared {
+            return;
+        }
+        let Some(client_id) = self.web_client_id.as_deref() else {
+            return;
+        };
+        let grant = match crate::auth::Grant::personal_web_api(client_id) {
+            Ok(grant) => grant,
+            Err(error) => {
+                self.emit(Event::Error(error.to_string()));
+                return;
             }
         };
         let listener = match crate::auth::listen_for_redirect(grant.redirect_port) {
             Ok(listener) => listener,
             Err(error) => {
-                if source == ApiSource::Shared {
+                if primary {
                     self.emit(Event::Auth(AuthStatus::Failed(error.to_string())));
                 } else {
                     self.emit(Event::Error(error.to_string()));
@@ -3192,21 +3290,41 @@ impl Worker {
         self.cancel_signin = Some(cancel_tx);
         self.authorizing_source = Some(source);
         self.api.set_state(source, SessionState::Authorizing);
-        if source == ApiSource::Shared {
+        if primary {
             self.emit(Event::Auth(AuthStatus::WaitingForBrowser {
                 url: flow.url.clone(),
             }));
         }
         let browser_url = flow.url.clone();
-        tokio::task::spawn_blocking(move || {
-            if let Err(error) = crate::opener::open(&browser_url) {
-                log::warn!("unable to open a browser: {error}");
-            }
-        });
         let events = self.events.clone();
         let waker = self.waker.clone();
         let commands = self.commands.clone();
         tokio::spawn(async move {
+            // A Client ID Spotify never issued would stop on Spotify's page
+            // in the browser, which never tells the app. Ask first.
+            if crate::auth::client_known(&http, &grant.client_id).await == Some(false) {
+                if lease.current() {
+                    let _ = events.send(if primary {
+                        Event::Auth(AuthStatus::Refused(SignInProblem::UnknownClient))
+                    } else {
+                        Event::Error(
+                            "Spotify doesn't know this Client ID. Copy it again from your \
+                             app's page in Spotify's developer dashboard."
+                                .into(),
+                        )
+                    });
+                    waker.wake();
+                }
+                let _ = commands.send(Command::SignInEnded { source, attempt });
+                return;
+            }
+            if lease.current() {
+                tokio::task::spawn_blocking(move || {
+                    if let Err(error) = crate::opener::open(&browser_url) {
+                        log::warn!("unable to open a browser: {error}");
+                    }
+                });
+            }
             let result = async {
                 let code = crate::auth::wait_for_code_on_listener(listener, &flow.state, cancel_rx)
                     .await?;
@@ -3225,7 +3343,7 @@ impl Worker {
                     });
                 }
                 Err(error) => {
-                    if lease.current() && source == ApiSource::Shared {
+                    if lease.current() && primary {
                         let _ = events.send(Event::Auth(AuthStatus::SignedOut));
                     }
                     let message = error.to_string();
@@ -4818,7 +4936,9 @@ impl Worker {
         if query.is_empty() {
             return;
         }
-        let split = self.api.personal_ready();
+        // Splitting moves playlists to shared access; without it, one request
+        // to the personal app asks for everything.
+        let split = self.api.personal_ready() && self.api.has_shared();
         self.emit(Event::Api(Box::new(ApiResponse::SearchStarted {
             query: query.clone(),
             serial,
@@ -7647,7 +7767,7 @@ mod authorization_tests {
         worker.engine_proxy = Some(old_url.clone());
         worker.signed_in = true;
         worker.engine_busy = true;
-        worker.change_proxy(1, ProxyConfig::Off, false);
+        worker.change_proxy(1, ProxyConfig::Off, None);
         assert!(
             worker.engine_restart_pending,
             "Off must discard an in-flight connection using the former system proxy"
@@ -7810,7 +7930,7 @@ mod authorization_tests {
         let _entered = runtime.enter();
         worker.restoring_proxy = true;
         let old = worker.credentials.lease(CredentialSlot::Proxy);
-        worker.change_proxy(1, ProxyConfig::System, false);
+        worker.change_proxy(1, ProxyConfig::System, None);
         assert!(!worker.restoring_proxy);
         assert!(worker.http.client().is_ok());
         worker.on_proxy_restored(
@@ -7858,7 +7978,7 @@ mod authorization_tests {
         let _entered = runtime.enter();
         let original = worker.engine_config.proxy.clone();
         let bad = ProxyConfig::Invalid("Proxy port must be a number".into());
-        worker.change_proxy(1, bad.clone(), false);
+        worker.change_proxy(1, bad.clone(), None);
         assert_eq!(worker.engine_config.proxy, original);
         assert!(!worker.engine_restart_pending);
         assert!(worker.http.client().is_ok());
@@ -7876,7 +7996,7 @@ mod authorization_tests {
             verify(&mut worker, ApiSource::Shared, "alice");
             let old = worker.credentials.lease(CredentialSlot::Shared);
             let grant = StoredGrant::Web(crate::auth::StoredToken {
-                client_id: crate::auth::DEFAULT_WEB_CLIENT_ID.into(),
+                client_id: "dummy-shared-client".into(),
                 access_token: "dummy-expired-access".into(),
                 refresh_token: "dummy-rejected-refresh".into(),
                 ..Default::default()
@@ -7909,6 +8029,176 @@ mod authorization_tests {
                     .any(|event| matches!(event, Event::Auth(AuthStatus::Connected { .. })))
             );
         });
+    }
+
+    /// Spotify refusing the shared grant of a listener who also has a
+    /// personal app leaves them signed in with it; refusing the personal
+    /// app's grant too, the last one, signs them out.
+    #[test]
+    fn a_refused_shared_grant_leaves_the_personal_app_signed_in() {
+        let (runtime, mut worker, events) = worker("refused-shared-keeps-personal");
+        let _entered = runtime.enter();
+        verify(&mut worker, ApiSource::Shared, "alice");
+        verify(&mut worker, ApiSource::Personal, "alice");
+        let _ = events.try_iter().collect::<Vec<_>>();
+        let finished = |worker: &Worker, expired: ApiSource| Command::ApiFinished {
+            generation: *worker.session.borrow(),
+            home_account: None,
+            response: Box::new(ApiResponse::Me(Err(ApiError::SignInExpired {
+                api_source: expired,
+            }))),
+            expired: vec![expired],
+            shared_lease: worker.credentials.lease(CredentialSlot::Shared),
+            personal_lease: worker.credentials.lease(CredentialSlot::Personal),
+        };
+        let (commands, receiver) = mpsc::unbounded_channel();
+        commands.send(finished(&worker, ApiSource::Shared)).unwrap();
+        commands.send(Command::Shutdown).unwrap();
+        runtime.block_on(worker.run(receiver));
+        assert!(worker.signed_in);
+        assert!(!worker.api.has_shared());
+        assert!(worker.api.personal_ready());
+        assert!(
+            !events
+                .try_iter()
+                .any(|event| matches!(event, Event::Auth(AuthStatus::Failed(_))))
+        );
+
+        let (commands, receiver) = mpsc::unbounded_channel();
+        commands
+            .send(finished(&worker, ApiSource::Personal))
+            .unwrap();
+        commands.send(Command::Shutdown).unwrap();
+        runtime.block_on(worker.run(receiver));
+        assert!(!worker.signed_in);
+        assert!(events.try_iter().any(|event| matches!(
+            event,
+            Event::Auth(AuthStatus::Refused(SignInProblem::Expired))
+        )));
+    }
+
+    /// The sign-in screen's button signs in with the Client ID typed there,
+    /// and its problems show on that screen rather than as a toast behind
+    /// it. What cannot be a Client ID never reaches the browser, and shared
+    /// access takes no new sign-ins.
+    #[test]
+    fn the_sign_in_screen_signs_in_with_the_listeners_own_app() {
+        let _turn = WEB_PORT.lock().unwrap_or_else(|poison| poison.into_inner());
+        let (runtime, mut worker, events) = worker("sign-in-with-personal");
+        let _entered = runtime.enter();
+        let _occupied =
+            std::net::TcpListener::bind(("127.0.0.1", crate::auth::WEB_REDIRECT_PORT)).unwrap();
+        for typed in [
+            None,
+            Some("".into()),
+            Some("https://developer.spotify.com".into()),
+        ] {
+            worker.sign_in(typed);
+            let received: Vec<_> = events.try_iter().collect();
+            assert!(received.iter().any(|event| matches!(
+                event,
+                Event::Auth(AuthStatus::Refused(SignInProblem::MalformedClientId))
+            )));
+            assert_eq!(worker.authorization_attempt, 0);
+        }
+
+        worker.sign_in_source(ApiSource::Shared);
+        assert!(worker.cancel_signin.is_none());
+        assert_eq!(
+            worker.api.state(ApiSource::Shared),
+            SessionState::Unavailable
+        );
+
+        let id = "0123456789abcdef0123456789abcdef";
+        worker.sign_in(Some(format!(" {id} ")));
+        assert_eq!(worker.web_client_id.as_deref(), Some(id));
+        let received: Vec<_> = events.try_iter().collect();
+        assert!(received.iter().any(|event| matches!(event,
+            Event::Auth(AuthStatus::Failed(message)) if message.contains("8989")
+        )));
+        assert!(
+            !received
+                .iter()
+                .any(|event| matches!(event, Event::Error(_)))
+        );
+        assert_eq!(
+            worker.api.state(ApiSource::Shared),
+            SessionState::Unavailable
+        );
+    }
+
+    /// Choosing another app in Settings while it is the only grant, and
+    /// never finishing its sign-in, returns to the sign-in screen rather
+    /// than leaving an app that nothing answers.
+    #[test]
+    fn an_unfinished_switch_of_the_only_app_returns_to_sign_in() {
+        let (runtime, mut worker, events) = worker("unfinished-switch");
+        let _entered = runtime.enter();
+        verify(&mut worker, ApiSource::Personal, "alice");
+        worker.api.clear(ApiSource::Personal);
+        worker.authorizing_source = Some(ApiSource::Personal);
+        let _ = events.try_iter().collect::<Vec<_>>();
+        let (commands, receiver) = mpsc::unbounded_channel();
+        commands
+            .send(Command::SignInEnded {
+                source: ApiSource::Personal,
+                attempt: worker.authorization_attempt,
+            })
+            .unwrap();
+        commands.send(Command::Shutdown).unwrap();
+        runtime.block_on(worker.run(receiver));
+        assert!(!worker.signed_in);
+        assert!(
+            events
+                .try_iter()
+                .any(|event| matches!(event, Event::Auth(AuthStatus::SignedOut)))
+        );
+    }
+
+    /// Spotify refusing the shared grant with nothing else signed in sends
+    /// the listener to set up their own app, and says why; a personal app
+    /// that does not let the account in says that instead.
+    #[test]
+    fn refusals_say_what_to_do() {
+        let (runtime, mut worker, events) = worker("refusals");
+        let _entered = runtime.enter();
+        verify(&mut worker, ApiSource::Shared, "alice");
+        worker.on_web_verification_failed(
+            ApiSource::Shared,
+            ApiError::SignInExpired {
+                api_source: ApiSource::Shared,
+            },
+        );
+        let received: Vec<_> = events.try_iter().collect();
+        assert!(received.iter().any(|event| matches!(
+            event,
+            Event::Auth(AuthStatus::Refused(SignInProblem::SharedRetired))
+        )));
+        assert!(
+            received
+                .iter()
+                .any(|event| matches!(event, Event::SharedGrant(false)))
+        );
+        assert!(
+            !received
+                .iter()
+                .any(|event| matches!(event, Event::Error(_)))
+        );
+
+        worker
+            .api
+            .set_state(ApiSource::Personal, SessionState::Authorizing);
+        worker.on_web_verification_failed(
+            ApiSource::Personal,
+            ApiError::Status {
+                status: 403,
+                message: "Check settings on developer.spotify.com/dashboard".into(),
+            },
+        );
+        assert!(events.try_iter().any(|event| matches!(
+            event,
+            Event::Auth(AuthStatus::Refused(SignInProblem::AccountNotAllowed))
+        )));
     }
 
     #[test]
@@ -8381,14 +8671,18 @@ mod authorization_tests {
         assert_eq!(crate::web_player::saved_plan(&plan, "ana"), None);
     }
 
+    /// Tests that bind the personal app's callback port take turns.
+    static WEB_PORT: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
     #[test]
     fn occupied_login_port_reports_persistent_failure_before_browser_sign_in() {
+        let _turn = WEB_PORT.lock().unwrap_or_else(|poison| poison.into_inner());
         let (runtime, mut worker, events) = worker("occupied-login-port");
         let _entered = runtime.enter();
         let _occupied =
             std::net::TcpListener::bind(("127.0.0.1", crate::auth::WEB_REDIRECT_PORT)).unwrap();
         for _ in 0..2 {
-            worker.sign_in_source(ApiSource::Shared);
+            worker.sign_in_source(ApiSource::Personal);
             let received: Vec<_> = events.try_iter().collect();
             assert!(received.iter().any(|event| matches!(event,
                 Event::Auth(AuthStatus::Failed(message)) if message.contains("8989")
@@ -8712,7 +9006,7 @@ mod authorization_tests {
             let lease = worker.credentials.lease(slot);
             let token = crate::auth::StoredToken {
                 client_id: if slot == CredentialSlot::Shared {
-                    crate::auth::DEFAULT_WEB_CLIENT_ID.into()
+                    "dummy-shared-client".into()
                 } else {
                     "personal".into()
                 },
@@ -8736,12 +9030,13 @@ mod authorization_tests {
             assert!(worker.web_tokens[slot.index()].is_none());
             assert!(!worker.signed_in);
             let emitted: Vec<_> = events.try_iter().collect();
-            // Signing in renews the shared app; a personal app is renewed only
-            // by authorizing it again in Settings (#634).
+            // A shared grant cannot be renewed, so it points at the
+            // listener's own app; a personal app is renewed by signing in
+            // with it, or in Settings (#634).
             let advice = if slot == CredentialSlot::Shared {
-                "Sign in again."
+                "Sign in with your own Spotify app."
             } else {
-                "Authorize it again in Settings, under Account."
+                "with Sign in or in Settings, under Account."
             };
             assert!(emitted.iter().any(|event| matches!(event,
                 Event::Error(message)
@@ -8765,7 +9060,7 @@ mod authorization_tests {
         let attempt = worker.authorization_attempt;
         let album_type_session = worker.album_type_lookup.session_generation;
         let token = crate::auth::StoredToken {
-            client_id: crate::auth::DEFAULT_WEB_CLIENT_ID.into(),
+            client_id: "dummy-shared-client".into(),
             access_token: "dummy-access".into(),
             refresh_token: "dummy-refresh".into(),
             ..Default::default()
@@ -8958,7 +9253,7 @@ mod authorization_tests {
                 client_id: if source == ApiSource::Personal {
                     "personal"
                 } else {
-                    crate::auth::DEFAULT_WEB_CLIENT_ID
+                    "dummy-shared-client"
                 }
                 .into(),
                 ..Default::default()
