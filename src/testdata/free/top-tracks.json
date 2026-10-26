@@ -1,0 +1,1567 @@
+{
+  "data": {
+    "me": {
+      "profile": {
+        "topTracks": {
+          "__typename": "TrackPageV2",
+          "items": [
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e023450c486874dae4e43d2ab7f",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048513450c486874dae4e43d2ab7f",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2733450c486874dae4e43d2ab7f",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Getaway - Remixes",
+                  "uri": "spotify:album:385LIqcFwcgV6vn4wATx88"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Tritonal"
+                      },
+                      "uri": "spotify:artist:521qvhdobR0GzhvU6TFw76"
+                    },
+                    {
+                      "profile": {
+                        "name": "Angel Taylor"
+                      },
+                      "uri": "spotify:artist:6D5xkX8ecb4bGccXqtDI63"
+                    },
+                    {
+                      "profile": {
+                        "name": "Koven"
+                      },
+                      "uri": "spotify:artist:3UCbp6D1lvILlxRJT9LnFa"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 203720
+                },
+                "mediaType": "AUDIO",
+                "name": "Getaway - Koven Remix",
+                "saved": false,
+                "uri": "spotify:track:3k8YbL8VrzqdDJ0z9huH75",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e026699b6d2fbb3aa5f07b3e0d8",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048516699b6d2fbb3aa5f07b3e0d8",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2736699b6d2fbb3aa5f07b3e0d8",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "DESPERADO",
+                  "uri": "spotify:album:3Fhd5mu9DDnph1m4j9Hioo"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Stormy"
+                      },
+                      "uri": "spotify:artist:5Do9u0GoN4gFn6Nk8NGDhh"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 192000
+                },
+                "mediaType": "AUDIO",
+                "name": "PER LA VITA",
+                "saved": false,
+                "uri": "spotify:track:3zosYc9OVj4kZWrbdarnTL",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e0201fb6f1b5a837eefa91aea4e",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d0000485101fb6f1b5a837eefa91aea4e",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b27301fb6f1b5a837eefa91aea4e",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Love + War",
+                  "uri": "spotify:album:5W5oxg0Z2aFfbudPakSHqH"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Kwabs"
+                      },
+                      "uri": "spotify:artist:0r0KdmVS1Er3kaFnl1KPog"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 214149
+                },
+                "mediaType": "AUDIO",
+                "name": "Walk",
+                "saved": false,
+                "uri": "spotify:track:5T8t1yJwAf6Dr6fIFGPjro",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e02128b948ac9a26c14269282d4",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d00004851128b948ac9a26c14269282d4",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b273128b948ac9a26c14269282d4",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "No Mercy",
+                  "uri": "spotify:album:6LGR2plk2Yk4A33CAktJN3"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "T.I."
+                      },
+                      "uri": "spotify:artist:4OBJLual30L7gRl5UkeRcT"
+                    },
+                    {
+                      "profile": {
+                        "name": "Eminem"
+                      },
+                      "uri": "spotify:artist:7dGJo4pcD2V6oG8kP0tJRR"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "EXPLICIT"
+                },
+                "duration": {
+                  "totalMilliseconds": 318360
+                },
+                "mediaType": "AUDIO",
+                "name": "That's All She Wrote",
+                "saved": false,
+                "uri": "spotify:track:6XAA7T9VHcqKQSzjmXAJ8o",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e0232a7d87248d1b75463483df5",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d0000485132a7d87248d1b75463483df5",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b27332a7d87248d1b75463483df5",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Thriller",
+                  "uri": "spotify:album:2ANVost0y2y52ema1E9xAZ"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Michael Jackson"
+                      },
+                      "uri": "spotify:artist:3fMbdgg4jU18AjLCKBhRSm"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 260368
+                },
+                "mediaType": "AUDIO",
+                "name": "Baby Be Mine",
+                "saved": false,
+                "uri": "spotify:track:6XYbMGvtl6tlPoGWaiH7EY",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e021e0b04676fae1205f4853706",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048511e0b04676fae1205f4853706",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2731e0b04676fae1205f4853706",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "a Gift & a Curse",
+                  "uri": "spotify:album:5qmZefgh78fN3jsyPPlvuw"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Gunna"
+                      },
+                      "uri": "spotify:artist:2hlmm7s2ICUX0LVIhVFlZQ"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "EXPLICIT"
+                },
+                "duration": {
+                  "totalMilliseconds": 125040
+                },
+                "mediaType": "AUDIO",
+                "name": "fukumean",
+                "saved": false,
+                "uri": "spotify:track:4rXLjWdF2ZZpXCVTfWcshS",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e02de9f71e80469ab49d240ef48",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d00004851de9f71e80469ab49d240ef48",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b273de9f71e80469ab49d240ef48",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Trust In The Process",
+                  "uri": "spotify:album:6Obk7ZoQc0phLmCpdwkLmq"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Dillz."
+                      },
+                      "uri": "spotify:artist:6o1jEgjlAdULaFrZsLJMOB"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 125653
+                },
+                "mediaType": "AUDIO",
+                "name": "Trust In The Process",
+                "saved": true,
+                "uri": "spotify:track:0AbXnKigCCx2OPstyQptJN",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e0250432a9b2b84007b3a7116c6",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d0000485150432a9b2b84007b3a7116c6",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b27350432a9b2b84007b3a7116c6",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Wyw my sweetie #JerseyClub",
+                  "uri": "spotify:album:1sC3jFZgrm8MAFlCBQswl6"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "nissi"
+                      },
+                      "uri": "spotify:artist:6z7UEPFZV1gNP0xw9KCREB"
+                    },
+                    {
+                      "profile": {
+                        "name": "25Hzz"
+                      },
+                      "uri": "spotify:artist:6g9OMnaZV5nBjGjwxRHCjW"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 94513
+                },
+                "mediaType": "AUDIO",
+                "name": "Wyw my sweetie #JerseyClub - Slowed",
+                "saved": false,
+                "uri": "spotify:track:3YXG57Sbn1ZXKi4TWCgpJ0",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e026d2ea01f1b5163f4a0df48a2",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048516d2ea01f1b5163f4a0df48a2",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2736d2ea01f1b5163f4a0df48a2",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "The Making of a Paracosm",
+                  "uri": "spotify:album:4yrjPmonSHiJIHum5TrqEe"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Kasbo"
+                      },
+                      "uri": "spotify:artist:1ikID9RZZMvkuBGDWrqajq"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 228000
+                },
+                "mediaType": "AUDIO",
+                "name": "Blur",
+                "saved": true,
+                "uri": "spotify:track:014wRfy90MuZKVOxpaSeWC",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e029e1cfc756886ac782e363d79",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048519e1cfc756886ac782e363d79",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2739e1cfc756886ac782e363d79",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Currents",
+                  "uri": "spotify:album:79dL7FLiJFOO0EoehUHQBv"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Tame Impala"
+                      },
+                      "uri": "spotify:artist:5INjqkS1o8h1imAzPqGZBb"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 467586
+                },
+                "mediaType": "AUDIO",
+                "name": "Let It Happen",
+                "saved": false,
+                "uri": "spotify:track:2X485T9Z5Ly0xyaghN73ed",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e027a1c7a8d625d1ed2b842a0e0",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048517a1c7a8d625d1ed2b842a0e0",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2737a1c7a8d625d1ed2b842a0e0",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Le mie preferite",
+                  "uri": "spotify:album:63xABvK8K0qKDiHaAOfIXz"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Lelio Luttazzi"
+                      },
+                      "uri": "spotify:artist:6m1rUIqtk10YWCyR5jFW9W"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 72413
+                },
+                "mediaType": "AUDIO",
+                "name": "Souvenir dItalie",
+                "saved": false,
+                "uri": "spotify:track:3KAqGDCuK9S1gNHbAcl9ZI",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e02ac22e367a3bb9308d2a2beb5",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d00004851ac22e367a3bb9308d2a2beb5",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b273ac22e367a3bb9308d2a2beb5",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Isaka II (6am) [with Tems, Omah Lay, Thukuthela, JAZZWRLD, Lekaa Beats]",
+                  "uri": "spotify:album:1Ba4tVkFViKy6KmRyd9adZ"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "CIZA"
+                      },
+                      "uri": "spotify:artist:71hPkbyih5bdlHVPBgav33"
+                    },
+                    {
+                      "profile": {
+                        "name": "Tems"
+                      },
+                      "uri": "spotify:artist:687cZJR45JO7jhk1LHIbgq"
+                    },
+                    {
+                      "profile": {
+                        "name": "OMAH LAY"
+                      },
+                      "uri": "spotify:artist:5yOvAmpIR7hVxiS6Ls5DPO"
+                    },
+                    {
+                      "profile": {
+                        "name": "Thukuthela"
+                      },
+                      "uri": "spotify:artist:4yNx0crmKm3VRGTjWR1L3n"
+                    },
+                    {
+                      "profile": {
+                        "name": "JAZZWRLD"
+                      },
+                      "uri": "spotify:artist:3idyOn3lhSxgV2qdDQNfhz"
+                    },
+                    {
+                      "profile": {
+                        "name": "Lekaa Beats"
+                      },
+                      "uri": "spotify:artist:3HzmmNkD0FRr2pBSwyUBBY"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 285239
+                },
+                "mediaType": "AUDIO",
+                "name": "Isaka II (6am) [with Tems, Omah Lay, Thukuthela, JAZZWRLD, Lekaa Beats]",
+                "saved": false,
+                "uri": "spotify:track:4lz4aKs60vUoyZP4pNy3aD",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e0253fba8ec0cb8ede0eb2254d0",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d0000485153fba8ec0cb8ede0eb2254d0",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b27353fba8ec0cb8ede0eb2254d0",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Al Quran Al Kareem",
+                  "uri": "spotify:album:0I2qvnekxFcDSjk5b5pI3Y"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Al Sheikh Yasser Al-dosari"
+                      },
+                      "uri": "spotify:artist:1ACNCKfen2aX8LNrhn0No2"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 1257693
+                },
+                "mediaType": "AUDIO",
+                "name": "Surah Al Muminun",
+                "saved": false,
+                "uri": "spotify:track:5CjHun4DW9XiT1dVe6ndFz",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e023dea4a2ccd58ad1f8e4dbb03",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048513dea4a2ccd58ad1f8e4dbb03",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2733dea4a2ccd58ad1f8e4dbb03",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "a thousand years",
+                  "uri": "spotify:album:15yvc643iYfQtb6zh9NEJo"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Christina Perri"
+                      },
+                      "uri": "spotify:artist:7H55rcKCfwqkyDFH9wpKM6"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 285120
+                },
+                "mediaType": "AUDIO",
+                "name": "a thousand years",
+                "saved": false,
+                "uri": "spotify:track:6lanRgr6wXibZr8KgzXxBl",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e02017d287440284b1745f2fe1f",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d00004851017d287440284b1745f2fe1f",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b273017d287440284b1745f2fe1f",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Consistent",
+                  "uri": "spotify:album:00H4hXLkzwVcgYeIKvZeRH"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "No/Me"
+                      },
+                      "uri": "spotify:artist:4L0It80jhQQKMTU2r02nkL"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "EXPLICIT"
+                },
+                "duration": {
+                  "totalMilliseconds": 182053
+                },
+                "mediaType": "AUDIO",
+                "name": "Consistent",
+                "saved": false,
+                "uri": "spotify:track:5T1aes2aQ6doXVLDdbp9fw",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e027c6236a76fbcee4f1b8ace08",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048517c6236a76fbcee4f1b8ace08",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2737c6236a76fbcee4f1b8ace08",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Housewife",
+                  "uri": "spotify:album:6JvmSyocXef7RZDZFaymNl"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Tate McRae"
+                      },
+                      "uri": "spotify:artist:45dkTj5sMRSjrmBSBeiHym"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 208810
+                },
+                "mediaType": "AUDIO",
+                "name": "Housewife",
+                "saved": false,
+                "uri": "spotify:track:2sFepQNyl1WjpROruP8bJ0",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e0247d68adc61a13392a78ac671",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d0000485147d68adc61a13392a78ac671",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b27347d68adc61a13392a78ac671",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Scenic Drive (The Tape)",
+                  "uri": "spotify:album:5HBwLKK7l3N8fovxDlTBpE"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Khalid"
+                      },
+                      "uri": "spotify:artist:6LuN9FCkKOj5PcnpouEgny"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 156040
+                },
+                "mediaType": "AUDIO",
+                "name": "Present",
+                "saved": true,
+                "uri": "spotify:track:0PdwDpafg7Nz5TrL6U2anU",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e028863bc11d2aa12b54f5aeb36",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048518863bc11d2aa12b54f5aeb36",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2738863bc11d2aa12b54f5aeb36",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "After Hours",
+                  "uri": "spotify:album:4yP0hdKOZPNshxUOjY0cZj"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "The Weeknd"
+                      },
+                      "uri": "spotify:artist:1Xyo4u8uXC1ZmMpatF05PJ"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 200040
+                },
+                "mediaType": "AUDIO",
+                "name": "Blinding Lights",
+                "saved": false,
+                "uri": "spotify:track:0VjIjW4GlUZAMYd2vXMi3b",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e02bb643ae7287c339560084452",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d00004851bb643ae7287c339560084452",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b273bb643ae7287c339560084452",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Africa Jungle Part.1",
+                  "uri": "spotify:album:3L0XpPvJAAqHwUDobAF9bL"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Soolking"
+                      },
+                      "uri": "spotify:artist:0GgY7hjMoGDsX8ZDe2mwds"
+                    },
+                    {
+                      "profile": {
+                        "name": "GIMS"
+                      },
+                      "uri": "spotify:artist:0GOx72r5AAEKRGQFn3xqXK"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 160628
+                },
+                "mediaType": "AUDIO",
+                "name": "CARRÉ OK",
+                "saved": false,
+                "uri": "spotify:track:1A6AH7Rq1x4mDCUF9HmJt9",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e02476513434478fcdd4a6b2f6e",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d00004851476513434478fcdd4a6b2f6e",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b273476513434478fcdd4a6b2f6e",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Jackman.",
+                  "uri": "spotify:album:1ep4OEfNOhvcY85STfEtKy"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Jack Harlow"
+                      },
+                      "uri": "spotify:artist:2LIk90788K0zvyj2JJVwkJ"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "EXPLICIT"
+                },
+                "duration": {
+                  "totalMilliseconds": 113292
+                },
+                "mediaType": "AUDIO",
+                "name": "They Don't Love It",
+                "saved": true,
+                "uri": "spotify:track:2dSKFFNoNXKo3hPnlwUdPe",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e02280d1643a9a752e1522815ec",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d00004851280d1643a9a752e1522815ec",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b273280d1643a9a752e1522815ec",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Lake Arrowhead",
+                  "uri": "spotify:album:3U4EYwTYpx3O5gwyYewICq"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Nora En Pure"
+                      },
+                      "uri": "spotify:artist:24DO0PijjITGIEWsO8XaPs"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 215655
+                },
+                "mediaType": "AUDIO",
+                "name": "Lake Arrowhead - Radio Mix",
+                "saved": false,
+                "uri": "spotify:track:33aSTPB8HcILORwuFiTY1v",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e020c5f23cbf0b1ab7e37d0dc67",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048510c5f23cbf0b1ab7e37d0dc67",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2730c5f23cbf0b1ab7e37d0dc67",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Alone At Prom",
+                  "uri": "spotify:album:5Gm2XKBgnlzd6qTi7LE1z2"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Tory Lanez"
+                      },
+                      "uri": "spotify:artist:2jku7tDXc6XoB6MO2hFuqg"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 226466
+                },
+                "mediaType": "AUDIO",
+                "name": "The Color Violet",
+                "saved": true,
+                "uri": "spotify:track:3azJifCSqg9fRij2yKIbWz",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e0221deb742375f88edfb2e7368",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d0000485121deb742375f88edfb2e7368",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b27321deb742375f88edfb2e7368",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "NO ME ARREPIENTO DE SENTIR TANTO",
+                  "uri": "spotify:album:7a0lnWtCz0eW15WsWu3dHQ"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "KAROL G"
+                      },
+                      "uri": "spotify:artist:790FomKkXshlbRYZFtlgla"
+                    },
+                    {
+                      "profile": {
+                        "name": "Judeline"
+                      },
+                      "uri": "spotify:artist:1H6X7yhnXZg73f9bssaj1Q"
+                    },
+                    {
+                      "profile": {
+                        "name": "rusowsky"
+                      },
+                      "uri": "spotify:artist:1XEVu7gdRFfzEFqsPrancH"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 225834
+                },
+                "mediaType": "AUDIO",
+                "name": "BbY WOW",
+                "saved": false,
+                "uri": "spotify:track:3h5T5JypYU7huFiVYhv1dr",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e0232a7d87248d1b75463483df5",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d0000485132a7d87248d1b75463483df5",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b27332a7d87248d1b75463483df5",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "Thriller",
+                  "uri": "spotify:album:2ANVost0y2y52ema1E9xAZ"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Michael Jackson"
+                      },
+                      "uri": "spotify:artist:3fMbdgg4jU18AjLCKBhRSm"
+                    },
+                    {
+                      "profile": {
+                        "name": "Paul McCartney"
+                      },
+                      "uri": "spotify:artist:4STHEaNw4mPZ2tzheohgXB"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 222152
+                },
+                "mediaType": "AUDIO",
+                "name": "The Girl Is Mine (with Paul McCartney)",
+                "saved": false,
+                "uri": "spotify:track:4IT6vDuKprKl6jyVndlY8V",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e02e603debabd10fa9f00b6a021",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d00004851e603debabd10fa9f00b6a021",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b273e603debabd10fa9f00b6a021",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "name": "VOL. 1",
+                  "uri": "spotify:album:5fJmADef6jcPtm5H8UgLsX"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Novulent"
+                      },
+                      "uri": "spotify:artist:2Q0rAyTIfdTUwDt8jpEpv0"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "totalCount": 0
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "duration": {
+                  "totalMilliseconds": 95002
+                },
+                "mediaType": "AUDIO",
+                "name": "scars",
+                "saved": false,
+                "uri": "spotify:track:0ENO8Pu1riZdUdYEErLA8z",
+                "visualIdentity": {
+                  "sixteenByNineCoverImage": null
+                }
+              }
+            }
+          ],
+          "totalCount": 172
+        }
+      }
+    }
+  }
+}

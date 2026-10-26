@@ -1,0 +1,254 @@
+{
+  "data": {
+    "me": {
+      "profile": {
+        "topArtists": {
+          "__typename": "ArtistPageV2",
+          "items": [
+            {
+              "data": {
+                "__typename": "Artist",
+                "profile": {
+                  "name": "Michael Jackson"
+                },
+                "uri": "spotify:artist:3fMbdgg4jU18AjLCKBhRSm",
+                "visuals": {
+                  "avatarImage": {
+                    "sources": [
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab6761610000e5eb997cc9a4aec335d46c9481fd",
+                        "width": 640
+                      },
+                      {
+                        "height": 160,
+                        "url": "https://i.scdn.co/image/ab6761610000f178997cc9a4aec335d46c9481fd",
+                        "width": 160
+                      },
+                      {
+                        "height": 320,
+                        "url": "https://i.scdn.co/image/ab67616100005174997cc9a4aec335d46c9481fd",
+                        "width": 320
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Artist",
+                "profile": {
+                  "name": "FKJ"
+                },
+                "uri": "spotify:artist:2FwDTncULUnmANIh7qKa5z",
+                "visuals": {
+                  "avatarImage": {
+                    "sources": [
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab6761610000e5eba6e6973a01eb04abf32b58bb",
+                        "width": 640
+                      },
+                      {
+                        "height": 160,
+                        "url": "https://i.scdn.co/image/ab6761610000f178a6e6973a01eb04abf32b58bb",
+                        "width": 160
+                      },
+                      {
+                        "height": 320,
+                        "url": "https://i.scdn.co/image/ab67616100005174a6e6973a01eb04abf32b58bb",
+                        "width": 320
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Artist",
+                "profile": {
+                  "name": "The Weeknd"
+                },
+                "uri": "spotify:artist:1Xyo4u8uXC1ZmMpatF05PJ",
+                "visuals": {
+                  "avatarImage": {
+                    "sources": [
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab6761610000e5ebc1719ac9e6a75c1c25835018",
+                        "width": 640
+                      },
+                      {
+                        "height": 160,
+                        "url": "https://i.scdn.co/image/ab6761610000f178c1719ac9e6a75c1c25835018",
+                        "width": 160
+                      },
+                      {
+                        "height": 320,
+                        "url": "https://i.scdn.co/image/ab67616100005174c1719ac9e6a75c1c25835018",
+                        "width": 320
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Artist",
+                "profile": {
+                  "name": "Jack Harlow"
+                },
+                "uri": "spotify:artist:2LIk90788K0zvyj2JJVwkJ",
+                "visuals": {
+                  "avatarImage": {
+                    "sources": [
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab6761610000e5ebf7019a4ae65738627db5c56c",
+                        "width": 640
+                      },
+                      {
+                        "height": 160,
+                        "url": "https://i.scdn.co/image/ab6761610000f178f7019a4ae65738627db5c56c",
+                        "width": 160
+                      },
+                      {
+                        "height": 320,
+                        "url": "https://i.scdn.co/image/ab67616100005174f7019a4ae65738627db5c56c",
+                        "width": 320
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Artist",
+                "profile": {
+                  "name": "Tritonal"
+                },
+                "uri": "spotify:artist:521qvhdobR0GzhvU6TFw76",
+                "visuals": {
+                  "avatarImage": {
+                    "sources": [
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab6761610000e5eb0e619558cf5dbfbeff85d883",
+                        "width": 640
+                      },
+                      {
+                        "height": 160,
+                        "url": "https://i.scdn.co/image/ab6761610000f1780e619558cf5dbfbeff85d883",
+                        "width": 160
+                      },
+                      {
+                        "height": 320,
+                        "url": "https://i.scdn.co/image/ab676161000051740e619558cf5dbfbeff85d883",
+                        "width": 320
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Artist",
+                "profile": {
+                  "name": "KAROL G"
+                },
+                "uri": "spotify:artist:790FomKkXshlbRYZFtlgla",
+                "visuals": {
+                  "avatarImage": {
+                    "sources": [
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab6761610000e5eb3869e286c9043f85e8e4bc06",
+                        "width": 640
+                      },
+                      {
+                        "height": 160,
+                        "url": "https://i.scdn.co/image/ab6761610000f1783869e286c9043f85e8e4bc06",
+                        "width": 160
+                      },
+                      {
+                        "height": 320,
+                        "url": "https://i.scdn.co/image/ab676161000051743869e286c9043f85e8e4bc06",
+                        "width": 320
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Artist",
+                "profile": {
+                  "name": "Ólafur Arnalds"
+                },
+                "uri": "spotify:artist:7E3BRXV9ZbCt5lQTCXMTia",
+                "visuals": {
+                  "avatarImage": {
+                    "sources": [
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab6761610000e5eb7d901cbff8cb882e7ba4e5f3",
+                        "width": 640
+                      },
+                      {
+                        "height": 160,
+                        "url": "https://i.scdn.co/image/ab6761610000f1787d901cbff8cb882e7ba4e5f3",
+                        "width": 160
+                      },
+                      {
+                        "height": 320,
+                        "url": "https://i.scdn.co/image/ab676161000051747d901cbff8cb882e7ba4e5f3",
+                        "width": 320
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "data": {
+                "__typename": "Artist",
+                "profile": {
+                  "name": "MA3IZ"
+                },
+                "uri": "spotify:artist:6T4HJ0ayzxLWDbktdiBe3l",
+                "visuals": {
+                  "avatarImage": {
+                    "sources": [
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab6761610000e5ebab5c7b7bba5829f78944c267",
+                        "width": 640
+                      },
+                      {
+                        "height": 160,
+                        "url": "https://i.scdn.co/image/ab6761610000f178ab5c7b7bba5829f78944c267",
+                        "width": 160
+                      },
+                      {
+                        "height": 320,
+                        "url": "https://i.scdn.co/image/ab67616100005174ab5c7b7bba5829f78944c267",
+                        "width": 320
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ],
+          "totalCount": 8
+        }
+      }
+    }
+  }
+}
