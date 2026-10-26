@@ -1,0 +1,270 @@
+{
+  "data": {
+    "episodeUnionV2": {
+      "__typename": "Episode",
+      "accessInfo": null,
+      "audio": {
+        "items": [
+          {
+            "url": "https://p.scdn.co/mp3-preview/e5bc2b51db8fa1948d61f27a28848c0a09e930eb"
+          },
+          {
+            "url": "https://p.scdn.co/mp3-preview/403d868c387bbf5c6d7b6df05e27a35437e86f35"
+          },
+          {
+            "url": "https://p.scdn.co/mp3-preview/9c2de5217027cd2a2c8eb73aaca96fec16c15ffe"
+          },
+          {
+            "url": "https://p.scdn.co/mp3-preview/06b77ccbb315eb0fb8a60289a33c85b999f381e1"
+          },
+          {
+            "url": "https://p.scdn.co/mp3-preview/dbcdc54a8676b38b02af5c7f4817c141f559349b"
+          },
+          {
+            "url": "https://p.scdn.co/mp3-preview/e47027d329c9c7d1d7b004b89e82d8f0ba9ddeb4"
+          }
+        ]
+      },
+      "contentInformation": null,
+      "contentRating": {
+        "label": "EXPLICIT"
+      },
+      "contentRatingsV2": {
+        "labels": [
+          "EXPLICIT"
+        ]
+      },
+      "contents": [],
+      "coverArt": {
+        "sources": [
+          {
+            "height": 64,
+            "url": "https://i.scdn.co/image/ab6765630000f68de3dfbd869a297cdc95fd1077",
+            "width": 64
+          },
+          {
+            "height": 300,
+            "url": "https://i.scdn.co/image/ab67656300005f1fe3dfbd869a297cdc95fd1077",
+            "width": 300
+          },
+          {
+            "height": 640,
+            "url": "https://i.scdn.co/image/ab6765630000ba8ae3dfbd869a297cdc95fd1077",
+            "width": 640
+          }
+        ]
+      },
+      "creator": null,
+      "description": "Kurt Metzger and Duncan Trussell are comedians and co-hosts of the \"Mystery Boys\" podcast. They also host their respective podcasts, \"The Derp with Kurp\" and \"The Duncan Trussell Family Hour.\"www.ymhstudios.com/mystery-boys-podcast/www.youtube.com/@duncantrussellfamilyhourwww.duncantrussell.comwww.youtube.com/@kurtmetzgercomedywww.kurtmetzgercomedy.com  Perplexity: Download the app or ask Perplexity anything at https://pplx.ai/rogan.  Get a free welcome kit with your first subscription of AG1 at https://drinkag1.com/joerogan  Use code JRE for 20% off your membership  Learn more about your ad choices. Visit podcastchoices.com/adchoices",
+      "duration": {
+        "totalMilliseconds": 9821140
+      },
+      "gatedEntityRelations": [],
+      "htmlDescription": "<p>Kurt Metzger and Duncan Trussell are comedians and co-hosts of the &#34;Mystery Boys&#34; podcast. They also host their respective podcasts, &#34;The Derp with Kurp&#34; and &#34;The Duncan Trussell Family Hour.&#34;<br />www.ymhstudios.com/mystery-boys-podcast/<br />www.youtube.com/&#64;duncantrussellfamilyhour<br />www.duncantrussell.com<br />www.youtube.com/&#64;kurtmetzgercomedy<br />www.kurtmetzgercomedy.com</p>\n<p><br /></p>\n<p>Perplexity: Download the app or ask Perplexity anything at <a href=\"https://pplx.ai/rogan\" rel=\"nofollow\">https://pplx.ai/rogan</a>.</p>\n<p><br /></p>\n<p>Get a free welcome kit with your first subscription of AG1 at <a href=\"https://drinkag1.com/joerogan\" rel=\"nofollow\">https://drinkag1.com/joerogan</a></p>\n<p><br /></p>\n<p>Use code JRE for 20% off your membership </p><p> </p><p>Learn more about your ad choices. Visit <a href=\"https://podcastchoices.com/adchoices\" rel=\"nofollow\">podcastchoices.com/adchoices</a></p>",
+      "id": "2rKMiQw2A58GL5ZHH8jfHo",
+      "mediaTypes": [
+        "AUDIO",
+        "VIDEO"
+      ],
+      "name": "#2570 - Mystery Boys",
+      "playability": {
+        "playable": true,
+        "reason": "PLAYABLE",
+        "unplayabilityReasons": []
+      },
+      "playedState": {
+        "playPositionMilliseconds": 0,
+        "state": "NOT_STARTED"
+      },
+      "podcastV2": {
+        "data": {
+          "__typename": "Podcast",
+          "coverArt": {
+            "sources": [
+              {
+                "height": 64,
+                "url": "https://i.scdn.co/image/ab6765630000f68de7c95712f4940a9bf439467e",
+                "width": 64
+              },
+              {
+                "height": 300,
+                "url": "https://i.scdn.co/image/ab67656300005f1fe7c95712f4940a9bf439467e",
+                "width": 300
+              },
+              {
+                "height": 640,
+                "url": "https://i.scdn.co/image/ab6765630000ba8ae7c95712f4940a9bf439467e",
+                "width": 640
+              }
+            ]
+          },
+          "name": "The Joe Rogan Experience",
+          "showTypes": [
+            "SHOW_TYPE_EXCLUSIVE"
+          ],
+          "trailerV2": null,
+          "uri": "spotify:show:4rOoJ6Egrf8K2IrywzwOMk",
+          "accessInfo": null
+        }
+      },
+      "previewPlayback": {
+        "audioPreview": {
+          "cdnUrl": "https://p.scdn.co/mp3-preview/65e7d11e09ef8338f6cf792207da2e9b4f556861.mp3"
+        }
+      },
+      "releaseDate": {
+        "isoString": "2026-10-23T17:00:00Z",
+        "precision": "MINUTE"
+      },
+      "restrictions": {
+        "paywallContent": false
+      },
+      "segments": {
+        "segments": {
+          "totalCount": 0
+        }
+      },
+      "transcripts": {
+        "items": [
+          {
+            "cdnUrl": "https://episode-transcripts.spotifycdn.com/1.0/spotify:transcript:0VZBdpm6ICp2xHnP9Le0yt",
+            "isStatic": false,
+            "language": "en-us",
+            "readAlongUrlV2": "https://spclient.wg.spotify.com/transcript-read-along/v2/episode/2rKMiQw2A58GL5ZHH8jfHo",
+            "uri": "spotify:transcript:0VZBdpm6ICp2xHnP9Le0yt"
+          }
+        ]
+      },
+      "type": "PODCAST_EPISODE",
+      "uri": "spotify:episode:2rKMiQw2A58GL5ZHH8jfHo",
+      "visualIdentity": {
+        "sixteenByNineCoverImage": {
+          "image": {
+            "data": {
+              "__typename": "ImageV2",
+              "sources": [
+                {
+                  "maxHeight": 720,
+                  "maxWidth": 1280,
+                  "url": "https://image-cdn-fa.spotifycdn.com/image/ab6772ab000030aeb1bc779505bae7d8f8daa997"
+                },
+                {
+                  "maxHeight": 360,
+                  "maxWidth": 640,
+                  "url": "https://image-cdn-fa.spotifycdn.com/image/ab6772ab0000e0e7b1bc779505bae7d8f8daa997"
+                }
+              ]
+            }
+          }
+        },
+        "squareCoverImage": {
+          "__typename": "VisualIdentityImage",
+          "extractedColorSet": {
+            "encoreBaseSetTextColor": {
+              "alpha": 255,
+              "blue": 110,
+              "green": 165,
+              "red": 255
+            },
+            "highContrast": {
+              "backgroundBase": {
+                "alpha": 255,
+                "blue": 0,
+                "green": 48,
+                "red": 145
+              },
+              "backgroundTintedBase": {
+                "alpha": 255,
+                "blue": 0,
+                "green": 9,
+                "red": 97
+              },
+              "textBase": {
+                "alpha": 255,
+                "blue": 255,
+                "green": 255,
+                "red": 255
+              },
+              "textBrightAccent": {
+                "alpha": 255,
+                "blue": 255,
+                "green": 255,
+                "red": 255
+              },
+              "textSubdued": {
+                "alpha": 255,
+                "blue": 154,
+                "green": 192,
+                "red": 255
+              }
+            },
+            "higherContrast": {
+              "backgroundBase": {
+                "alpha": 255,
+                "blue": 0,
+                "green": 10,
+                "red": 101
+              },
+              "backgroundTintedBase": {
+                "alpha": 255,
+                "blue": 40,
+                "green": 55,
+                "red": 144
+              },
+              "textBase": {
+                "alpha": 255,
+                "blue": 255,
+                "green": 255,
+                "red": 255
+              },
+              "textBrightAccent": {
+                "alpha": 255,
+                "blue": 96,
+                "green": 215,
+                "red": 30
+              },
+              "textSubdued": {
+                "alpha": 255,
+                "blue": 154,
+                "green": 192,
+                "red": 255
+              }
+            },
+            "minContrast": {
+              "backgroundBase": {
+                "alpha": 255,
+                "blue": 0,
+                "green": 111,
+                "red": 247
+              },
+              "backgroundTintedBase": {
+                "alpha": 255,
+                "blue": 0,
+                "green": 83,
+                "red": 217
+              },
+              "textBase": {
+                "alpha": 255,
+                "blue": 255,
+                "green": 255,
+                "red": 255
+              },
+              "textBrightAccent": {
+                "alpha": 255,
+                "blue": 255,
+                "green": 255,
+                "red": 255
+              },
+              "textSubdued": {
+                "alpha": 255,
+                "blue": 255,
+                "green": 255,
+                "red": 255
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
