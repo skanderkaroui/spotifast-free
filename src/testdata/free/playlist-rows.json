@@ -1,0 +1,341 @@
+{
+  "data": {
+    "playlistV2": {
+      "__typename": "Playlist",
+      "uri": "spotify:playlist:5cr4tchPl4yl1stF1xtur3",
+      "name": "Scratch",
+      "description": "",
+      "revisionId": "AAAAB3NjcmF0Y2hyZXZpc2lvbg==",
+      "ownerV2": {
+        "data": {
+          "__typename": "User",
+          "uri": "spotify:user:owner",
+          "username": "owner",
+          "name": "Owner"
+        }
+      },
+      "images": {
+        "items": []
+      },
+      "content": {
+        "__typename": "PlaylistItemsPage",
+        "items": [
+          {
+            "uid": "672589e2ee75cc997d41",
+            "addedAt": {
+              "isoString": "2026-10-16T19:40:09Z"
+            },
+            "itemV2": {
+              "__typename": "TrackResponseWrapper",
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "artists": {
+                    "items": [
+                      {
+                        "profile": {
+                          "name": "nissi"
+                        },
+                        "uri": "spotify:artist:6z7UEPFZV1gNP0xw9KCREB"
+                      },
+                      {
+                        "profile": {
+                          "name": "25Hzz"
+                        },
+                        "uri": "spotify:artist:6g9OMnaZV5nBjGjwxRHCjW"
+                      }
+                    ]
+                  },
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e02a7ea6f3acfa7ab99a9860254",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d00004851a7ea6f3acfa7ab99a9860254",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b273a7ea6f3acfa7ab99a9860254",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "date": {
+                    "isoString": "2026-08-28T00:00:00Z",
+                    "precision": "DAY"
+                  },
+                  "name": "Wyw my sweetie #JerseyClub",
+                  "uri": "spotify:album:14raNBGwPRRL8PbQXkMYmt"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "nissi"
+                      },
+                      "uri": "spotify:artist:6z7UEPFZV1gNP0xw9KCREB"
+                    },
+                    {
+                      "profile": {
+                        "name": "25Hzz"
+                      },
+                      "uri": "spotify:artist:6g9OMnaZV5nBjGjwxRHCjW"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "__typename": "TrackAudioAssociationPage",
+                    "items": []
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "discNumber": 1,
+                "trackDuration": {
+                  "totalMilliseconds": 94513
+                },
+                "mediaType": "AUDIO",
+                "name": "Wyw my sweetie #JerseyClub - Slowed",
+                "playability": {
+                  "playable": true,
+                  "reason": "PLAYABLE"
+                },
+                "playcount": "24324624",
+                "playlistAudioAttributes": {
+                  "bpm": 123.25929260253906,
+                  "key": {
+                    "camelotKey": {
+                      "color": "#ffadb9",
+                      "value": "6A"
+                    },
+                    "key": "G",
+                    "mode": "MODE_MINOR"
+                  }
+                },
+                "trackNumber": 2,
+                "uri": "spotify:track:3GWeTr5MQe85ybRi9nmCIc"
+              }
+            }
+          },
+          {
+            "uid": "aa73ce749d66b5a67e2e",
+            "addedAt": {
+              "isoString": "2026-08-17T08:05:57Z"
+            },
+            "itemV2": {
+              "__typename": "TrackResponseWrapper",
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "artists": {
+                    "items": [
+                      {
+                        "profile": {
+                          "name": "Tritonal"
+                        },
+                        "uri": "spotify:artist:521qvhdobR0GzhvU6TFw76"
+                      }
+                    ]
+                  },
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/cd0dabcf9c627c40444081e09213a0017ebdf567",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/bd47614bea1e4aaab84beed6426bf73e57a8b910",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/0cd0333511252003372c21bd1ea6b7a5fc1c3ff4",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "date": {
+                    "isoString": "2016-07-08T00:00:00Z",
+                    "precision": "DAY"
+                  },
+                  "name": "Getaway (Remixes)",
+                  "uri": "spotify:album:1pCddf4xbF2oOYFXTOZzDS"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Tritonal"
+                      },
+                      "uri": "spotify:artist:521qvhdobR0GzhvU6TFw76"
+                    },
+                    {
+                      "profile": {
+                        "name": "Angel Taylor"
+                      },
+                      "uri": "spotify:artist:6D5xkX8ecb4bGccXqtDI63"
+                    },
+                    {
+                      "profile": {
+                        "name": "Koven"
+                      },
+                      "uri": "spotify:artist:3UCbp6D1lvILlxRJT9LnFa"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "__typename": "TrackAudioAssociationPage",
+                    "items": []
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "discNumber": 1,
+                "trackDuration": {
+                  "totalMilliseconds": 203720
+                },
+                "mediaType": "AUDIO",
+                "name": "Getaway - Koven Remix",
+                "playability": {
+                  "playable": true,
+                  "reason": "PLAYABLE"
+                },
+                "playcount": "53599986",
+                "playlistAudioAttributes": {
+                  "bpm": 172.001,
+                  "key": {
+                    "camelotKey": {
+                      "color": "#89e3f9",
+                      "value": "11A"
+                    },
+                    "key": "F#",
+                    "mode": "MODE_MINOR"
+                  }
+                },
+                "trackNumber": 2,
+                "uri": "spotify:track:10EpXLXKHmNSVKvX7A5hg8"
+              }
+            }
+          },
+          {
+            "uid": "917b0d1eb385902afabd",
+            "addedAt": {
+              "isoString": "2026-07-18T16:08:16Z"
+            },
+            "itemV2": {
+              "__typename": "TrackResponseWrapper",
+              "data": {
+                "__typename": "Track",
+                "albumOfTrack": {
+                  "artists": {
+                    "items": [
+                      {
+                        "profile": {
+                          "name": "Nora En Pure"
+                        },
+                        "uri": "spotify:artist:24DO0PijjITGIEWsO8XaPs"
+                      }
+                    ]
+                  },
+                  "coverArt": {
+                    "sources": [
+                      {
+                        "height": 300,
+                        "url": "https://i.scdn.co/image/ab67616d00001e028c90c14abf20876a076a2810",
+                        "width": 300
+                      },
+                      {
+                        "height": 64,
+                        "url": "https://i.scdn.co/image/ab67616d000048518c90c14abf20876a076a2810",
+                        "width": 64
+                      },
+                      {
+                        "height": 640,
+                        "url": "https://i.scdn.co/image/ab67616d0000b2738c90c14abf20876a076a2810",
+                        "width": 640
+                      }
+                    ]
+                  },
+                  "date": {
+                    "isoString": "2016-04-25T00:00:00Z",
+                    "precision": "DAY"
+                  },
+                  "name": "Lake Arrowhead EP",
+                  "uri": "spotify:album:591iF8ubwnvPy7Q60V9S9O"
+                },
+                "artists": {
+                  "items": [
+                    {
+                      "profile": {
+                        "name": "Nora En Pure"
+                      },
+                      "uri": "spotify:artist:24DO0PijjITGIEWsO8XaPs"
+                    }
+                  ]
+                },
+                "associationsV3": {
+                  "audioAssociations": {
+                    "__typename": "TrackAudioAssociationPage",
+                    "items": []
+                  },
+                  "videoAssociations": {
+                    "totalCount": 0
+                  }
+                },
+                "contentRating": {
+                  "label": "NONE"
+                },
+                "discNumber": 1,
+                "trackDuration": {
+                  "totalMilliseconds": 215655
+                },
+                "mediaType": "AUDIO",
+                "name": "Lake Arrowhead - Radio Mix",
+                "playability": {
+                  "playable": true,
+                  "reason": "PLAYABLE"
+                },
+                "playcount": "18151847",
+                "playlistAudioAttributes": {
+                  "bpm": 122.0,
+                  "key": {
+                    "camelotKey": {
+                      "color": "#fec0a3",
+                      "value": "5A"
+                    },
+                    "key": "C",
+                    "mode": "MODE_MINOR"
+                  }
+                },
+                "trackNumber": 1,
+                "uri": "spotify:track:0HKo7Vc6oePilkVcHcFr4v"
+              }
+            }
+          }
+        ],
+        "pagingInfo": {
+          "limit": 25,
+          "offset": 0
+        },
+        "totalCount": 3
+      }
+    }
+  }
+}

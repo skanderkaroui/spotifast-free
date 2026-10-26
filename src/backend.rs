@@ -5933,7 +5933,10 @@ async fn handle_free(
             if let Some(response) = crate::free_podcasts::handle(reader, account, request).await {
                 return Some(response);
             }
-            return crate::free_player::handle(reader, account, request).await;
+            if let Some(response) = crate::free_player::handle(reader, account, request).await {
+                return Some(response);
+            }
+            return crate::free_playlist_edits::handle(reader, account, request).await;
         }
     })
 }

@@ -427,6 +427,35 @@ fn query_reply(event: &serde_json::Value) -> Option<(u64, QueryReply)> {
     Some((id, reply))
 }
 
+/// A helper for tests that answers each query in turn with the next of
+/// `answers` (`(status, body)`), and writes every query it was sent to
+/// `log`, one JSON object per line, as the page would have sent it.
+#[cfg(test)]
+pub(crate) fn scripted(answers: &[(u16, String)], log: &std::path::Path) -> WebPlayer {
+    let dir = log.parent().expect("the log has a folder");
+    let answers_path = dir.join("answers.jsonl");
+    let lines: Vec<String> = answers
+        .iter()
+        .map(|(status, body)| serde_json::json!({"status": status, "body": body}).to_string())
+        .collect();
+    std::fs::write(&answers_path, lines.join("\n")).unwrap();
+    let script = r#"
+import json, sys
+answers = [json.loads(l) for l in open(sys.argv[1]) if l.strip()]
+log = open(sys.argv[2], 'a')
+for line in sys.stdin:
+    q = json.loads(line)
+    if q.get('cmd') != 'query':
+        continue
+    log.write(json.dumps(q['query'], sort_keys=True) + '\n'); log.flush()
+    a = answers.pop(0) if answers else {'status': 599, 'body': ''}
+    print(json.dumps({'event': 'query', 'id': q['id'], 'status': a['status'], 'body': a['body']}), flush=True)
+"#;
+    let mut command = Command::new("python3");
+    command.arg("-c").arg(script).arg(&answers_path).arg(log);
+    WebPlayer::spawn(command, Arc::new(|_| {}), Arc::new(|_| {}), None).unwrap()
+}
+
 /// Sends queries of Spotify's web player API through the helper's page,
 /// from any task (`WebPlayer::reader`).
 #[derive(Clone)]
