@@ -838,6 +838,203 @@ mod tests {
         assert_eq!(sent, [published_query("owner", &playlist_uri(ID), false)]);
     }
 
+    /// Live, on the real account: makes the scratch playlist, adds, moves
+    /// and removes songs in it, renames it and deletes it, then checks the
+    /// library lists exactly what it listed before. Touches nothing else.
+    #[test]
+    #[ignore = "needs the helper signed in to Spotify; writes a scratch playlist"]
+    fn live_scratch_playlist_round_trip() {
+        const SCRATCH: &str = "Spotifast Free test (safe to delete)";
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let player = crate::web_player::WebPlayer::start(
+            std::sync::Arc::new(|_| {}),
+            std::sync::Arc::new(|_| {}),
+            None,
+        )
+        .unwrap();
+        let reader = player.reader();
+        let account = runtime.block_on(async {
+            let profile = ask(&reader, free::profile_query()).await?;
+            let plan = ask(&reader, free::account_query()).await?;
+            free::user(&profile, &plan)
+        });
+        let account = account.expect("the account").id;
+        let library = |reader: &crate::web_player::Reader| -> Vec<(String, String)> {
+            let mut all = Vec::new();
+            let mut offset = 0;
+            loop {
+                let body = runtime
+                    .block_on(ask(reader, free::library_query(offset, 50)))
+                    .unwrap();
+                let page = free::library_playlists(&body, offset).unwrap();
+                all.extend(page.items.iter().map(|p| (p.id.clone(), p.name.clone())));
+                match page.next {
+                    Some(_) => offset += page.limit,
+                    None => return all,
+                }
+            }
+        };
+        let before = library(&reader);
+        assert!(
+            !before
+                .iter()
+                .any(|(_, name)| name.starts_with("Spotifast Free test")),
+            "a scratch playlist is already there: {before:?}"
+        );
+        eprintln!("library before: {} playlists", before.len());
+
+        let created = runtime.block_on(handle(
+            &reader,
+            Some(&account),
+            &ApiRequest::CreatePlaylist {
+                name: SCRATCH.into(),
+                public: false,
+                description: String::new(),
+            },
+        ));
+        let Some(ApiResponse::PlaylistCreated(Ok(scratch))) = created else {
+            player.shutdown();
+            panic!("create: {created:?}");
+        };
+        let id = scratch.id.clone();
+        eprintln!("created {id}");
+        let steps = || -> Result<(), String> {
+            let order = || -> Result<Vec<String>, String> {
+                let list = runtime
+                    .block_on(rows(&reader, &id))
+                    .map_err(|e| e.to_string())?;
+                Ok(list.rows.into_iter().map(|row| row.uri).collect())
+            };
+            let change = |request: ApiRequest| -> Result<Option<String>, String> {
+                match runtime.block_on(handle(&reader, Some(&account), &request)) {
+                    Some(ApiResponse::PlaylistItemsChanged { result, .. }) => {
+                        result.map_err(|e| e.to_string())
+                    }
+                    other => Err(format!("{other:?}")),
+                }
+            };
+            let (a, b, c, d) = (A, B, C, "spotify:track:0DiWol3AO6WpXZgp0goxAV");
+            let check = |want: &[&str]| -> Result<(), String> {
+                let got = order()?;
+                (got == want)
+                    .then_some(())
+                    .ok_or(format!("rows {got:?}, wanted {want:?}"))
+            };
+            let snapshot = change(ApiRequest::AddToPlaylist {
+                playlist_id: id.clone(),
+                playlist_name: SCRATCH.into(),
+                uris: vec![a.into(), b.into(), c.into()],
+                position: None,
+            })?;
+            eprintln!("added 3, snapshot {snapshot:?}");
+            if snapshot.is_none() {
+                return Err("no snapshot after adding".into());
+            }
+            check(&[a, b, c])?;
+            change(ApiRequest::AddToPlaylist {
+                playlist_id: id.clone(),
+                playlist_name: SCRATCH.into(),
+                uris: vec![d.into()],
+                position: Some(1),
+            })?;
+            check(&[a, d, b, c])?;
+            eprintln!("added at 1");
+            match runtime.block_on(handle(
+                &reader,
+                Some(&account),
+                &ApiRequest::CheckPlaylistDuplicates {
+                    playlist_id: id.clone(),
+                    playlist_name: SCRATCH.into(),
+                    items: vec![PlayableItem::Track(Track {
+                        uri: b.into(),
+                        ..Track::default()
+                    })],
+                    position: None,
+                },
+            )) {
+                Some(ApiResponse::PlaylistDuplicatesChecked {
+                    result: Ok(found), ..
+                }) if found == [b] => {}
+                other => return Err(format!("duplicates: {other:?}")),
+            }
+            change(ApiRequest::ReorderPlaylist {
+                playlist_id: id.clone(),
+                range_start: 3,
+                insert_before: 0,
+                snapshot_id: None,
+            })?;
+            check(&[c, a, d, b])?;
+            eprintln!("moved");
+            change(ApiRequest::RemoveFromPlaylist {
+                playlist_id: id.clone(),
+                uris: vec![d.into()],
+                snapshot_id: None,
+            })?;
+            check(&[c, a, b])?;
+            runtime
+                .block_on(remove_rows(
+                    &reader,
+                    &id,
+                    &[RemovedRow {
+                        uri: a.into(),
+                        position: 1,
+                        copy: 0,
+                    }],
+                ))
+                .map_err(|e| e.to_string())?;
+            check(&[c, b])?;
+            eprintln!("removed");
+            match runtime.block_on(handle(
+                &reader,
+                Some(&account),
+                &ApiRequest::UpdatePlaylist {
+                    id: id.clone(),
+                    name: Some(format!("{SCRATCH} renamed")),
+                    description: Some("Made by a Spotifast test.".into()),
+                    public: None,
+                },
+            )) {
+                Some(ApiResponse::PlaylistUpdated { result: Ok(()), .. }) => {}
+                other => return Err(format!("update: {other:?}")),
+            }
+            let body = runtime
+                .block_on(ask(&reader, free::playlist_query(&playlist_uri(&id), 0, 1)))
+                .map_err(|e| e.to_string())?;
+            let renamed = free::playlist(&body).map_err(|e| e.to_string())?;
+            if renamed.name != format!("{SCRATCH} renamed")
+                || renamed.description.as_deref() != Some("Made by a Spotifast test.")
+            {
+                return Err(format!(
+                    "renamed to {:?} / {:?}",
+                    renamed.name, renamed.description
+                ));
+            }
+            eprintln!("renamed");
+            Ok(())
+        };
+        let outcome = steps();
+        // Always: empty and delete the scratch playlist, whatever failed.
+        let emptied = runtime.block_on(async {
+            let list = rows(&reader, &id).await?;
+            let uids: Vec<String> = list.rows.into_iter().map(|row| row.uid).collect();
+            if !uids.is_empty() {
+                ask(&reader, remove_query(&id, &uids)).await?;
+            }
+            Ok::<_, ApiError>(())
+        });
+        let deleted = runtime.block_on(delete_own(&reader, &account, &id));
+        let after = library(&reader);
+        player.shutdown();
+        eprintln!("library after: {} playlists", after.len());
+        outcome.unwrap();
+        emptied.unwrap();
+        deleted.unwrap();
+        assert_eq!(after, before, "the library is back as it was");
+    }
+
     /// Picked rows are removed by their own uid, leaving the song's other
     /// copies, and a row no longer there removes nothing.
     #[test]
