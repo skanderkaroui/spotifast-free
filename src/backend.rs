@@ -2331,7 +2331,7 @@ impl Worker {
                     config,
                     client_id,
                 } => self.change_proxy(request, config, Some(client_id)),
-                Command::SignInFree => self.sign_in_free(),
+                Command::SignInFree => self.sign_in_free_clicked(),
                 #[cfg(target_os = "macos")]
                 Command::FreeSignedIn(result) => self.on_free_signed_in(*result),
                 #[cfg(target_os = "macos")]
@@ -4073,6 +4073,16 @@ impl Worker {
     /// Signs in on Spotify's own page in the Free helper. The helper shows
     /// Spotify's sign-in when its page is signed out, and the account is
     /// read once the page reports it signed in (`on_free_account`).
+    /// The user's own click on Sign in: as `sign_in_free`, and Spotify's
+    /// sign-in comes to the front, also when the page reported itself
+    /// signed out at launch, behind the app. A sign-in restored at launch
+    /// never asks for it.
+    fn sign_in_free_clicked(&mut self) {
+        self.sign_in_free();
+        #[cfg(target_os = "macos")]
+        if let Some(_player) = self.web_player.as_ref() {}
+    }
+
     fn sign_in_free(&mut self) {
         #[cfg(target_os = "macos")]
         {
@@ -9188,6 +9198,57 @@ mod authorization_tests {
             crate::web_player::saved_free_sign_in(&worker.dirs.volume_dir()).is_none(),
             "signing out forgets it"
         );
+    }
+
+    /// Live, 2026-10-26: clicking Sign in opened Spotify's sign-in behind
+    /// the app, where nobody saw it. The click asks the helper to bring it
+    /// to the front; a sign-in restored at launch does not.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn clicking_sign_in_brings_spotifys_sign_in_to_the_front() {
+        let (runtime, mut worker, _events) = worker("free-sign-in-front");
+        let _entered = runtime.enter();
+        let dir = worker.dirs.volume_dir();
+        std::fs::create_dir_all(&dir).unwrap();
+        let log = dir.join("helper.jsonl");
+        let lines = |log: &std::path::Path| -> Vec<String> {
+            std::fs::read_to_string(log)
+                .unwrap_or_default()
+                .lines()
+                .map(str::to_owned)
+                .collect()
+        };
+        let helper = |log: &std::path::Path| {
+            let mut command = std::process::Command::new("sh");
+            command
+                .arg("-c")
+                .arg(r#"while read line; do printf '%s\n' "$line" >> "$0"; done"#)
+                .arg(log);
+            crate::web_player::WebPlayer::spawn(command, Arc::new(|_| {}), Arc::new(|_| {}), None)
+                .unwrap()
+        };
+
+        worker.web_player = Some(helper(&log));
+        worker.sign_in_free();
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        assert!(
+            !lines(&log).iter().any(|line| line.contains("show-sign-in")),
+            "a restored sign-in stays out of the way: {:?}",
+            lines(&log)
+        );
+
+        worker.sign_in_free_clicked();
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        assert!(
+            lines(&log)
+                .iter()
+                .any(|line| line == r#"{"cmd":"show-sign-in"}"#),
+            "{:?}",
+            lines(&log)
+        );
+        if let Some(player) = worker.web_player.take() {
+            player.shutdown();
+        }
     }
 
     /// Live, 2026-10-26: the helper's page left for Spotify's login, so the

@@ -162,6 +162,9 @@ pub enum Unsupported {
     NotOffered(&'static str),
 }
 
+/// The helper app's bundle identifier, as its Info.plist names it.
+pub const HELPER_BUNDLE_ID: &str = "io.github.skanderkaroui.SpotifastFree.Helper";
+
 impl WebPlayer {
     /// The helper app's executable: `SPOTIFAST_PLAYBACK_HELPER`, else next to
     /// this executable inside the app bundle.
@@ -193,7 +196,7 @@ impl WebPlayer {
         Self::spawn(command, notify, on_account, ad_log)
     }
 
-    fn spawn(
+    pub(crate) fn spawn(
         mut command: Command,
         notify: Notify,
         on_account: OnAccount,
@@ -378,6 +381,13 @@ impl WebPlayer {
     /// Whether the helper process is still running.
     pub fn running(&mut self) -> bool {
         matches!(self.child.try_wait(), Ok(None))
+    }
+
+    /// Brings Spotify's sign-in window to the front, for the user's own
+    /// click on Sign in (the app yields its activation first).
+    pub fn show_sign_in(&self) {
+        let mut stdin = self.stdin.lock().unwrap_or_else(|p| p.into_inner());
+        let _ = writeln!(stdin, r#"{{"cmd":"show-sign-in"}}"#).and_then(|()| stdin.flush());
     }
 
     pub fn shutdown(mut self) {
@@ -1080,6 +1090,19 @@ mod tests {
             [Account::SignedOut, Account::SignedIn]
         );
         player.shutdown();
+    }
+
+    /// The app hands its activation to the helper by this identifier, so it
+    /// must be the one the helper's Info.plist gives it.
+    #[test]
+    fn the_helper_bundle_id_is_the_one_its_info_plist_names() {
+        let plist = include_str!("../experiments/macos-playback-host/Info.plist");
+        assert!(
+            plist.contains(&format!(
+                "<key>CFBundleIdentifier</key><string>{HELPER_BUNDLE_ID}</string>"
+            )),
+            "{plist}"
+        );
     }
 
     /// A helper that ignores `quit` (a page that never loaded, a hang) is
