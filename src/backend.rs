@@ -5181,7 +5181,7 @@ impl Worker {
                         let name = format!("{request:?}");
                         let name = name.split([' ', '(', '{']).next().unwrap_or_default().to_owned();
                         if let Some(response) = handle_free(reader, account.as_deref(), &request).await {
-                            log::info!("free read {name}: web player");
+                            log::debug!("free read {name}: web player");
                             return (response, Vec::new());
                         }
                         log::info!("free read {name}: not read through the web player");
