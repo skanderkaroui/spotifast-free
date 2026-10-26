@@ -17,7 +17,8 @@ use crate::api::models::{Album, ArtistRef, Image};
 use crate::http::Http;
 
 const ENDPOINT: &str = "https://api-partner.spotify.com/pathfinder/v2/query";
-pub(crate) const QUERY_HASH: &str = "d889c8c936ab192af8ced595427f5ba2acdf63478fdc0a181c8d477f8322630e";
+pub(crate) const QUERY_HASH: &str =
+    "d889c8c936ab192af8ced595427f5ba2acdf63478fdc0a181c8d477f8322630e";
 const TIMEOUT: Duration = Duration::from_secs(30);
 
 /// The most releases the shelf and its page hold, as many as the feed's

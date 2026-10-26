@@ -72,7 +72,6 @@ pub async fn handle(
         let pending = reader.query(&query);
         async move { free::answer(pending.await) }
     };
-    let _ = std::marker::PhantomData::<Album>;
     Some(match request {
         ApiRequest::TopArtists { generation } => ApiResponse::TopArtists {
             generation: *generation,
@@ -108,12 +107,78 @@ pub async fn handle(
                 .iter()
                 .map(|id| read(recommender_query(&format!("spotify:track:{id}"), 10)));
             let answers = futures_join(reads).await;
-            let found: Vec<Value> = answers.iter().filter_map(|a| a.as_ref().ok()).cloned().collect();
+            let found: Vec<Value> = answers
+                .iter()
+                .filter_map(|a| a.as_ref().ok())
+                .cloned()
+                .collect();
             ApiResponse::Recommendations {
                 generation: *generation,
                 result: match answers.into_iter().find_map(Result::err) {
                     Some(error) if found.is_empty() => Err(error),
                     _ => Ok(recommended(&found, seed_tracks, 20)),
+                },
+            }
+        }
+        ApiRequest::NewReleases { generation } => ApiResponse::NewReleases {
+            generation: *generation,
+            result: async {
+                let feed = read(feed_query()).await?;
+                if !crate::new_releases::parse(&feed)?.is_empty() {
+                    return new_releases(&feed, &[]);
+                }
+                let artists = free::followed_artists(
+                    &read(free::followed_artists_query(
+                        0,
+                        crate::new_releases::FALLBACK_ARTISTS as u32,
+                    ))
+                    .await?,
+                    0,
+                )?
+                .items;
+                let pages = futures_join(
+                    artists
+                        .iter()
+                        .map(|artist| read(free::discography_query(&artist.uri, 0, 10))),
+                )
+                .await;
+                let found: Vec<Value> = pages
+                    .iter()
+                    .filter_map(|p| p.as_ref().ok())
+                    .cloned()
+                    .collect();
+                match pages.into_iter().find_map(Result::err) {
+                    Some(error) if found.is_empty() => Err(error),
+                    _ => new_releases(&feed, &found),
+                }
+            }
+            .await,
+        },
+        ApiRequest::NewReleaseTracks { albums, generation } => {
+            let answers = futures_join(
+                albums
+                    .iter()
+                    .map(|album| read(free::album_query(&album.uri, 0, 50))),
+            )
+            .await;
+            let mut failure = None;
+            let found: Vec<(Album, Value)> = albums
+                .iter()
+                .cloned()
+                .zip(answers)
+                .filter_map(|(album, answer)| match answer {
+                    Ok(body) => Some((album, body)),
+                    Err(error) => {
+                        failure.get_or_insert(error);
+                        None
+                    }
+                })
+                .collect();
+            ApiResponse::NewReleaseTracks {
+                generation: *generation,
+                result: match failure {
+                    Some(error) if found.is_empty() => Err(error),
+                    _ => Ok(release_tracks(&found)),
                 },
             }
         }
@@ -260,14 +325,42 @@ mod recommendation_tests {
 /// as it is for an account with few follows, the latest releases of the
 /// followed artists from their discographies.
 pub fn new_releases(feed: &Value, discographies: &[Value]) -> Result<Vec<Album>, ApiError> {
-    let _ = (feed, discographies);
-    Ok(Vec::new())
+    let albums = crate::new_releases::parse(feed)?;
+    if !albums.is_empty() {
+        return Ok(albums);
+    }
+    let pages = discographies
+        .iter()
+        .filter_map(|page| free::discography(page, 0).ok())
+        .map(|page| page.items)
+        .collect();
+    Ok(crate::new_releases::merge_artist_releases(pages))
+}
+
+/// The What's New feed's releases, as the web player asks for them.
+pub fn feed_query() -> Value {
+    free::persisted(
+        "queryWhatsNewFeed",
+        crate::new_releases::QUERY_HASH,
+        json!({
+            "offset": 0, "limit": crate::new_releases::LIMIT, "onlyUnPlayedItems": false,
+            "includedContentTypes": ["ALBUM"], "includeEpisodeContentRatingsV2": false,
+        }),
+    )
 }
 
 /// The songs of these releases, each with its release as the album.
 pub fn release_tracks(answers: &[(Album, Value)]) -> Vec<Track> {
-    let _ = answers;
-    Vec::new()
+    answers
+        .iter()
+        .filter_map(|(release, body)| Some((release, free::album(body, 0).ok()?.tracks?)))
+        .flat_map(|(release, page)| {
+            page.items.into_iter().map(move |mut song| {
+                song.album = Some(release.clone());
+                song
+            })
+        })
+        .collect()
 }
 
 #[cfg(test)]
