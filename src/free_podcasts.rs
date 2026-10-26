@@ -6,7 +6,9 @@
 use serde_json::{Value, json};
 
 use crate::api::ApiError;
-use crate::api::models::{Episode, ExternalUrls, Image, Page, ResumePoint, Show};
+use crate::api::models::{
+    Episode, ExternalUrls, Image, Page, ResumePoint, SavedEpisode, SavedShow, Show,
+};
 use crate::backend::{ApiRequest, ApiResponse};
 
 fn persisted(operation: &str, hash: &str, variables: Value) -> Value {
@@ -183,6 +185,48 @@ pub fn episode(body: &Value) -> Result<Episode, ApiError> {
         .ok_or_else(|| ApiError::Decode("Spotify sent no episode".into()))
 }
 
+/// One of the account's collections, newest first: `show` for its saved
+/// podcasts, `listenlater` for Your Episodes. The page sends it to
+/// `collection/v2/paging`.
+pub fn collection_query(username: &str, set: &str) -> Value {
+    json!({"collection": {"username": username, "set": set, "limit": 10_000}})
+}
+
+/// The details of up to 50 episodes, by URI.
+pub fn episodes_query(uris: &[String]) -> Value {
+    persisted(
+        "decorateContextEpisodesOrChapters",
+        "383de00240775c39a6afe0b1055dc562b2a3930894201f9762f3fc32a74971c7",
+        json!({"uris": uris}),
+    )
+}
+
+/// The collection's rows of one kind (`spotify:show:`), newest first, with
+/// when each was saved.
+pub fn saved_rows(_body: &Value, _prefix: &str) -> Vec<(String, Option<String>)> {
+    Vec::new()
+}
+
+/// A page of Your Episodes: the saved episodes at `offset`, with their
+/// details.
+pub fn saved_episodes(
+    _saved: &[(String, Option<String>)],
+    _details: &Value,
+    _offset: u32,
+) -> Page<SavedEpisode> {
+    Page::default()
+}
+
+/// A page of saved podcasts: the rows at `offset`, each with its own page's
+/// answer, in the same order.
+pub fn saved_shows(
+    _saved: &[(String, Option<String>)],
+    _pages: &[Value],
+    _offset: u32,
+) -> Page<SavedShow> {
+    Page::default()
+}
+
 /// The newest episodes Home lists per saved podcast.
 const HOME_EPISODES_PER_SHOW: u32 = 5;
 
@@ -314,6 +358,57 @@ mod tests {
         let show = episode.show.unwrap();
         assert_eq!(show.id, "4rOoJ6Egrf8K2IrywzwOMk");
         assert_eq!(show.publisher, "", "the episode's answer has no publisher");
+    }
+
+    /// Your Episodes: the saved episodes in the order saved, each with its
+    /// podcast, and songs or podcasts among the rows left out.
+    #[test]
+    fn your_episodes_page_through_the_saved_episodes() {
+        let collection = json!({"items": [
+            {"uri": "spotify:episode:2rKMiQw2A58GL5ZHH8jfHo", "added_at": "1700000000"},
+            {"uri": "spotify:track:x", "added_at": "1700000001"},
+        ]});
+        let saved = saved_rows(&collection, "spotify:episode:");
+        assert_eq!(saved.len(), 1);
+        assert_eq!(saved[0].1.as_deref(), Some("2023-11-14T22:13:20Z"));
+        let page = saved_episodes(
+            &saved,
+            &body(include_str!("testdata/free/episodes.json")),
+            0,
+        );
+        assert_eq!(page.total, 1);
+        assert_eq!(page.next, None);
+        let episode = &page.items[0].episode;
+        assert_eq!(episode.name, "#2570 - Mystery Boys");
+        assert_eq!(episode.id, "2rKMiQw2A58GL5ZHH8jfHo");
+        assert_eq!(episode.duration_ms, 9_821_140);
+        let show = episode.show.as_ref().unwrap();
+        assert_eq!(show.publisher, "Joe Rogan");
+        assert_eq!(
+            page.items[0].added_at.as_deref(),
+            Some("2023-11-14T22:13:20Z")
+        );
+        assert!(saved_episodes(&saved, &json!(null), 50).items.is_empty());
+    }
+
+    /// Saved podcasts: each saved show read from its own page, in the order
+    /// saved; a show whose page did not answer is left out.
+    #[test]
+    fn saved_podcasts_read_from_their_pages() {
+        let collection = json!({"items": [
+            {"uri": "spotify:show:4rOoJ6Egrf8K2IrywzwOMk", "added_at": "1700000000"},
+            {"uri": "spotify:show:gone", "added_at": "1600000000"},
+        ]});
+        let saved = saved_rows(&collection, "spotify:show:");
+        let page = saved_shows(
+            &saved,
+            &[body(include_str!("testdata/free/show.json")), json!(null)],
+            0,
+        );
+        assert_eq!(page.total, 2);
+        assert_eq!(page.items.len(), 1);
+        assert_eq!(page.items[0].show.name, "The Joe Rogan Experience");
+        assert!(page.items[0].added_at.is_some());
     }
 
     /// Where an episode was left: started, finished, or not begun.
