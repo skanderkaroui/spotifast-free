@@ -4080,7 +4080,9 @@ impl Worker {
     fn sign_in_free_clicked(&mut self) {
         self.sign_in_free();
         #[cfg(target_os = "macos")]
-        if let Some(_player) = self.web_player.as_ref() {}
+        if let Some(player) = self.web_player.as_ref() {
+            player.show_sign_in();
+        }
     }
 
     fn sign_in_free(&mut self) {
