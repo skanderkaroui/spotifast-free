@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Spotifast\n"
 "Report-Msgid-Bugs-To: https://github.com/crmne/spotifast/issues/new?"
 "template=translation.yml\n"
-"POT-Creation-Date: 2026-10-26 10:32+0100\n"
+"POT-Creation-Date: 2026-10-26 11:23+0100\n"
 "PO-Revision-Date: 2026-09-09 13:30+0000\n"
 "Last-Translator: Spotifast contributors\n"
 "Language-Team: Traditional Chinese\n"
@@ -656,7 +656,7 @@ msgstr "網路連線錯誤。請檢查連線。"
 msgid "Cut"
 msgstr "剪下"
 
-#: src/ui/widgets.rs:3171 src/ui/login.rs:551
+#: src/ui/widgets.rs:3171 src/ui/login.rs:547
 msgid "Copy"
 msgstr "複製"
 
@@ -1280,7 +1280,7 @@ msgstr "Spotify Free，本機播放需要 Premium"
 msgid "Connected as {username}"
 msgstr "已以 {username} 身分連線"
 
-#: src/ui/settings.rs:537 src/ui/login.rs:382
+#: src/ui/settings.rs:537 src/ui/login.rs:378
 msgid "Client ID"
 msgstr "用戶端 ID"
 
@@ -1712,7 +1712,7 @@ msgstr ""
 "「關閉」會忽略環境變數。「系統」會使用環境變數，在 macOS 和 Windows 上還會使"
 "用作業系統的 Proxy。"
 
-#: src/ui/settings.rs:1663 src/ui/login.rs:635
+#: src/ui/settings.rs:1663 src/ui/login.rs:631
 msgid "Apply settings"
 msgstr "套用設定"
 
@@ -2883,19 +2883,11 @@ msgstr ""
 "如果 Spotify 顯示「Invalid redirect URI」，請將 {uri} 原樣新增到你的應用程"
 "式，儲存後重新登入。"
 
-#: src/ui/login.rs:289
-msgid "Sign in with Spotify Free"
-msgstr "使用 Spotify Free 登入"
-
-#: src/ui/login.rs:303
+#: src/ui/login.rs:302
 msgid "Sign in with Spotify"
 msgstr "使用 Spotify 登入"
 
-#: src/ui/login.rs:315
-msgid "Sign in through your browser. Spotifast never sees your password."
-msgstr "透過瀏覽器登入。Spotifast 永遠不會看到你的密碼。"
-
-#: src/ui/login.rs:320
+#: src/ui/login.rs:317
 msgid ""
 "Sign in through your browser. Spotifast never sees your password. Local "
 "playback needs Spotify Premium."
@@ -2903,23 +2895,23 @@ msgstr ""
 "透過瀏覽器登入。Spotifast 永遠不會看到你的密碼。本機播放需要 Spotify "
 "Premium。"
 
-#: src/ui/login.rs:330
+#: src/ui/login.rs:326
 msgid "How to set up your Spotify app"
 msgstr "如何設定你的 Spotify 應用程式"
 
-#: src/ui/login.rs:350
+#: src/ui/login.rs:346
 msgid "Proxy Settings"
 msgstr "Proxy 設定"
 
-#: src/ui/login.rs:400
+#: src/ui/login.rs:396
 msgid "A Client ID is 32 letters and digits. Copy it from your app's page."
 msgstr "用戶端 ID 由 32 個字母和數字組成。請從你的應用程式頁面複製。"
 
-#: src/ui/login.rs:452
+#: src/ui/login.rs:448
 msgid "Set up your Spotify app"
 msgstr "設定你的 Spotify 應用程式"
 
-#: src/ui/login.rs:460
+#: src/ui/login.rs:456
 msgid ""
 "Spotifast signs in through your own free Spotify app. Spotify requires its "
 "owner to have Premium."
@@ -2927,28 +2919,28 @@ msgstr ""
 "Spotifast 透過你自己的免費 Spotify 應用程式登入。Spotify 要求應用程式擁有者具"
 "備 Premium。"
 
-#: src/ui/login.rs:470
+#: src/ui/login.rs:466
 msgid "Open Spotify's developer dashboard."
 msgstr "開啟 Spotify 開發人員資訊主頁。"
 
-#: src/ui/login.rs:489
+#: src/ui/login.rs:485
 msgid "Click Create app. Any name will do."
 msgstr "按一下「Create app」。名稱不拘。"
 
-#: src/ui/login.rs:496
+#: src/ui/login.rs:492
 msgid "Under Redirect URIs, add exactly:"
 msgstr "在「Redirect URIs」中準確新增："
 
-#: src/ui/login.rs:505
+#: src/ui/login.rs:501
 msgid "Tick Web API, accept the terms, and save."
 msgstr "勾選「Web API」，接受條款並儲存。"
 
-#: src/ui/login.rs:514
+#: src/ui/login.rs:510
 msgid "Paste the app's Client ID into the field and sign in."
 msgstr "將應用程式的用戶端 ID 貼到欄位中並登入。"
 
 #. Translators: shown on the Copy button for a moment after it copied.
-#: src/ui/login.rs:549
+#: src/ui/login.rs:545
 msgid "Copied"
 msgstr "已複製"
 
@@ -3618,6 +3610,12 @@ msgstr ""
 "Spotifast 需要支援 OpenGL 2.0 或更新版本的顯示卡驅動程式，而這台電腦或虛擬機"
 "器沒有提供。請安裝顯示卡驅動程式，或為虛擬機器開啟 GPU 加速。要開啟 {url} 了"
 "解更多嗎？"
+
+#~ msgid "Sign in with Spotify Free"
+#~ msgstr "使用 Spotify Free 登入"
+
+#~ msgid "Sign in through your browser. Spotifast never sees your password."
+#~ msgstr "透過瀏覽器登入。Spotifast 永遠不會看到你的密碼。"
 
 #~ msgid "Sign in on Spotify's own page. No Spotify app or Premium needed."
 #~ msgstr "在 Spotify 自己的頁面上登入。無需 Spotify 應用程式或 Premium。"

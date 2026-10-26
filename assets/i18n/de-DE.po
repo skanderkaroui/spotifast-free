@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Spotifast\n"
 "Report-Msgid-Bugs-To: https://github.com/crmne/spotifast/issues/new?"
 "template=translation.yml\n"
-"POT-Creation-Date: 2026-10-26 10:32+0100\n"
+"POT-Creation-Date: 2026-10-26 11:23+0100\n"
 "PO-Revision-Date: 2026-09-09 13:30+0000\n"
 "Last-Translator: Spotifast contributors\n"
 "Language-Team: German\n"
@@ -665,7 +665,7 @@ msgstr "Netzwerkfehler. Überprüfe deine Verbindung."
 msgid "Cut"
 msgstr "Ausschneiden"
 
-#: src/ui/widgets.rs:3171 src/ui/login.rs:551
+#: src/ui/widgets.rs:3171 src/ui/login.rs:547
 msgid "Copy"
 msgstr "Kopieren"
 
@@ -1323,7 +1323,7 @@ msgstr "Spotify Free, lokale Wiedergabe erfordert Premium"
 msgid "Connected as {username}"
 msgstr "Verbunden als {username}"
 
-#: src/ui/settings.rs:537 src/ui/login.rs:382
+#: src/ui/settings.rs:537 src/ui/login.rs:378
 msgid "Client ID"
 msgstr "Client ID"
 
@@ -1781,7 +1781,7 @@ msgstr ""
 "„Aus“ ignoriert Umgebungsvariablen. „System“ nutzt sie und unter macOS und "
 "Windows den Proxy des Betriebssystems."
 
-#: src/ui/settings.rs:1663 src/ui/login.rs:635
+#: src/ui/settings.rs:1663 src/ui/login.rs:631
 msgid "Apply settings"
 msgstr "Einstellungen anwenden"
 
@@ -3006,19 +3006,11 @@ msgstr ""
 "Wenn Spotify „Invalid redirect URI“ meldet, füge {uri} genau so zu deiner "
 "App hinzu, speichere und melde dich erneut an."
 
-#: src/ui/login.rs:289
-msgid "Sign in with Spotify Free"
-msgstr "Mit Spotify Free anmelden"
-
-#: src/ui/login.rs:303
+#: src/ui/login.rs:302
 msgid "Sign in with Spotify"
 msgstr "Mit Spotify anmelden"
 
-#: src/ui/login.rs:315
-msgid "Sign in through your browser. Spotifast never sees your password."
-msgstr "Melde dich über deinen Browser an. Spotifast sieht dein Passwort nie."
-
-#: src/ui/login.rs:320
+#: src/ui/login.rs:317
 msgid ""
 "Sign in through your browser. Spotifast never sees your password. Local "
 "playback needs Spotify Premium."
@@ -3026,25 +3018,25 @@ msgstr ""
 "Melde dich über deinen Browser an. Spotifast sieht dein Passwort nie. Lokale "
 "Wiedergabe erfordert Spotify Premium."
 
-#: src/ui/login.rs:330
+#: src/ui/login.rs:326
 msgid "How to set up your Spotify app"
 msgstr "So richtest du deine Spotify-App ein"
 
-#: src/ui/login.rs:350
+#: src/ui/login.rs:346
 msgid "Proxy Settings"
 msgstr "Proxy-Einstellungen"
 
-#: src/ui/login.rs:400
+#: src/ui/login.rs:396
 msgid "A Client ID is 32 letters and digits. Copy it from your app's page."
 msgstr ""
 "Eine Client ID besteht aus 32 Buchstaben und Ziffern. Kopiere sie von der "
 "Seite deiner App."
 
-#: src/ui/login.rs:452
+#: src/ui/login.rs:448
 msgid "Set up your Spotify app"
 msgstr "Deine Spotify-App einrichten"
 
-#: src/ui/login.rs:460
+#: src/ui/login.rs:456
 msgid ""
 "Spotifast signs in through your own free Spotify app. Spotify requires its "
 "owner to have Premium."
@@ -3052,28 +3044,28 @@ msgstr ""
 "Spotifast meldet dich über deine eigene kostenlose Spotify-App an. Spotify "
 "verlangt, dass ihr Besitzer Premium hat."
 
-#: src/ui/login.rs:470
+#: src/ui/login.rs:466
 msgid "Open Spotify's developer dashboard."
 msgstr "Öffne das Entwickler-Dashboard von Spotify."
 
-#: src/ui/login.rs:489
+#: src/ui/login.rs:485
 msgid "Click Create app. Any name will do."
 msgstr "Klicke auf „Create app“. Der Name ist egal."
 
-#: src/ui/login.rs:496
+#: src/ui/login.rs:492
 msgid "Under Redirect URIs, add exactly:"
 msgstr "Füge unter „Redirect URIs“ genau Folgendes hinzu:"
 
-#: src/ui/login.rs:505
+#: src/ui/login.rs:501
 msgid "Tick Web API, accept the terms, and save."
 msgstr "Hake „Web API“ an, akzeptiere die Bedingungen und speichere."
 
-#: src/ui/login.rs:514
+#: src/ui/login.rs:510
 msgid "Paste the app's Client ID into the field and sign in."
 msgstr "Füge die Client ID der App in das Feld ein und melde dich an."
 
 #. Translators: shown on the Copy button for a moment after it copied.
-#: src/ui/login.rs:549
+#: src/ui/login.rs:545
 msgid "Copied"
 msgstr "Kopiert"
 
@@ -3761,6 +3753,13 @@ msgstr ""
 "PC oder diese virtuelle Maschine bietet keinen. Installiere den "
 "Grafiktreiber oder schalte die GPU-Beschleunigung der virtuellen Maschine "
 "ein. {url} öffnen, um mehr zu erfahren?"
+
+#~ msgid "Sign in with Spotify Free"
+#~ msgstr "Mit Spotify Free anmelden"
+
+#~ msgid "Sign in through your browser. Spotifast never sees your password."
+#~ msgstr ""
+#~ "Melde dich über deinen Browser an. Spotifast sieht dein Passwort nie."
 
 #~ msgid "Sign in on Spotify's own page. No Spotify app or Premium needed."
 #~ msgstr ""

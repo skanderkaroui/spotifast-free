@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Spotifast\n"
 "Report-Msgid-Bugs-To: https://github.com/crmne/spotifast/issues/new?"
 "template=translation.yml\n"
-"POT-Creation-Date: 2026-10-26 10:32+0100\n"
+"POT-Creation-Date: 2026-10-26 11:23+0100\n"
 "PO-Revision-Date: 2026-10-02 20:30+0300\n"
 "Last-Translator: Barış Berke Çetin <brsberkectn@gmail.com>\n"
 "Language-Team: Turkish\n"
@@ -664,7 +664,7 @@ msgstr "Ağ bağlantısı hatası. Bağlantınızı kontrol edin."
 msgid "Cut"
 msgstr "Kes"
 
-#: src/ui/widgets.rs:3171 src/ui/login.rs:551
+#: src/ui/widgets.rs:3171 src/ui/login.rs:547
 msgid "Copy"
 msgstr "Kopyala"
 
@@ -1317,7 +1317,7 @@ msgstr "Spotify Free, yerel çalma için Premium gerekir"
 msgid "Connected as {username}"
 msgstr "{username} olarak bağlandı"
 
-#: src/ui/settings.rs:537 src/ui/login.rs:382
+#: src/ui/settings.rs:537 src/ui/login.rs:378
 msgid "Client ID"
 msgstr "İstemci Kimliği (Client ID)"
 
@@ -1768,7 +1768,7 @@ msgstr ""
 "Kapalı, ortam değişkenlerini yok sayar. Sistem, bu değişkenleri ve macOS ile "
 "Windows'ta işletim sistemi proxy'sini kullanır."
 
-#: src/ui/settings.rs:1663 src/ui/login.rs:635
+#: src/ui/settings.rs:1663 src/ui/login.rs:631
 msgid "Apply settings"
 msgstr "Ayarları uygula"
 
@@ -2991,19 +2991,11 @@ msgstr ""
 "Spotify “Invalid redirect URI” derse {uri} adresini uygulamanıza tam olarak "
 "ekleyin, kaydedin ve yeniden giriş yapın."
 
-#: src/ui/login.rs:289
-msgid "Sign in with Spotify Free"
-msgstr "Spotify Free ile giriş yap"
-
-#: src/ui/login.rs:303
+#: src/ui/login.rs:302
 msgid "Sign in with Spotify"
 msgstr "Spotify ile giriş yap"
 
-#: src/ui/login.rs:315
-msgid "Sign in through your browser. Spotifast never sees your password."
-msgstr "Tarayıcınız üzerinden giriş yapın. Spotifast parolanızı asla görmez."
-
-#: src/ui/login.rs:320
+#: src/ui/login.rs:317
 msgid ""
 "Sign in through your browser. Spotifast never sees your password. Local "
 "playback needs Spotify Premium."
@@ -3011,24 +3003,24 @@ msgstr ""
 "Tarayıcınız üzerinden giriş yapın. Spotifast parolanızı asla görmez. Yerel "
 "çalma için Spotify Premium gerekir."
 
-#: src/ui/login.rs:330
+#: src/ui/login.rs:326
 msgid "How to set up your Spotify app"
 msgstr "Spotify uygulamanızı nasıl kurarsınız"
 
-#: src/ui/login.rs:350
+#: src/ui/login.rs:346
 msgid "Proxy Settings"
 msgstr "Proxy Ayarları"
 
-#: src/ui/login.rs:400
+#: src/ui/login.rs:396
 msgid "A Client ID is 32 letters and digits. Copy it from your app's page."
 msgstr ""
 "İstemci Kimliği 32 harf ve rakamdan oluşur. Uygulama sayfanızdan kopyalayın."
 
-#: src/ui/login.rs:452
+#: src/ui/login.rs:448
 msgid "Set up your Spotify app"
 msgstr "Spotify uygulamanızı kurun"
 
-#: src/ui/login.rs:460
+#: src/ui/login.rs:456
 msgid ""
 "Spotifast signs in through your own free Spotify app. Spotify requires its "
 "owner to have Premium."
@@ -3036,28 +3028,28 @@ msgstr ""
 "Spotifast, kendi ücretsiz Spotify uygulamanız üzerinden giriş yapar. "
 "Spotify, uygulama sahibinin Premium olmasını şart koşar."
 
-#: src/ui/login.rs:470
+#: src/ui/login.rs:466
 msgid "Open Spotify's developer dashboard."
 msgstr "Spotify geliştirici panelini açın."
 
-#: src/ui/login.rs:489
+#: src/ui/login.rs:485
 msgid "Click Create app. Any name will do."
 msgstr "“Create app” düğmesine tıklayın. Herhangi bir ad olur."
 
-#: src/ui/login.rs:496
+#: src/ui/login.rs:492
 msgid "Under Redirect URIs, add exactly:"
 msgstr "“Redirect URIs” altına tam olarak şunu ekleyin:"
 
-#: src/ui/login.rs:505
+#: src/ui/login.rs:501
 msgid "Tick Web API, accept the terms, and save."
 msgstr "“Web API” kutusunu işaretleyin, koşulları kabul edin ve kaydedin."
 
-#: src/ui/login.rs:514
+#: src/ui/login.rs:510
 msgid "Paste the app's Client ID into the field and sign in."
 msgstr "Uygulamanın İstemci Kimliği'ni alana yapıştırın ve giriş yapın."
 
 #. Translators: shown on the Copy button for a moment after it copied.
-#: src/ui/login.rs:549
+#: src/ui/login.rs:545
 msgid "Copied"
 msgstr "Kopyalandı"
 
@@ -3742,6 +3734,13 @@ msgstr ""
 "ihtiyaç duyar ve bu bilgisayar ya da sanal makine bunu sağlamıyor. Grafik "
 "sürücüsünü yükleyin veya sanal makine için GPU hızlandırmayı açın. Daha "
 "fazlasını okumak için {url} açılsın mı?"
+
+#~ msgid "Sign in with Spotify Free"
+#~ msgstr "Spotify Free ile giriş yap"
+
+#~ msgid "Sign in through your browser. Spotifast never sees your password."
+#~ msgstr ""
+#~ "Tarayıcınız üzerinden giriş yapın. Spotifast parolanızı asla görmez."
 
 #~ msgid "Sign in on Spotify's own page. No Spotify app or Premium needed."
 #~ msgstr ""

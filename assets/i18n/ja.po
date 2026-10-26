@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Spotifast\n"
 "Report-Msgid-Bugs-To: https://github.com/crmne/spotifast/issues/new?"
 "template=translation.yml\n"
-"POT-Creation-Date: 2026-10-26 10:32+0100\n"
+"POT-Creation-Date: 2026-10-26 11:23+0100\n"
 "PO-Revision-Date: 2026-09-09 13:30+0000\n"
 "Last-Translator: Spotifast contributors\n"
 "Language-Team: Japanese\n"
@@ -658,7 +658,7 @@ msgstr "ネットワーク接続エラーです。接続を確認してくださ
 msgid "Cut"
 msgstr "切り取り"
 
-#: src/ui/widgets.rs:3171 src/ui/login.rs:551
+#: src/ui/widgets.rs:3171 src/ui/login.rs:547
 msgid "Copy"
 msgstr "コピー"
 
@@ -1307,7 +1307,7 @@ msgstr "Spotify Free。ローカル再生にはPremiumが必要です"
 msgid "Connected as {username}"
 msgstr "{username}として接続中"
 
-#: src/ui/settings.rs:537 src/ui/login.rs:382
+#: src/ui/settings.rs:537 src/ui/login.rs:378
 msgid "Client ID"
 msgstr "クライアントID"
 
@@ -1757,7 +1757,7 @@ msgstr ""
 "「オフ」では環境変数を無視します。「システム」では環境変数と、macOSとWindows"
 "ではOSのプロキシを使います。"
 
-#: src/ui/settings.rs:1663 src/ui/login.rs:635
+#: src/ui/settings.rs:1663 src/ui/login.rs:631
 msgid "Apply settings"
 msgstr "設定を適用"
 
@@ -2966,20 +2966,11 @@ msgstr ""
 "Spotifyに「Invalid redirect URI」と表示された場合は、{uri}をそのままアプリに"
 "追加して保存し、もう一度ログインしてください。"
 
-#: src/ui/login.rs:289
-msgid "Sign in with Spotify Free"
-msgstr "Spotify Free でサインイン"
-
-#: src/ui/login.rs:303
+#: src/ui/login.rs:302
 msgid "Sign in with Spotify"
 msgstr "Spotifyでログイン"
 
-#: src/ui/login.rs:315
-msgid "Sign in through your browser. Spotifast never sees your password."
-msgstr ""
-"ブラウザでログインします。Spotifastがパスワードを見ることはありません。"
-
-#: src/ui/login.rs:320
+#: src/ui/login.rs:317
 msgid ""
 "Sign in through your browser. Spotifast never sees your password. Local "
 "playback needs Spotify Premium."
@@ -2987,24 +2978,24 @@ msgstr ""
 "ブラウザでログインします。Spotifastがパスワードを見ることはありません。ローカ"
 "ル再生にはSpotify Premiumが必要です。"
 
-#: src/ui/login.rs:330
+#: src/ui/login.rs:326
 msgid "How to set up your Spotify app"
 msgstr "Spotifyアプリの設定方法"
 
-#: src/ui/login.rs:350
+#: src/ui/login.rs:346
 msgid "Proxy Settings"
 msgstr "プロキシ設定"
 
-#: src/ui/login.rs:400
+#: src/ui/login.rs:396
 msgid "A Client ID is 32 letters and digits. Copy it from your app's page."
 msgstr ""
 "クライアントIDは32文字の英数字です。アプリのページからコピーしてください。"
 
-#: src/ui/login.rs:452
+#: src/ui/login.rs:448
 msgid "Set up your Spotify app"
 msgstr "Spotifyアプリを設定"
 
-#: src/ui/login.rs:460
+#: src/ui/login.rs:456
 msgid ""
 "Spotifast signs in through your own free Spotify app. Spotify requires its "
 "owner to have Premium."
@@ -3012,28 +3003,28 @@ msgstr ""
 "Spotifastは、あなた自身の無料Spotifyアプリでログインします。Spotifyでは、アプ"
 "リの所有者がPremiumである必要があります。"
 
-#: src/ui/login.rs:470
+#: src/ui/login.rs:466
 msgid "Open Spotify's developer dashboard."
 msgstr "Spotifyの開発者ダッシュボードを開きます。"
 
-#: src/ui/login.rs:489
+#: src/ui/login.rs:485
 msgid "Click Create app. Any name will do."
 msgstr "「Create app」をクリックします。名前は何でも構いません。"
 
-#: src/ui/login.rs:496
+#: src/ui/login.rs:492
 msgid "Under Redirect URIs, add exactly:"
 msgstr "「Redirect URIs」に次のアドレスを正確に追加します："
 
-#: src/ui/login.rs:505
+#: src/ui/login.rs:501
 msgid "Tick Web API, accept the terms, and save."
 msgstr "「Web API」にチェックを入れ、規約に同意して保存します。"
 
-#: src/ui/login.rs:514
+#: src/ui/login.rs:510
 msgid "Paste the app's Client ID into the field and sign in."
 msgstr "アプリのクライアントIDを入力欄に貼り付けて、ログインします。"
 
 #. Translators: shown on the Copy button for a moment after it copied.
-#: src/ui/login.rs:549
+#: src/ui/login.rs:545
 msgid "Copied"
 msgstr "コピーしました"
 
@@ -3711,6 +3702,13 @@ msgstr ""
 "この PC または仮想マシンにはありません。グラフィックドライバーをインストール"
 "するか、仮想マシンの GPU アクセラレーションを有効にしてください。詳しくは "
 "{url} を開きますか？"
+
+#~ msgid "Sign in with Spotify Free"
+#~ msgstr "Spotify Free でサインイン"
+
+#~ msgid "Sign in through your browser. Spotifast never sees your password."
+#~ msgstr ""
+#~ "ブラウザでログインします。Spotifastがパスワードを見ることはありません。"
 
 #~ msgid "Sign in on Spotify's own page. No Spotify app or Premium needed."
 #~ msgstr ""
