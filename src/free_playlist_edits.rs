@@ -28,6 +28,53 @@ pub async fn handle(
     request: &ApiRequest,
 ) -> Option<ApiResponse> {
     Some(match request {
+        ApiRequest::AddToPlaylist {
+            playlist_id,
+            playlist_name,
+            uris,
+            position,
+        } => ApiResponse::PlaylistItemsChanged {
+            id: playlist_id.clone(),
+            message: format!("Added to {playlist_name}"),
+            result: add(reader, playlist_id, uris, *position).await,
+        },
+        ApiRequest::RemoveFromPlaylist {
+            playlist_id, uris, ..
+        } => ApiResponse::PlaylistItemsChanged {
+            id: playlist_id.clone(),
+            message: "Removed from playlist".to_string(),
+            result: remove_songs(reader, playlist_id, uris).await,
+        },
+        ApiRequest::ReorderPlaylist {
+            playlist_id,
+            range_start,
+            insert_before,
+            ..
+        } => ApiResponse::PlaylistItemsChanged {
+            id: playlist_id.clone(),
+            message: String::new(),
+            result: reorder(reader, playlist_id, *range_start, *insert_before).await,
+        },
+        ApiRequest::CheckPlaylistDuplicates {
+            playlist_id,
+            playlist_name,
+            items,
+            position,
+        } => {
+            let uris: Vec<String> = items.iter().map(|item| item.uri().to_string()).collect();
+            ApiResponse::PlaylistDuplicatesChecked {
+                result: rows(reader, playlist_id).await.map(|list| {
+                    uris.iter()
+                        .filter(|uri| list.rows.iter().any(|row| row.uri == **uri))
+                        .cloned()
+                        .collect()
+                }),
+                playlist_id: playlist_id.clone(),
+                playlist_name: playlist_name.clone(),
+                items: items.clone(),
+                position: *position,
+            }
+        }
         _ => return None,
     })
 }
@@ -245,8 +292,15 @@ pub async fn remove_rows(
     id: &str,
     picked: &[RemovedRow],
 ) -> Result<Option<String>, ApiError> {
-    let _ = (reader, id, picked);
-    Err(changed())
+    let list = rows(reader, id).await?;
+    let uris: Vec<String> = list.rows.iter().map(|row| row.uri.clone()).collect();
+    let indices = crate::session_reads::removal_indices(&uris, picked).ok_or_else(changed)?;
+    let uids: Vec<String> = indices
+        .iter()
+        .map(|(index, _)| list.rows[*index as usize].uid.clone())
+        .collect();
+    ask(reader, remove_query(id, &uids)).await?;
+    revision(reader, id).await
 }
 
 fn source() -> Value {
