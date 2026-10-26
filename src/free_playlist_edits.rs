@@ -75,6 +75,30 @@ pub async fn handle(
                 position: *position,
             }
         }
+        ApiRequest::CreatePlaylist {
+            name,
+            public,
+            description,
+        } => {
+            ApiResponse::PlaylistCreated(create(reader, account, name, *public, description).await)
+        }
+        ApiRequest::UpdatePlaylist {
+            id,
+            name,
+            description,
+            public,
+        } => ApiResponse::PlaylistUpdated {
+            id: id.clone(),
+            result: update(
+                reader,
+                account,
+                id,
+                name.as_deref(),
+                description.as_deref(),
+                *public,
+            )
+            .await,
+        },
         _ => return None,
     })
 }
