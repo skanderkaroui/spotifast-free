@@ -38,6 +38,39 @@ pub fn is_ad(uri: &str) -> bool {
 /// Called with every new state, from the helper's reader thread.
 pub type Notify = Arc<dyn Fn(LocalState) + Send + Sync>;
 
+/// Spotify's sign-in on the helper's page, as the page reports it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Account {
+    SignedIn,
+    SignedOut,
+}
+
+/// Called when the page's sign-in changes, from the helper's reader thread.
+pub type OnAccount = Arc<dyn Fn(Account) + Send + Sync>;
+
+/// Queries waiting for the page's answer, by id.
+type Queries = Arc<Mutex<Pending>>;
+
+#[derive(Default)]
+struct Pending {
+    next: u64,
+    waiting: std::collections::HashMap<u64, tokio::sync::oneshot::Sender<QueryReply>>,
+}
+
+/// What the page answered to one query of Spotify's web player API.
+#[derive(Debug, PartialEq, Eq)]
+pub enum QueryReply {
+    /// Spotify's HTTP status and body.
+    Answered { status: u16, body: String },
+    /// The page is signed out of Spotify.
+    SignedOut,
+    /// The page sent nothing: not loaded yet, or the network failed.
+    Unavailable,
+}
+
+/// How long a query waits for the page before giving up.
+const QUERY_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(45);
+
 /// How long `shutdown` waits for the helper to quit before killing it.
 const SHUTDOWN_GRACE: std::time::Duration = std::time::Duration::from_secs(2);
 /// How long a just-asked play or pause holds against Spotify's state reports
@@ -90,6 +123,7 @@ pub struct WebPlayer {
     child: Child,
     stdin: Arc<Mutex<ChildStdin>>,
     state: Arc<Mutex<LocalState>>,
+    queries: Queries,
     /// Tells the app about a change shown at once, as the reader does for
     /// Spotify's reports.
     notify: Notify,
@@ -120,18 +154,23 @@ impl WebPlayer {
         Self::helper_path().is_some_and(|path| path.exists())
     }
 
-    pub fn start(notify: Notify, ad_log: Option<PathBuf>) -> std::io::Result<Self> {
+    pub fn start(
+        notify: Notify,
+        on_account: OnAccount,
+        ad_log: Option<PathBuf>,
+    ) -> std::io::Result<Self> {
         let path = Self::helper_path().ok_or_else(|| {
             std::io::Error::new(std::io::ErrorKind::NotFound, "playback helper not found")
         })?;
         let mut command = Command::new(path);
         command.args(["--headless", "--web-player"]);
-        Self::spawn(command, notify, ad_log)
+        Self::spawn(command, notify, on_account, ad_log)
     }
 
     fn spawn(
         mut command: Command,
         notify: Notify,
+        on_account: OnAccount,
         ad_log: Option<PathBuf>,
     ) -> std::io::Result<Self> {
         let mut child = command
@@ -148,6 +187,8 @@ impl WebPlayer {
         }));
         let shared = Arc::clone(&state);
         let reader_notify = Arc::clone(&notify);
+        let queries: Queries = Arc::default();
+        let answers = Arc::clone(&queries);
         std::thread::Builder::new()
             .name("web-player-events".into())
             .spawn(move || {
@@ -156,6 +197,22 @@ impl WebPlayer {
                     let Ok(event) = serde_json::from_str::<serde_json::Value>(&line) else {
                         continue;
                     };
+                    if let Some((id, reply)) = query_reply(&event) {
+                        let waiting = answers
+                            .lock()
+                            .unwrap_or_else(|p| p.into_inner())
+                            .waiting
+                            .remove(&id);
+                        if let Some(waiting) = waiting {
+                            let _ = waiting.send(reply);
+                        }
+                        continue;
+                    }
+                    match event.get("state").and_then(|v| v.as_str()) {
+                        Some("signed-in") if is_account(&event) => on_account(Account::SignedIn),
+                        Some("signed-out") if is_account(&event) => on_account(Account::SignedOut),
+                        _ => {}
+                    }
                     // What the web player did with each command, and its
                     // errors, so a failed play is visible in Spotifast's log.
                     if matches!(
@@ -189,6 +246,15 @@ impl WebPlayer {
                         notify(state.clone());
                     }
                 }
+                // Queries still waiting are answered: their page is gone.
+                answers
+                    .lock()
+                    .unwrap_or_else(|p| p.into_inner())
+                    .waiting
+                    .drain()
+                    .for_each(|(_, waiting)| {
+                        let _ = waiting.send(QueryReply::Unavailable);
+                    });
                 // The helper quit (crashed, or killed). Playback stops, but the
                 // next command starts a new one, so it stays available:
                 // reporting it disconnected would hold every later play.
@@ -202,8 +268,50 @@ impl WebPlayer {
             child,
             stdin,
             state,
+            queries,
             notify,
         })
+    }
+
+    /// Sends one query of Spotify's web player API (`operationName`,
+    /// `variables` and `extensions`) for the page to make with its own
+    /// sign-in. The returned future resolves with the page's answer; it needs
+    /// no access to the player, so the caller can await it elsewhere.
+    pub fn query(
+        &self,
+        query: &serde_json::Value,
+    ) -> impl std::future::Future<Output = QueryReply> + Send + 'static {
+        let (sender, receiver) = tokio::sync::oneshot::channel();
+        let id = {
+            let mut pending = self.queries.lock().unwrap_or_else(|p| p.into_inner());
+            pending.next += 1;
+            let id = pending.next;
+            pending.waiting.insert(id, sender);
+            id
+        };
+        let line = serde_json::json!({ "cmd": "query", "id": id, "query": query }).to_string();
+        let sent = {
+            let mut stdin = self.stdin.lock().unwrap_or_else(|p| p.into_inner());
+            writeln!(stdin, "{line}").and_then(|()| stdin.flush())
+        };
+        let queries = Arc::clone(&self.queries);
+        async move {
+            let reply = if sent.is_err() {
+                QueryReply::Unavailable
+            } else {
+                tokio::time::timeout(QUERY_TIMEOUT, receiver)
+                    .await
+                    .ok()
+                    .and_then(Result::ok)
+                    .unwrap_or(QueryReply::Unavailable)
+            };
+            queries
+                .lock()
+                .unwrap_or_else(|p| p.into_inner())
+                .waiting
+                .remove(&id);
+            reply
+        }
     }
 
     pub fn command(&mut self, command: &PlayerCommand) -> std::io::Result<Result<(), Unsupported>> {
@@ -287,6 +395,32 @@ impl WebPlayer {
         let _ = self.child.kill();
         let _ = self.child.wait();
     }
+}
+
+fn is_account(event: &serde_json::Value) -> bool {
+    event.get("event").and_then(|v| v.as_str()) == Some("account")
+}
+
+/// The page's answer to a query, from its `query` event.
+fn query_reply(event: &serde_json::Value) -> Option<(u64, QueryReply)> {
+    if event.get("event").and_then(|v| v.as_str()) != Some("query") {
+        return None;
+    }
+    let id = event.get("id")?.as_u64()?;
+    let status = event.get("status").and_then(|v| v.as_u64()).unwrap_or(0);
+    let reply = match (status, event.get("how").and_then(|v| v.as_str())) {
+        (0, Some("signed-out")) => QueryReply::SignedOut,
+        (0, _) => QueryReply::Unavailable,
+        (status, _) => QueryReply::Answered {
+            status: u16::try_from(status).unwrap_or(u16::MAX),
+            body: event
+                .get("body")
+                .and_then(|v| v.as_str())
+                .unwrap_or_default()
+                .to_owned(),
+        },
+    };
+    Some((id, reply))
 }
 
 /// Appends one ad event to the local ad log, one JSON object per line with
@@ -819,13 +953,61 @@ mod tests {
         })
     }
 
+    /// A helper that answers each query line as the page does, out of order,
+    /// and reports Spotify's sign-in. Each caller gets its own answer, and a
+    /// helper that quits answers what is still waiting.
+    #[test]
+    fn queries_get_their_own_answers_and_the_sign_in_is_reported() {
+        let script = r#"
+            echo '{"event":"account","state":"signed-out"}'
+            echo '{"event":"account","state":"signed-in"}'
+            read first; read second; read third
+            id() { printf '%s' "$1" | sed 's/.*"id":\([0-9]*\).*/\1/'; }
+            echo "{\"event\":\"query\",\"id\":$(id "$second"),\"status\":200,\"body\":\"two\"}"
+            echo "{\"event\":\"query\",\"id\":$(id "$first"),\"status\":0,\"how\":\"signed-out\"}"
+        "#;
+        let mut command = Command::new("sh");
+        command.args(["-c", script]);
+        let seen = Arc::new(Mutex::new(Vec::new()));
+        let accounts = Arc::clone(&seen);
+        let player = WebPlayer::spawn(
+            command,
+            Arc::new(|_| {}),
+            Arc::new(move |account| accounts.lock().unwrap().push(account)),
+            None,
+        )
+        .unwrap();
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let first = player.query(&json!({"operationName": "a"}));
+        let second = player.query(&json!({"operationName": "b"}));
+        let third = player.query(&json!({"operationName": "c"}));
+        let (first, second, third) = runtime.block_on(async { tokio::join!(first, second, third) });
+        assert_eq!(first, QueryReply::SignedOut);
+        assert_eq!(
+            second,
+            QueryReply::Answered {
+                status: 200,
+                body: "two".into()
+            }
+        );
+        assert_eq!(third, QueryReply::Unavailable, "the helper quit first");
+        assert_eq!(
+            *seen.lock().unwrap(),
+            [Account::SignedOut, Account::SignedIn]
+        );
+        player.shutdown();
+    }
+
     /// A helper that ignores `quit` (a page that never loaded, a hang) is
     /// killed after the grace period instead of holding the backend.
     #[test]
     fn shutdown_kills_a_helper_that_does_not_quit() {
         let mut command = Command::new("sleep");
         command.arg("60");
-        let player = WebPlayer::spawn(command, Arc::new(|_| {}), None).unwrap();
+        let player = WebPlayer::spawn(command, Arc::new(|_| {}), Arc::new(|_| {}), None).unwrap();
         let started = Instant::now();
         player.shutdown();
         assert!(started.elapsed() < SHUTDOWN_GRACE + std::time::Duration::from_secs(2));
@@ -843,7 +1025,13 @@ mod tests {
         };
         // A helper that reads commands and never answers, like Spotify
         // before its first report after the command.
-        let mut player = WebPlayer::spawn(Command::new("cat"), Arc::new(|_| {}), None).unwrap();
+        let mut player = WebPlayer::spawn(
+            Command::new("cat"),
+            Arc::new(|_| {}),
+            Arc::new(|_| {}),
+            None,
+        )
+        .unwrap();
         let now = Instant::now();
         {
             let mut state = player.state.lock().unwrap();
@@ -891,6 +1079,7 @@ mod tests {
         let mut player = WebPlayer::spawn(
             Command::new("cat"),
             Arc::new(move |state: LocalState| seen.lock().unwrap().push(state.playback)),
+            Arc::new(|_| {}),
             None,
         )
         .unwrap();
