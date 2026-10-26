@@ -448,14 +448,27 @@
   // its own player's API answers. The query goes out from inside the page,
   // with the page's sign-in, which never leaves it; only the answer does.
   const PATHFINDER = 'https://api-partner.spotify.com/pathfinder/v2/query';
+  // The account's saved songs and albums, newest first, as the web player
+  // reads its library (REA: collection-platform). Only this read is let
+  // through besides pathfinder queries.
+  const COLLECTION = 'https://spclient.wg.spotify.com/collection/v2/paging';
   window.__spotifastQuery = async (id, query) => {
+    // A signed-out page has an anonymous token too; a read with it answers
+    // an empty profile. Wait for Spotify's own sign-in marker instead.
+    reportAccount();
     const end = Date.now() + 30000;
-    while (!connect.auth && Date.now() < end) await sleep(200);
-    if (!connect.auth) return post('query', { id, status: 0, how: account === 'signed-out' ? 'signed-out' : 'not-ready' });
+    while ((!connect.auth || account === null) && Date.now() < end) {
+      await sleep(200);
+      reportAccount();
+    }
+    if (account === 'signed-out') return post('query', { id, status: 0, how: 'signed-out' });
+    if (!connect.auth || account !== 'signed-in') return post('query', { id, status: 0, how: 'not-ready' });
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const used = connect.auth.authorization;
       try {
-        const response = await pageFetch(PATHFINDER, { method: 'POST', headers: headers(), body: JSON.stringify(query) });
+        const target = query?.collection ? COLLECTION : PATHFINDER;
+        const body = query?.collection ? { ...query.collection } : query;
+        const response = await pageFetch(target, { method: 'POST', headers: { ...headers(), accept: 'application/json' }, body: JSON.stringify(body) });
         if (response.status === 401 && attempt === 0) {
           const renewed = Date.now() + 5000;
           while (connect.auth.authorization === used && Date.now() < renewed) await sleep(200);

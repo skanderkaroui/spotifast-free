@@ -527,6 +527,7 @@ for (const name of fixtureNames) {
   };
   const page = {
     ...context,
+    document: { ...document, querySelector: (selector) => (selector.includes('user-widget-link') ? {} : null) },
     window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } }, fetch: fetchFake },
     setInterval: () => {},
     setTimeout,
@@ -548,4 +549,32 @@ for (const name of fixtureNames) {
   assert.equal(JSON.parse(answers[0].body).data.me.profile.username, 'u');
   assert.ok(!JSON.stringify(answers).includes('Bearer'), 'the sign-in never leaves the page');
   console.log('ok: a Free read goes out with the page sign-in and only the answer comes back');
+}
+
+// A signed-out page still has an anonymous token. Its reads must not go out
+// as the account's: the page reports itself signed out instead, so the app
+// waits for the sign-in rather than reading an empty profile.
+{
+  const out = [];
+  const asked = [];
+  const shownHere = { 'login-button': {} };
+  const page = {
+    ...context,
+    document: { ...document, querySelector: (selector) => shownHere[selector.match(/^\[data-testid="([^"]+)"\]$/)?.[1]] ?? null },
+    window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } },
+      fetch: async (input, init = {}) => { asked.push(String(input)); return { ok: true, status: 200, text: async () => '{"data":{"me":null}}', json: async () => ({}) }; } },
+    setInterval: (fn) => { page.tick = fn; },
+    setTimeout,
+    navigator: {},
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer anonymous' } });
+  page.tick?.();
+  asked.length = 0;
+  await page.window.__spotifastQuery(3, { operationName: 'profileAttributes' });
+  assert.ok(!asked.some((url) => url.includes('/pathfinder/')), 'no read goes out signed out');
+  const answer = out.find((event) => event.event === 'query');
+  assert.equal(answer?.id, 3);
+  assert.equal(answer?.how, 'signed-out');
+  console.log('ok: a signed-out page reports itself signed out instead of reading');
 }
