@@ -119,6 +119,32 @@ pub fn forget_plan(path: &std::path::Path) {
     }
 }
 
+/// The account a Free sign-in through the helper's page belongs to, so the
+/// next launch signs in through the page again. The helper keeps Spotify's
+/// own sign-in in its website data; this only names the account. `None`
+/// when there is none.
+pub fn saved_free_sign_in(volume_dir: &std::path::Path) -> Option<String> {
+    let text = std::fs::read_to_string(volume_dir.join("free-sign-in")).ok()?;
+    let account = text.trim();
+    (!account.is_empty()).then(|| account.to_owned())
+}
+
+/// Remembers a Free sign-in, or forgets it with `None`.
+pub fn save_free_sign_in(volume_dir: &std::path::Path, account: Option<&str>) {
+    let path = volume_dir.join("free-sign-in");
+    let result = match account {
+        Some(account) => std::fs::create_dir_all(volume_dir)
+            .and_then(|()| std::fs::write(&path, format!("{account}\n"))),
+        None => match std::fs::remove_file(&path) {
+            Err(error) if error.kind() != std::io::ErrorKind::NotFound => Err(error),
+            _ => Ok(()),
+        },
+    };
+    if let Err(error) = result {
+        log::warn!("couldn't save the Free sign-in: {error}");
+    }
+}
+
 pub struct WebPlayer {
     child: Child,
     stdin: Arc<Mutex<ChildStdin>>,
