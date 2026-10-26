@@ -459,7 +459,8 @@
   // library). Only these three paths are let through, with ids checked.
   const PLAYLISTS = 'https://spclient.wg.spotify.com/playlist/v2';
   const playlistChangesUrl = (changes) => {
-    if (changes.create === true) return `${PLAYLISTS}/playlist`;
+    // The helper hands JSON booleans over as numbers.
+    if (changes.create === true || changes.create === 1) return `${PLAYLISTS}/playlist`;
     if (typeof changes.playlist === 'string' && /^[A-Za-z0-9]{22}$/.test(changes.playlist)) {
       return `${PLAYLISTS}/playlist/${changes.playlist}/changes`;
     }
@@ -485,7 +486,7 @@
         const recent = query?.recentlyPlayed;
         const changes = query?.playlistChanges;
         const changesTarget = changes && playlistChangesUrl(changes);
-        if (changes && !changesTarget) return post('query', { id, status: 400, body: '' });
+        if (changes && !changesTarget) return post('query', { id, status: 400, body: 'refused: not a playlist change' });
         const target = recent
           ? `https://spclient.wg.spotify.com/recently-played/v3/user/${encodeURIComponent(recent.username)}/recently-played?format=json&limit=${Number(recent.limit) || 50}&filter=default`
           : changesTarget ?? (query?.collection ? COLLECTION : PATHFINDER);
