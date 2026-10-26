@@ -1,0 +1,99 @@
+{
+  "data": {
+    "artistUnion": {
+      "__typename": "Artist",
+      "uri": "spotify:artist:4tZwfgrHOc3mvqYlEYSvVi",
+      "relatedContent": {
+        "relatedArtists": {
+          "totalCount": 40,
+          "items": [
+            {
+              "id": "3yDIp0kaq9EFKe07X1X2rz",
+              "profile": {
+                "name": "Nile Rodgers"
+              },
+              "uri": "spotify:artist:3yDIp0kaq9EFKe07X1X2rz",
+              "visuals": {
+                "avatarImage": {
+                  "sources": [
+                    {
+                      "height": 640,
+                      "url": "https://i.scdn.co/image/ab6761610000e5ebede7b4f5a5316f0cf586ec7e",
+                      "width": 640
+                    },
+                    {
+                      "height": 160,
+                      "url": "https://i.scdn.co/image/ab6761610000f178ede7b4f5a5316f0cf586ec7e",
+                      "width": 160
+                    },
+                    {
+                      "height": 320,
+                      "url": "https://i.scdn.co/image/ab67616100005174ede7b4f5a5316f0cf586ec7e",
+                      "width": 320
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": "1rAv1GhTQ2rmG94p9lU3rB",
+              "profile": {
+                "name": "Julian Casablancas"
+              },
+              "uri": "spotify:artist:1rAv1GhTQ2rmG94p9lU3rB",
+              "visuals": {
+                "avatarImage": {
+                  "sources": [
+                    {
+                      "height": 640,
+                      "url": "https://i.scdn.co/image/ab6761610000e5eb97357a72fc531a2c2d3ee47a",
+                      "width": 640
+                    },
+                    {
+                      "height": 160,
+                      "url": "https://i.scdn.co/image/ab6761610000f17897357a72fc531a2c2d3ee47a",
+                      "width": 160
+                    },
+                    {
+                      "height": 320,
+                      "url": "https://i.scdn.co/image/ab6761610000517497357a72fc531a2c2d3ee47a",
+                      "width": 320
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": "2RdwBSPQiwcmiDo9kixcl8",
+              "profile": {
+                "name": "Pharrell Williams"
+              },
+              "uri": "spotify:artist:2RdwBSPQiwcmiDo9kixcl8",
+              "visuals": {
+                "avatarImage": {
+                  "sources": [
+                    {
+                      "height": 640,
+                      "url": "https://i.scdn.co/image/ab6761610000e5ebf0789cd783c20985ec3deb4e",
+                      "width": 640
+                    },
+                    {
+                      "height": 160,
+                      "url": "https://i.scdn.co/image/ab6761610000f178f0789cd783c20985ec3deb4e",
+                      "width": 160
+                    },
+                    {
+                      "height": 320,
+                      "url": "https://i.scdn.co/image/ab67616100005174f0789cd783c20985ec3deb4e",
+                      "width": 320
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
