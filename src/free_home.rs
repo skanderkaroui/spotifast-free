@@ -255,3 +255,60 @@ mod recommendation_tests {
         assert!(!songs[0].artists.is_empty());
     }
 }
+
+/// New releases: the What's New feed's albums, or when the feed is empty,
+/// as it is for an account with few follows, the latest releases of the
+/// followed artists from their discographies.
+pub fn new_releases(feed: &Value, discographies: &[Value]) -> Result<Vec<Album>, ApiError> {
+    let _ = (feed, discographies);
+    Ok(Vec::new())
+}
+
+/// The songs of these releases, each with its release as the album.
+pub fn release_tracks(answers: &[(Album, Value)]) -> Vec<Track> {
+    let _ = answers;
+    Vec::new()
+}
+
+#[cfg(test)]
+mod release_tests {
+    use super::*;
+
+    const DISCOGRAPHY: &str = include_str!("testdata/free/discography.json");
+    const ALBUM: &str = include_str!("testdata/free/album.json");
+
+    fn empty_feed() -> Value {
+        json!({"data": {"whatsNewFeedItems": {"items": [], "totalCount": 0}}})
+    }
+
+    #[test]
+    fn an_empty_feed_lists_the_followed_artists_latest_releases() {
+        let pages: Vec<Value> = vec![serde_json::from_str(DISCOGRAPHY).unwrap()];
+        let albums = new_releases(&empty_feed(), &pages).unwrap();
+        assert_eq!(albums.len(), 5);
+        assert_eq!(albums[0].name, "Random Access Memories (Drumless Edition)");
+        assert_eq!(albums[0].release_date.as_deref(), Some("2023-11-17"));
+        assert_eq!(albums[2].album_type.as_deref(), Some("single"));
+    }
+
+    #[test]
+    fn a_missing_feed_is_an_error_not_an_empty_shelf() {
+        assert!(new_releases(&json!({"data": null}), &[]).is_err());
+    }
+
+    #[test]
+    fn release_songs_carry_their_release() {
+        let release = Album {
+            id: "4m2880jivSbbyEGAKfITCa".into(),
+            uri: "spotify:album:4m2880jivSbbyEGAKfITCa".into(),
+            name: "Random Access Memories".into(),
+            ..Album::default()
+        };
+        let songs = release_tracks(&[(release, serde_json::from_str(ALBUM).unwrap())]);
+        assert_eq!(songs.len(), 2);
+        assert_eq!(
+            songs[0].album.as_ref().unwrap().name,
+            "Random Access Memories"
+        );
+    }
+}
