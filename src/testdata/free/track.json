@@ -1,0 +1,45 @@
+{
+  "data": {
+    "trackUnion": {
+      "__typename": "Track",
+      "uri": "spotify:track:0DiWol3AO6WpXZgp0goxAV",
+      "name": "One More Time",
+      "duration": {
+        "totalMilliseconds": 320357
+      },
+      "trackNumber": 1,
+      "contentRating": {
+        "label": "NONE"
+      },
+      "playability": {
+        "playable": true
+      },
+      "firstArtist": {
+        "items": [
+          {
+            "uri": "spotify:artist:4tZwfgrHOc3mvqYlEYSvVi",
+            "profile": {
+              "name": "Daft Punk"
+            }
+          }
+        ]
+      },
+      "otherArtists": {
+        "items": []
+      },
+      "albumOfTrack": {
+        "uri": "spotify:album:2noRn2Aes5aoNVsU6iWThc",
+        "name": "Discovery",
+        "coverArt": {
+          "sources": [
+            {
+              "height": 300,
+              "url": "https://i.scdn.co/image/ab67616d00001e021e81bff9807a9e629fce5ade",
+              "width": 300
+            }
+          ]
+        }
+      }
+    }
+  }
+}

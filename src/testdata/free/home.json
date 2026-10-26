@@ -1,0 +1,328 @@
+{
+  "data": {
+    "home": {
+      "__typename": "HomeResponsePayload",
+      "greeting": {
+        "transformedLabel": "Good afternoon",
+        "translatedBaseText": "Good afternoon"
+      },
+      "sectionContainer": {
+        "sections": {
+          "items": [
+            {
+              "data": {
+                "__typename": "HomeGenericSectionData",
+                "headerEntity": {
+                  "__typename": "UnknownType"
+                },
+                "subtitle": {
+                  "transformedLabel": "",
+                  "translatedBaseText": null
+                },
+                "title": {
+                  "transformedLabel": "Made For Listener One",
+                  "translatedBaseText": "Made For {0}"
+                }
+              },
+              "sectionItems": {
+                "items": [
+                  {
+                    "content": {
+                      "__typename": "PlaylistResponseWrapper",
+                      "data": {
+                        "__typename": "Playlist",
+                        "uri": "spotify:playlist:37i9dQZEVXcGuUMMv8yUk2",
+                        "name": "Mix Uk2",
+                        "description": "",
+                        "images": {
+                          "items": [
+                            {
+                              "sources": [
+                                {
+                                  "url": "https://i.scdn.co/image/cover",
+                                  "width": 300,
+                                  "height": 300
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ownerV2": {
+                          "data": {
+                            "__typename": "User",
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify",
+                            "username": "spotify"
+                          }
+                        }
+                      }
+                    },
+                    "data": null,
+                    "uri": "spotify:playlist:37i9dQZEVXcGuUMMv8yUk2"
+                  },
+                  {
+                    "content": {
+                      "__typename": "PlaylistResponseWrapper",
+                      "data": {
+                        "__typename": "Playlist",
+                        "uri": "spotify:playlist:37i9dQZF1E365sgLc1siP5",
+                        "name": "Mix iP5",
+                        "description": "",
+                        "images": {
+                          "items": [
+                            {
+                              "sources": [
+                                {
+                                  "url": "https://i.scdn.co/image/cover",
+                                  "width": 300,
+                                  "height": 300
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ownerV2": {
+                          "data": {
+                            "__typename": "User",
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify",
+                            "username": "spotify"
+                          }
+                        }
+                      }
+                    },
+                    "data": null,
+                    "uri": "spotify:playlist:37i9dQZF1E365sgLc1siP5"
+                  },
+                  {
+                    "content": {
+                      "__typename": "PlaylistResponseWrapper",
+                      "data": {
+                        "__typename": "Playlist",
+                        "uri": "spotify:playlist:37i9dQZF1E37s1G10cjOpz",
+                        "name": "Mix Opz",
+                        "description": "",
+                        "images": {
+                          "items": [
+                            {
+                              "sources": [
+                                {
+                                  "url": "https://i.scdn.co/image/cover",
+                                  "width": 300,
+                                  "height": 300
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ownerV2": {
+                          "data": {
+                            "__typename": "User",
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify",
+                            "username": "spotify"
+                          }
+                        }
+                      }
+                    },
+                    "data": null,
+                    "uri": "spotify:playlist:37i9dQZF1E37s1G10cjOpz"
+                  }
+                ],
+                "pagingInfo": {
+                  "nextOffset": null
+                },
+                "totalCount": 8
+              },
+              "uri": "spotify:section:0JQ5DAUnp4wcj0bCb3wh3S"
+            },
+            {
+              "data": {
+                "__typename": "HomeGenericSectionData",
+                "headerEntity": {
+                  "__typename": "UnknownType"
+                },
+                "subtitle": {
+                  "transformedLabel": "",
+                  "translatedBaseText": null
+                },
+                "title": {
+                  "transformedLabel": "Your top mixes",
+                  "translatedBaseText": "Your top mixes"
+                }
+              },
+              "sectionItems": {
+                "items": [
+                  {
+                    "content": {
+                      "__typename": "PlaylistResponseWrapper",
+                      "data": {
+                        "__typename": "Playlist",
+                        "uri": "spotify:playlist:37i9dQZF1EIZoBY8ZZ7sNs",
+                        "name": "Mix sNs",
+                        "description": "",
+                        "images": {
+                          "items": [
+                            {
+                              "sources": [
+                                {
+                                  "url": "https://i.scdn.co/image/cover",
+                                  "width": 300,
+                                  "height": 300
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ownerV2": {
+                          "data": {
+                            "__typename": "User",
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify",
+                            "username": "spotify"
+                          }
+                        }
+                      }
+                    },
+                    "data": null,
+                    "uri": "spotify:playlist:37i9dQZF1EIZoBY8ZZ7sNs"
+                  },
+                  {
+                    "content": {
+                      "__typename": "PlaylistResponseWrapper",
+                      "data": {
+                        "__typename": "Playlist",
+                        "uri": "spotify:playlist:37i9dQZF1EQfqRaYoWBGEg",
+                        "name": "Mix GEg",
+                        "description": "",
+                        "images": {
+                          "items": [
+                            {
+                              "sources": [
+                                {
+                                  "url": "https://i.scdn.co/image/cover",
+                                  "width": 300,
+                                  "height": 300
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ownerV2": {
+                          "data": {
+                            "__typename": "User",
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify",
+                            "username": "spotify"
+                          }
+                        }
+                      }
+                    },
+                    "data": null,
+                    "uri": "spotify:playlist:37i9dQZF1EQfqRaYoWBGEg"
+                  },
+                  {
+                    "content": {
+                      "__typename": "PlaylistResponseWrapper",
+                      "data": {
+                        "__typename": "Playlist",
+                        "uri": "spotify:playlist:37i9dQZF1EIXOyFJo000jQ",
+                        "name": "Mix 0jQ",
+                        "description": "",
+                        "images": {
+                          "items": [
+                            {
+                              "sources": [
+                                {
+                                  "url": "https://i.scdn.co/image/cover",
+                                  "width": 300,
+                                  "height": 300
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "ownerV2": {
+                          "data": {
+                            "__typename": "User",
+                            "name": "Spotify",
+                            "uri": "spotify:user:spotify",
+                            "username": "spotify"
+                          }
+                        }
+                      }
+                    },
+                    "data": null,
+                    "uri": "spotify:playlist:37i9dQZF1EIXOyFJo000jQ"
+                  }
+                ],
+                "pagingInfo": {
+                  "nextOffset": 10
+                },
+                "totalCount": 13
+              },
+              "uri": "spotify:section:0JQ5DAnM3wGh0gz1MXnu89"
+            }
+          ],
+          "totalCount": 31
+        },
+        "uri": "spotify:page:0JQ5DAozXW0GUBAKjHsifH"
+      },
+      "homeChips": [
+        {
+          "highlightColor": null,
+          "highlightScheme": null,
+          "id": "music-chip",
+          "label": {
+            "transformedLabel": "Music",
+            "translatedBaseText": "Music"
+          },
+          "subChips": [
+            {
+              "id": "music-following-chip",
+              "label": {
+                "transformedLabel": "Following",
+                "translatedBaseText": "Following"
+              }
+            }
+          ]
+        },
+        {
+          "highlightColor": null,
+          "highlightScheme": null,
+          "id": "podcasts-chip",
+          "label": {
+            "transformedLabel": "Podcasts",
+            "translatedBaseText": "Podcasts"
+          },
+          "subChips": [
+            {
+              "id": "podcasts-following-chip",
+              "label": {
+                "transformedLabel": "Following",
+                "translatedBaseText": "Following"
+              }
+            }
+          ]
+        },
+        {
+          "highlightColor": null,
+          "highlightScheme": null,
+          "id": "audiobooks-chip",
+          "label": {
+            "transformedLabel": "Audiobooks",
+            "translatedBaseText": "Audiobooks"
+          },
+          "subChips": []
+        }
+      ]
+    }
+  },
+  "extensions": {
+    "responseIds": {
+      "/home": {
+        "continuum": "a555ac52-0b85-e011-155b-47eedadbf0ac"
+      }
+    }
+  }
+}

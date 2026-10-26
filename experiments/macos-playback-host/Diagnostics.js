@@ -466,9 +466,14 @@
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const used = connect.auth.authorization;
       try {
-        const target = query?.collection ? COLLECTION : PATHFINDER;
+        const recent = query?.recentlyPlayed;
+        const target = recent
+          ? `https://spclient.wg.spotify.com/recently-played/v3/user/${encodeURIComponent(recent.username)}/recently-played?format=json&limit=${Number(recent.limit) || 50}&filter=default`
+          : query?.collection ? COLLECTION : PATHFINDER;
         const body = query?.collection ? { ...query.collection } : query;
-        const response = await pageFetch(target, { method: 'POST', headers: { ...headers(), accept: 'application/json' }, body: JSON.stringify(body) });
+        const response = await pageFetch(target, recent
+          ? { headers: { ...headers(), accept: 'application/json' } }
+          : { method: 'POST', headers: { ...headers(), accept: 'application/json' }, body: JSON.stringify(body) });
         if (response.status === 401 && attempt === 0) {
           const renewed = Date.now() + 5000;
           while (connect.auth.authorization === used && Date.now() < renewed) await sleep(200);
