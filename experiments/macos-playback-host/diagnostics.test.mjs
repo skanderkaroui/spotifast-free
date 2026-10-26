@@ -622,3 +622,50 @@ for (const name of fixtureNames) {
   assert.deepEqual(answers.map((a) => [a.id, a.status]), [[1, 200], [2, 200], [3, 200], [4, 400], [5, 200]]);
   console.log('ok: playlist edits go only to the playlist service paths asked');
 }
+
+// Spotify's code page (accounts.spotify.com/login/otp) has one box per digit
+// and keeps only the last character put into a box (REA, authn-web chunk 39:
+// the box's onChange takes value.slice(-1); only onPaste fills every box).
+// macOS fills a code from Messages or Mail into the focused box whole, so
+// only its last digit stayed. The whole code goes to the page as the paste
+// it handles instead.
+{
+  const listeners = [];
+  const boxes = Array.from({ length: 6 }, () => {
+    const box = { value: '', autocomplete: 'one-time-code', getAttribute: (name) => (name === 'autocomplete' ? 'one-time-code' : null), events: [] };
+    box.dispatchEvent = (event) => { box.events.push(event); return true; };
+    return box;
+  });
+  class DataTransfer { constructor() { this.data = {}; } setData(type, value) { this.data[type] = value; } getData(type) { return this.data[type === 'text' ? 'text/plain' : type] ?? ''; } }
+  class ClipboardEvent { constructor(type, init) { Object.assign(this, { type, ...init }); } }
+  const page = {
+    ...context,
+    location: { origin: 'https://accounts.spotify.com', href: 'https://accounts.spotify.com/en/login/otp' },
+    window: { webkit: { messageHandlers: { probe: { postMessage: () => {} } } }, fetch: pageFetch },
+    addEventListener: (type, listener, capture) => listeners.push({ type, listener, capture }),
+    DataTransfer,
+    ClipboardEvent,
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  const input = listeners.find((l) => l.type === 'input' && l.capture);
+  assert.ok(input, 'the page listens for input before Spotify does');
+  const fill = (box, value) => {
+    box.value = value;
+    let stopped = false;
+    input.listener({ target: box, stopImmediatePropagation: () => { stopped = true; } });
+    return stopped;
+  };
+  // AutoFill puts the whole code in the first box.
+  assert.equal(fill(boxes[0], '482915'), true, "Spotify's own handler would keep one digit");
+  const paste = boxes[0].events.at(-1);
+  assert.equal(paste?.type, 'paste');
+  assert.equal(paste.bubbles, true);
+  assert.equal(paste.clipboardData.getData('text'), '482915');
+  // Into a box already holding a digit: the code is the last six.
+  fill(boxes[0], '7482915');
+  assert.equal(boxes[0].events.at(-1).clipboardData.getData('text'), '482915');
+  // One digit typed into a box is Spotify's to handle.
+  assert.equal(fill(boxes[1], '4'), false);
+  assert.equal(boxes[1].events.length, 0);
+  console.log('ok: a code macOS fills in whole goes to every box');
+}
