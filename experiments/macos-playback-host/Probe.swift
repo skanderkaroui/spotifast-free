@@ -18,8 +18,12 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
     private let status = NSTextField(labelWithString: "Use Spotify's own controls. Diagnostics never read credentials.")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        let headless = CommandLine.arguments.contains("--headless")
         let configuration = WKWebViewConfiguration()
-        configuration.websiteDataStore = .default()
+        // --signed-out: a fresh store that keeps nothing, to see the sign-in
+        // window without signing the real one out.
+        configuration.websiteDataStore = CommandLine.arguments.contains("--signed-out")
+            ? .nonPersistent() : .default()
         // A music player has no reason to block audio. With the default
         // gesture rule, Spotify's play() runs after async work, loses the
         // click, and WebKit refuses it ("PageConsentRequired").
@@ -42,6 +46,36 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
         webView.navigationDelegate = self
         webView.uiDelegate = self
 
+        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
+                          styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                          backing: .buffered, defer: false)
+        if headless {
+            // The app's helper only ever shows this window for Spotify's
+            // sign-in: Spotify's page alone, without the probe's tools.
+            window.title = "Sign in to Spotify"
+            window.contentView = webView
+        } else {
+            window.title = "Spotifast Free Playback"
+            window.contentView = probeTools()
+        }
+        window.delegate = self
+        window.center()
+        if headless {
+            // Background helper: no Dock icon, window never shown. Spotifast
+            // drives it through stdin and reads events from stdout.
+            NSApp.setActivationPolicy(.accessory)
+            startCommandReader()
+            if CommandLine.arguments.contains("--web-player") { openPlayer() }
+            return
+        }
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate()
+        openPlayer()
+    }
+
+    /// The probe window's own tools around Spotify's page, for running it
+    /// by hand: open the player, check media support, and a status line.
+    private func probeTools() -> NSView {
         let buttons = NSStackView(views: [
             NSButton(title: "Open Web Player", target: self, action: #selector(openPlayer)),
             NSButton(title: "Check Media Support", target: self, action: #selector(checkMedia)),
@@ -59,25 +93,7 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
             webView.heightAnchor.constraint(greaterThanOrEqualToConstant: 350),
             status.widthAnchor.constraint(equalTo: webView.widthAnchor),
         ])
-
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 900, height: 600),
-                          styleMask: [.titled, .closable, .miniaturizable, .resizable],
-                          backing: .buffered, defer: false)
-        window.title = "Spotifast Free Playback"
-        window.contentView = content
-        window.delegate = self
-        window.center()
-        if CommandLine.arguments.contains("--headless") {
-            // Background helper: no Dock icon, window never shown. Spotifast
-            // drives it through stdin and reads events from stdout.
-            NSApp.setActivationPolicy(.accessory)
-            startCommandReader()
-            if CommandLine.arguments.contains("--web-player") { openPlayer() }
-            return
-        }
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate()
-        openPlayer()
+        return content
     }
 
     @objc private func openPlayer() { webView.load(URLRequest(url: playerURL)) }
@@ -140,6 +156,20 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
                 arguments: ["action": action], in: nil, in: .page) { _ in }
         case "quit":
             NSApp.terminate(nil)
+        case "snapshot":
+            // {"cmd":"snapshot","path":"/x.png"}: the window's content as a
+            // PNG, for checking the sign-in window without a screen capture.
+            guard let path = command["path"] as? String, let view = window.contentView else { return }
+            view.layoutSubtreeIfNeeded()
+            webView.takeSnapshot(with: nil) { image, _ in
+                guard let image, let tiff = image.tiffRepresentation,
+                      let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:])
+                else { return }
+                try? png.write(to: URL(fileURLWithPath: path))
+                if let note = try? JSONSerialization.data(withJSONObject: ["event": "snapshot", "path": path]) {
+                    FileHandle.standardOutput.write(note + Data([10]))
+                }
+            }
         default:
             break
         }
@@ -269,6 +299,12 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
             askedToSignIn = true
             status.stringValue = "Sign in to Spotify here. This window closes by itself once you are in."
             if headless {
+                // Spotify's own login page alone, rather than the web player
+                // behind a Log in button. It returns to the player page once
+                // signed in (the web player's own "continue" link).
+                var login = URLComponents(string: "https://accounts.spotify.com/login")!
+                login.queryItems = [URLQueryItem(name: "continue", value: playerURL.absoluteString)]
+                if let url = login.url { webView.load(URLRequest(url: url)) }
                 NSApp.setActivationPolicy(.regular)
                 window.makeKeyAndOrderFront(nil)
                 NSApp.activate()
