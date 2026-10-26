@@ -452,6 +452,22 @@
   // reads its library (REA: collection-platform). Only this read is let
   // through besides pathfinder queries.
   const COLLECTION = 'https://spclient.wg.spotify.com/collection/v2/paging';
+  // Playlist edits the web player makes on the playlist service rather than
+  // pathfinder (REA: POST playlist/v2/playlist to create one,
+  // .../playlist/<id>/changes for its name and description, and
+  // .../user/<username>/rootlist/changes to list or unlist it in the
+  // library). Only these three paths are let through, with ids checked.
+  const PLAYLISTS = 'https://spclient.wg.spotify.com/playlist/v2';
+  const playlistChangesUrl = (changes) => {
+    if (changes.create === true) return `${PLAYLISTS}/playlist`;
+    if (typeof changes.playlist === 'string' && /^[A-Za-z0-9]{22}$/.test(changes.playlist)) {
+      return `${PLAYLISTS}/playlist/${changes.playlist}/changes`;
+    }
+    if (typeof changes.rootlist === 'string' && /^[A-Za-z0-9._-]{1,64}$/.test(changes.rootlist)) {
+      return `${PLAYLISTS}/user/${encodeURIComponent(changes.rootlist)}/rootlist/changes`;
+    }
+    return null;
+  };
   window.__spotifastQuery = async (id, query) => {
     // A signed-out page has an anonymous token too; a read with it answers
     // an empty profile. Wait for Spotify's own sign-in marker instead.
@@ -467,10 +483,13 @@
       const used = connect.auth.authorization;
       try {
         const recent = query?.recentlyPlayed;
+        const changes = query?.playlistChanges;
+        const changesTarget = changes && playlistChangesUrl(changes);
+        if (changes && !changesTarget) return post('query', { id, status: 400, body: '' });
         const target = recent
           ? `https://spclient.wg.spotify.com/recently-played/v3/user/${encodeURIComponent(recent.username)}/recently-played?format=json&limit=${Number(recent.limit) || 50}&filter=default`
-          : query?.collection ? COLLECTION : PATHFINDER;
-        const body = query?.collection ? { ...query.collection } : query;
+          : changesTarget ?? (query?.collection ? COLLECTION : PATHFINDER);
+        const body = changes ? changes.body : query?.collection ? { ...query.collection } : query;
         const response = await pageFetch(target, recent
           ? { headers: { ...headers(), accept: 'application/json' } }
           : { method: 'POST', headers: { ...headers(), accept: 'application/json' }, body: JSON.stringify(body) });
