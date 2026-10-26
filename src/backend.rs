@@ -1887,6 +1887,9 @@ struct Worker {
     /// grant: the helper's page answers for the account.
     #[cfg(target_os = "macos")]
     free_session: bool,
+    /// The Free sign-in's account, once the page has read it.
+    #[cfg(target_os = "macos")]
+    free_account: Option<String>,
     /// The plan, once the Web API has answered.
     premium: Option<bool>,
     /// Free accounts on macOS play through Spotify's own web player in a
@@ -2005,6 +2008,8 @@ impl Worker {
             signed_in: false,
             #[cfg(target_os = "macos")]
             free_session: false,
+            #[cfg(target_os = "macos")]
+            free_account: None,
             premium: None,
             #[cfg(target_os = "macos")]
             web_player: None,
@@ -3427,6 +3432,7 @@ impl Worker {
         #[cfg(target_os = "macos")]
         {
             self.free_session = false;
+            self.free_account = None;
         }
         self.rootlist_pending = false;
         self.made_for_you = Arc::new(crate::made_for_you::MadeForYou::new(self.http.clone()));
@@ -4117,6 +4123,7 @@ impl Worker {
             Ok(user) => {
                 log::info!("signed in through Spotify's web player");
                 self.signed_in = true;
+                self.free_account = Some(user.id.clone());
                 self.emit(Event::Auth(AuthStatus::Connected {
                     username: user.name().to_string(),
                 }));
@@ -4124,8 +4131,10 @@ impl Worker {
                 self.emit(Event::Api(Box::new(ApiResponse::Me(Ok(user)))));
                 self.on_account_checked(premium);
             }
-            // Still on Spotify's sign-in in the helper's window.
-            Err(ApiError::NotSignedIn) => {}
+            // Still on Spotify's sign-in in the helper's window, or the page
+            // was away on Spotify's login and never answered: the account is
+            // read again when the page reports the sign-in.
+            Err(ApiError::NotSignedIn | ApiError::Network(_)) => {}
             Err(error) => {
                 self.free_session = false;
                 self.emit(Event::Auth(AuthStatus::Failed(format!(
@@ -5075,6 +5084,17 @@ impl Worker {
 
     /// Cancel requests on sign-out and report completion under their original generation.
     fn dispatch(&self, request: ApiRequest) -> tokio::task::AbortHandle {
+        // A Free sign-in has no Web API grant: its page reads for it.
+        #[cfg(target_os = "macos")]
+        let free = self
+            .free_session
+            .then(|| {
+                self.web_player
+                    .as_ref()
+                    .map(crate::web_player::WebPlayer::reader)
+            })
+            .flatten()
+            .map(|reader| (reader, self.free_account.clone()));
         let api = Arc::clone(&self.api);
         let made_for_you = Arc::clone(&self.made_for_you);
         let new_releases = Arc::clone(&self.new_releases);
@@ -5095,6 +5115,13 @@ impl Worker {
             let (response, expired) = tokio::select! {
                 _ = session.changed() => return,
                 result = async {
+                    // What the page does not read yet goes the usual way.
+                    #[cfg(target_os = "macos")]
+                    if let Some((reader, account)) = &free
+                        && let Some(response) = handle_free(reader, account.as_deref(), &request).await
+                    {
+                        return (response, Vec::new());
+                    }
                     handle(&api, &made_for_you, &new_releases, &connect, engine.as_deref(), &background_session, request).await
                 } => result,
             };
@@ -5537,6 +5564,111 @@ where
             (result, false, expired)
         }
     }
+}
+
+/// The reads a Free sign-in answers through Spotify's web player, shaped as
+/// the Web API's answers. `None` for a request it does not cover yet.
+#[cfg(target_os = "macos")]
+async fn handle_free(
+    reader: &crate::web_player::Reader,
+    account: Option<&str>,
+    request: &ApiRequest,
+) -> Option<ApiResponse> {
+    use crate::free_reads as free;
+    let read = |query: serde_json::Value| {
+        let pending = reader.query(&query);
+        async move { free::answer(pending.await) }
+    };
+    let playlist_uri = |id: &str| format!("spotify:playlist:{id}");
+    Some(match request {
+        ApiRequest::Me => {
+            let (profile, account) =
+                tokio::join!(read(free::profile_query()), read(free::account_query()));
+            ApiResponse::Me(profile.and_then(|profile| free::user(&profile, &account?)))
+        }
+        ApiRequest::MyPlaylists { offset, generation } => ApiResponse::MyPlaylists {
+            offset: *offset,
+            generation: *generation,
+            result: read(free::library_query(*offset, 50))
+                .await
+                .and_then(|body| free::library_playlists(&body, *offset)),
+        },
+        ApiRequest::Playlist { id, generation } => ApiResponse::Playlist {
+            id: id.clone(),
+            generation: *generation,
+            result: read(free::playlist_query(&playlist_uri(id), 0, 1))
+                .await
+                .and_then(|body| free::playlist(&body)),
+        },
+        ApiRequest::PlaylistItems {
+            id,
+            offset,
+            generation,
+        } => ApiResponse::PlaylistItems {
+            id: id.clone(),
+            offset: *offset,
+            generation: *generation,
+            result: read(free::playlist_query(&playlist_uri(id), *offset, 100))
+                .await
+                .and_then(|body| free::playlist_items(&body, *offset)),
+        },
+        ApiRequest::PlaylistSample {
+            id,
+            offset,
+            generation,
+        } => ApiResponse::PlaylistSample {
+            id: id.clone(),
+            generation: *generation,
+            result: read(free::playlist_query(&playlist_uri(id), *offset, 100))
+                .await
+                .and_then(|body| free::playlist_items(&body, *offset)),
+        },
+        ApiRequest::SavedTracks { offset, generation } => ApiResponse::SavedTracks {
+            offset: *offset,
+            generation: *generation,
+            account_id: account.map(str::to_owned),
+            result: async {
+                let account = account.ok_or(ApiError::NotSignedIn)?;
+                let saved = free::liked_uris(&read(free::collection_query(account, 10_000)).await?);
+                let start = (*offset as usize).min(saved.len());
+                let uris: Vec<String> = saved[start..(start + 50).min(saved.len())]
+                    .iter()
+                    .map(|(uri, _)| uri.clone())
+                    .collect();
+                let details = if uris.is_empty() {
+                    serde_json::Value::Null
+                } else {
+                    read(free::tracks_query(&uris)).await?
+                };
+                Ok(free::saved_page(&saved, &details, *offset))
+            }
+            .await,
+        },
+        ApiRequest::Album { id } => ApiResponse::Album {
+            id: id.clone(),
+            result: read(free::album_query(&format!("spotify:album:{id}"), 0, 50))
+                .await
+                .and_then(|body| free::album(&body, 0)),
+        },
+        ApiRequest::AlbumTracks {
+            id,
+            offset,
+            generation,
+        } => ApiResponse::AlbumTracks {
+            id: id.clone(),
+            offset: *offset,
+            generation: *generation,
+            result: read(free::album_query(
+                &format!("spotify:album:{id}"),
+                *offset,
+                50,
+            ))
+            .await
+            .and_then(|body| free::album(&body, *offset))
+            .map(|album| album.tracks.unwrap_or_default()),
+        },
+        _ => return None,
+    })
 }
 
 /// Tries the session Home route before the shared fallback and routes other API work.
@@ -8693,6 +8825,32 @@ mod authorization_tests {
         )));
         worker.sign_out();
         assert!(!worker.free_session, "signing out ends the Free session");
+    }
+
+    /// Live, 2026-10-26: the helper's page left for Spotify's login, so the
+    /// first read was never answered, and the app gave up before the
+    /// listener had signed in. An unanswered read waits for the sign-in.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn an_unanswered_read_while_signing_in_keeps_waiting() {
+        let (runtime, mut worker, events) = worker("free-sign-in-unanswered");
+        let _entered = runtime.enter();
+        worker.free_session = true;
+        worker.on_free_signed_in(Err(ApiError::Network(
+            "Spotify's web player did not answer".into(),
+        )));
+        assert!(worker.free_session, "still waiting for the sign-in");
+        assert!(
+            events
+                .try_iter()
+                .all(|event| !matches!(event, Event::Auth(AuthStatus::Failed(_))))
+        );
+        worker.on_free_signed_in(Ok(User {
+            id: "listener1".into(),
+            product: Some("free".into()),
+            ..User::default()
+        }));
+        assert!(worker.signed_in);
     }
 
     /// A Premium account must keep librespot: it is never routed to the Free
