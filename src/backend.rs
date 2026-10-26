@@ -796,8 +796,10 @@ pub enum Command {
     },
     /// Internal: a Web API browser flow or verification ended (success or not).
     /// The Free helper's page read the signed-in account.
+    #[cfg(target_os = "macos")]
     FreeSignedIn(Box<Result<User, ApiError>>),
     /// The Free helper's page reported a change in Spotify's sign-in.
+    #[cfg(target_os = "macos")]
     FreeAccount(crate::web_player::Account),
     SignInEnded {
         source: ApiSource,
@@ -1883,6 +1885,7 @@ struct Worker {
     signed_in: bool,
     /// Signed in on Spotify's own page in the Free helper, with no Web API
     /// grant: the helper's page answers for the account.
+    #[cfg(target_os = "macos")]
     free_session: bool,
     /// The plan, once the Web API has answered.
     premium: Option<bool>,
@@ -2000,6 +2003,7 @@ impl Worker {
             search_tasks: Vec::new(),
             engine_restart_pending: false,
             signed_in: false,
+            #[cfg(target_os = "macos")]
             free_session: false,
             premium: None,
             #[cfg(target_os = "macos")]
@@ -2323,7 +2327,9 @@ impl Worker {
                     client_id,
                 } => self.change_proxy(request, config, Some(client_id)),
                 Command::SignInFree => self.sign_in_free(),
+                #[cfg(target_os = "macos")]
                 Command::FreeSignedIn(result) => self.on_free_signed_in(*result),
+                #[cfg(target_os = "macos")]
                 Command::FreeAccount(account) => self.on_free_account(account),
                 Command::CancelSignIn => {
                     self.authorization_attempt += 1;
@@ -3418,7 +3424,10 @@ impl Worker {
         self.spotify_restore_started = true;
         self.cancel_search();
         self.signed_in = false;
-        self.free_session = false;
+        #[cfg(target_os = "macos")]
+        {
+            self.free_session = false;
+        }
         self.rootlist_pending = false;
         self.made_for_you = Arc::new(crate::made_for_you::MadeForYou::new(self.http.clone()));
         self.new_releases = Arc::new(crate::new_releases::NewReleases::new(self.http.clone()));
@@ -4037,6 +4046,7 @@ impl Worker {
     }
 
     /// Tells the backend when the helper's page signs in or out of Spotify.
+    #[cfg(target_os = "macos")]
     fn web_player_account(&self) -> crate::web_player::OnAccount {
         let commands = self.commands.clone();
         Arc::new(move |account| {
@@ -4084,9 +4094,7 @@ impl Worker {
         });
     }
 
-    #[cfg(not(target_os = "macos"))]
-    fn read_free_account(&mut self) {}
-
+    #[cfg(target_os = "macos")]
     fn on_free_account(&mut self, account: crate::web_player::Account) {
         if !self.free_session {
             return;
@@ -4100,6 +4108,7 @@ impl Worker {
         }
     }
 
+    #[cfg(target_os = "macos")]
     fn on_free_signed_in(&mut self, result: Result<User, ApiError>) {
         if !self.free_session || self.signed_in {
             return;
