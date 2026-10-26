@@ -121,6 +121,14 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
             webView.callAsyncJavaScript(
                 "await window.__spotifastConnect?.(action, args)",
                 arguments: ["action": action, "args": args], in: nil, in: .page) { _ in }
+        case "query":
+            // {"cmd":"query","id":N,"query":{...}}: one read of Spotify's web
+            // player API, sent by the page with its own sign-in; the answer
+            // comes back as {"event":"query","id":N,...}.
+            guard let id = command["id"], let query = command["query"] as? [String: Any] else { return }
+            webView.callAsyncJavaScript(
+                "await window.__spotifastQuery?.(id, query)",
+                arguments: ["id": id, "query": query], in: nil, in: .page) { _ in }
         case "media":
             // Media Session actions Spotify registered: play, pause,
             // nexttrack, previoustrack. Used by checks; Spotifast sends

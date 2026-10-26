@@ -441,6 +441,32 @@
   };
   // Set from Spotify's top bar by reportAccount below.
   let account = null;
+
+  // Spotifast's reads for a Free account (REA: the web player's own
+  // pathfinder queries). Spotify answers the official Web API for the
+  // page's sign-in with "rate limit exceeded" from the first request, but
+  // its own player's API answers. The query goes out from inside the page,
+  // with the page's sign-in, which never leaves it; only the answer does.
+  const PATHFINDER = 'https://api-partner.spotify.com/pathfinder/v2/query';
+  window.__spotifastQuery = async (id, query) => {
+    const end = Date.now() + 30000;
+    while (!connect.auth && Date.now() < end) await sleep(200);
+    if (!connect.auth) return post('query', { id, status: 0, how: account === 'signed-out' ? 'signed-out' : 'not-ready' });
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const used = connect.auth.authorization;
+      try {
+        const response = await pageFetch(PATHFINDER, { method: 'POST', headers: headers(), body: JSON.stringify(query) });
+        if (response.status === 401 && attempt === 0) {
+          const renewed = Date.now() + 5000;
+          while (connect.auth.authorization === used && Date.now() < renewed) await sleep(200);
+          continue;
+        }
+        return post('query', { id, status: response.status, body: await response.text() });
+      } catch (error) {
+        return post('query', { id, status: 0, how: 'network', message: text(error) });
+      }
+    }
+  };
   // Commands run one at a time, in the order pressed: each starts once the
   // one before it was acknowledged (or gave up), as Spotify's player sends.
   // A command stuck longer (a request that hangs, a wait for sign-in) holds

@@ -504,3 +504,48 @@ for (const name of fixtureNames) {
   assert.deepEqual(log, ['pause', 'resume', 'pause', 'resume']);
   console.log('ok: an early ack counts, and a response without ack_id adds no wait');
 }
+
+// A Free account's reads: the page sends the web player's own query with its
+// own sign-in and hands back only Spotify's answer, under the asked id. A
+// rejected token waits for the page's renewed one and goes once more.
+{
+  const out = [];
+  const asked = [];
+  let refuse = true;
+  const fetchFake = async (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url.includes('/pathfinder/')) {
+      asked.push({ url, headers: init.headers, body: JSON.parse(init.body) });
+      if (refuse) {
+        refuse = false;
+        setTimeout(() => page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer renewed' } }), 50);
+        return { ok: false, status: 401, text: async () => '' };
+      }
+      return { ok: true, status: 200, text: async () => '{"data":{"me":{"profile":{"username":"u"}}}}' };
+    }
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+  const page = {
+    ...context,
+    window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } }, fetch: fetchFake },
+    setInterval: () => {},
+    setTimeout,
+    navigator: {},
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer first', 'client-token': 'ct' } });
+  const query = { operationName: 'profileAttributes', variables: {}, extensions: { persistedQuery: { version: 1, sha256Hash: 'h' } } };
+  await page.window.__spotifastQuery(7, query);
+  assert.equal(asked.length, 2, 'refused once, sent again');
+  assert.equal(asked[0].url, 'https://api-partner.spotify.com/pathfinder/v2/query');
+  assert.deepEqual(asked[0].body, query);
+  assert.equal(asked[0].headers.authorization, 'Bearer first');
+  assert.equal(asked[1].headers.authorization, 'Bearer renewed');
+  const answers = out.filter((event) => event.event === 'query');
+  assert.equal(answers.length, 1);
+  assert.equal(answers[0].id, 7);
+  assert.equal(answers[0].status, 200);
+  assert.equal(JSON.parse(answers[0].body).data.me.profile.username, 'u');
+  assert.ok(!JSON.stringify(answers).includes('Bearer'), 'the sign-in never leaves the page');
+  console.log('ok: a Free read goes out with the page sign-in and only the answer comes back');
+}
