@@ -11861,7 +11861,13 @@ impl App {
                 self.request_proxy(true);
             }
             Action::ApplyProxy => self.request_proxy(false),
-            Action::SignInFree => self.backend.send(Command::SignInFree),
+            Action::SignInFree => {
+                // On the click, while Spotifast is active: let the helper's
+                // sign-in window come to the front when it opens.
+                #[cfg(target_os = "macos")]
+                crate::window::yield_to_free_helper();
+                self.backend.send(Command::SignInFree);
+            }
             Action::ProxyEdited => self.proxy_form_edited = true,
             Action::CancelSignIn => {
                 self.backend.send(Command::CancelSignIn);

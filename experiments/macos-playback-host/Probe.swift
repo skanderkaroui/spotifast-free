@@ -196,6 +196,15 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
             NSApp.terminate(nil)
             return
         }
+        // Spotifast's Sign in button: bring the sign-in window to the front
+        // now, on the click Spotifast yielded its activation for, even if the
+        // page reported itself signed out earlier (at launch, behind
+        // Spotifast). Never waits for the page.
+        if line.contains("\"show-sign-in\"") {
+            userAskedSignIn = true
+            if askedToSignIn { showSignIn(onTop: true) }
+            return
+        }
         guard pageReady else {
             pending.append(line)
             return
@@ -324,6 +333,12 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
         return nil
     }
 
+    /// Once the user is in the sign-in window it stops floating, so the mail
+    /// with Spotify's code or a password manager can come in front of it.
+    func applicationDidBecomeActive(_ notification: Notification) {
+        window?.level = .normal
+    }
+
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         // Spotifast's hidden helper: closing its sign-in window hides it
         // rather than quitting the player Spotifast is talking to.
@@ -380,6 +395,9 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
     /// that: hide it again (Spotifast's hidden helper) or close it (the
     /// sign-in window opened by hand), with nothing for the user to confirm.
     private var askedToSignIn = false
+    /// Spotifast's Sign in was clicked (`show-sign-in`): the window opens as
+    /// a pop-up on top, now or once the page reports itself signed out.
+    private var userAskedSignIn = false
     private func account(_ state: String) {
         let headless = CommandLine.arguments.contains("--headless")
         switch state {
@@ -392,13 +410,16 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
                 // signed in (the web player's own "continue" link).
                 var login = URLComponents(string: "https://accounts.spotify.com/login")!
                 login.queryItems = [URLQueryItem(name: "continue", value: playerURL.absoluteString)]
-                if let url = login.url { webView.load(URLRequest(url: url)) }
-                NSApp.setActivationPolicy(.regular)
-                window.makeKeyAndOrderFront(nil)
-                NSApp.activate()
+                // The login page reports itself signed out too; it is
+                // already showing, so it is not loaded again.
+                if webView.url?.host() != "accounts.spotify.com", let url = login.url {
+                    webView.load(URLRequest(url: url))
+                }
+                showSignIn(onTop: userAskedSignIn)
             }
         case "signed-in" where askedToSignIn:
             askedToSignIn = false
+            userAskedSignIn = false
             if headless {
                 window.orderOut(nil)
                 NSApp.setActivationPolicy(.accessory)
@@ -415,6 +436,24 @@ final class PlaybackProbe: NSObject, NSApplicationDelegate, NSWindowDelegate,
         default:
             break
         }
+    }
+
+    /// Shows the sign-in window. `onTop` when the user asked for it (Sign
+    /// in, in Spotifast): then it is a pop-up in front of everything.
+    /// Spotifast yields its activation on that click (macOS 14 only activates
+    /// an app another app yielded to), and the window floats until the helper
+    /// is active, so it is on top even where activation is refused. Shown on
+    /// its own (the page signed out by itself) it opens as a normal window.
+    private func showSignIn(onTop: Bool) {
+        NSApp.setActivationPolicy(.regular)
+        if onTop {
+            window.level = .floating
+            window.orderFrontRegardless()
+            window.makeKey()
+        } else {
+            window.makeKeyAndOrderFront(nil)
+        }
+        NSApp.activate()
     }
 
     func windowWillClose(_ notification: Notification) { NSApp.terminate(nil) }

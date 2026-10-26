@@ -88,6 +88,30 @@ pub fn report_missing_opengl(locale: crate::i18n::Locale) {
     }
 }
 
+/// Lets the Free playback helper come to the front for Spotify's sign-in.
+/// Since macOS 14 an app only becomes active when the active app yields to
+/// it, so without this the sign-in window can open behind Spotifast. Called
+/// on the user's click, while Spotifast is still the active app.
+pub fn yield_to_free_helper() {
+    #[cfg(target_os = "macos")]
+    {
+        use objc2::MainThreadMarker;
+        use objc2::runtime::NSObjectProtocol;
+        use objc2_app_kit::NSApplication;
+        use objc2_foundation::NSString;
+
+        let Some(mtm) = MainThreadMarker::new() else {
+            return;
+        };
+        let app = NSApplication::sharedApplication(mtm);
+        if app.respondsToSelector(objc2::sel!(yieldActivationToApplicationWithBundleIdentifier:)) {
+            app.yieldActivationToApplicationWithBundleIdentifier(&NSString::from_str(
+                crate::web_player::HELPER_BUNDLE_ID,
+            ));
+        }
+    }
+}
+
 /// Minimize the active window without leaving egui's macOS viewport flag stale
 /// when the user later restores it from the Dock.
 pub fn minimize_window(ctx: &egui::Context) {
