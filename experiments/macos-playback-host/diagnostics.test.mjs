@@ -669,3 +669,47 @@ for (const name of fixtureNames) {
   assert.equal(boxes[1].events.length, 0);
   console.log('ok: a code macOS fills in whole goes to every box');
 }
+
+// A Free account's playlist cover, as the web player uploads one (REA:
+// image-upload/v4/playlist takes the JPEG bytes with only the sign-in and
+// answers an upload token; playlist/<id>/register-image turns it into the
+// picture the list's attributes name). The app hands the JPEG as base64.
+{
+  const out = [];
+  const asked = [];
+  const page = {
+    ...context,
+    atob: (b64) => Buffer.from(b64, 'base64').toString('binary'),
+    document: { ...document, querySelector: (selector) => (selector.includes('user-widget-link') ? {} : null) },
+    window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } },
+      fetch: async (input, init = {}) => {
+        const url = typeof input === 'string' ? input : input.url;
+        if (url.includes('image-upload') || url.includes('register-image')) {
+          asked.push({ url, method: init.method, headers: init.headers, body: init.body });
+          return url.includes('image-upload')
+            ? { ok: true, status: 200, text: async () => '{"uploadToken":"tok"}' }
+            : { ok: true, status: 200, text: async () => '{"picture":"cGlj"}' };
+        }
+        return { ok: true, status: 200, json: async () => ({}) };
+      } },
+    setInterval: () => {},
+    setTimeout,
+    navigator: {},
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer first', 'client-token': 'ct' } });
+  const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00]);
+  await page.window.__spotifastQuery(1, { playlistImage: { playlist: '5cr4tchPl4yl1stF1xtur3', jpeg: jpeg.toString('base64') } });
+  await page.window.__spotifastQuery(2, { playlistImage: { playlist: '../../me', jpeg: jpeg.toString('base64') } });
+  assert.deepEqual(asked.map((a) => [a.method, a.url]), [
+    ['POST', 'https://image-upload.spotify.com/v4/playlist'],
+    ['POST', 'https://spclient.wg.spotify.com/playlist/v2/playlist/5cr4tchPl4yl1stF1xtur3/register-image'],
+  ]);
+  assert.deepEqual(asked[0].headers, { authorization: 'Bearer first', 'content-type': 'image/jpeg' });
+  assert.deepEqual([...asked[0].body], [...jpeg]);
+  assert.equal(asked[1].headers.authorization, 'Bearer first');
+  assert.deepEqual(JSON.parse(asked[1].body), { uploadToken: 'tok' });
+  const answers = out.filter((event) => event.event === 'query');
+  assert.deepEqual(answers.map((a) => [a.id, a.status, a.body]), [[1, 200, '{"picture":"cGlj"}'], [2, 400, 'refused: not a playlist']]);
+  console.log('ok: a Free playlist cover goes up as the web player sends it');
+}

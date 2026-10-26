@@ -781,6 +781,78 @@ mod tests {
         assert_eq!(playlist.public, Some(false));
     }
 
+    /// A cover goes up as the web player sends one: the JPEG to the image
+    /// service, then the picture it registers set as the list's own.
+    #[test]
+    fn a_cover_is_uploaded_and_set_as_the_list_picture() {
+        let cover = crate::playlist_cover::Cover {
+            jpeg: vec![0xff, 0xd8].into(),
+            encoded: "/9g=".into(),
+            uri: "file:///cover.jpg".into(),
+        };
+        let (response, sent) = run(
+            &[
+                (200, r#"{"picture":"cGlj"}"#),
+                (200, r#"{"revision":"AAAB"}"#),
+            ],
+            ApiRequest::UploadPlaylistCover {
+                id: ID.into(),
+                request: 7,
+                previous_urls: vec!["https://i.scdn.co/image/old".into()],
+                cover: cover.clone(),
+            },
+        );
+        assert_eq!(
+            sent,
+            [
+                json!({"playlistImage": {"playlist": ID, "jpeg": "/9g="}}),
+                json!({"playlistChanges": {"playlist": ID, "body": {
+                    "deltas": [{
+                        "ops": [{"kind": "UPDATE_LIST_ATTRIBUTES", "updateListAttributes": {
+                            "newAttributes": {"values": {"picture": "cGlj"}}}}],
+                        "info": {"source": {"client": "WEBPLAYER"}},
+                    }],
+                }}}),
+            ]
+        );
+        let Some(ApiResponse::PlaylistCoverUploaded {
+            id,
+            request,
+            previous_urls,
+            result,
+            ..
+        }) = response
+        else {
+            panic!("{response:?}");
+        };
+        assert_eq!((id.as_str(), request), (ID, 7));
+        assert_eq!(previous_urls, ["https://i.scdn.co/image/old"]);
+        result.unwrap();
+    }
+
+    /// A refused upload is reported and the list is left alone.
+    #[test]
+    fn a_refused_cover_upload_changes_nothing() {
+        let (response, sent) = run(
+            &[(413, "too large")],
+            ApiRequest::UploadPlaylistCover {
+                id: ID.into(),
+                request: 1,
+                previous_urls: vec![],
+                cover: crate::playlist_cover::Cover {
+                    jpeg: vec![0xff].into(),
+                    encoded: "/w==".into(),
+                    uri: String::new(),
+                },
+            },
+        );
+        assert_eq!(sent.len(), 1);
+        let Some(ApiResponse::PlaylistCoverUploaded { result, .. }) = response else {
+            panic!("{response:?}");
+        };
+        assert!(result.is_err());
+    }
+
     /// A rename and a new description go as one list change; `public`
     /// shows or hides the list on the profile.
     #[test]
