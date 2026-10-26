@@ -1,0 +1,264 @@
+{
+  "data": {
+    "me": {
+      "libraryV3": {
+        "__typename": "LibraryPage",
+        "items": [
+          {
+            "addedAt": {
+              "isoString": "2026-10-16T19:40:09Z"
+            },
+            "depth": 0,
+            "item": {
+              "__typename": "LibraryPseudoPlaylistResponseWrapper",
+              "_uri": "spotify:collection:tracks",
+              "data": {
+                "__typename": "PseudoPlaylist",
+                "count": 463,
+                "image": {
+                  "extractedColors": {
+                    "colorDark": {
+                      "hex": "#5018F0",
+                      "isFallback": false
+                    }
+                  },
+                  "sources": [
+                    {
+                      "height": 64,
+                      "url": "https://misc.scdn.co/liked-songs/liked-songs-64.png",
+                      "width": 64
+                    },
+                    {
+                      "height": 300,
+                      "url": "https://misc.scdn.co/liked-songs/liked-songs-300.png",
+                      "width": 300
+                    },
+                    {
+                      "height": 640,
+                      "url": "https://misc.scdn.co/liked-songs/liked-songs-640.png",
+                      "width": 640
+                    }
+                  ]
+                },
+                "name": "Liked Songs",
+                "uri": "spotify:collection:tracks"
+              }
+            },
+            "pinnable": true,
+            "pinned": true,
+            "playedAt": null
+          },
+          {
+            "addedAt": {
+              "isoString": "2026-06-09T08:11:24Z"
+            },
+            "depth": 0,
+            "item": {
+              "__typename": "PlaylistResponseWrapper",
+              "_uri": "spotify:playlist:37i9dQZF1FgnTBfUlzkeKt",
+              "data": {
+                "__typename": "Playlist",
+                "uri": "spotify:playlist:37i9dQZF1FgnTBfUlzkeKt",
+                "name": "Playlist keKt",
+                "description": "",
+                "images": {
+                  "items": [
+                    {
+                      "sources": [
+                        {
+                          "url": "https://i.scdn.co/image/cover",
+                          "width": 300,
+                          "height": 300
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "ownerV2": {
+                  "data": {
+                    "__typename": "User",
+                    "username": "listener1",
+                    "name": "Listener One",
+                    "uri": "spotify:user:listener1"
+                  }
+                }
+              }
+            },
+            "pinnable": true,
+            "pinned": true,
+            "playedAt": null
+          },
+          {
+            "addedAt": {
+              "isoString": "2025-04-13T10:39:13.492Z"
+            },
+            "depth": 0,
+            "item": {
+              "__typename": "PlaylistResponseWrapper",
+              "_uri": "spotify:playlist:37i9dQZEVXcGuUMMv8yUk2",
+              "data": {
+                "__typename": "Playlist",
+                "uri": "spotify:playlist:37i9dQZEVXcGuUMMv8yUk2",
+                "name": "Playlist yUk2",
+                "description": "",
+                "images": {
+                  "items": [
+                    {
+                      "sources": [
+                        {
+                          "url": "https://i.scdn.co/image/cover",
+                          "width": 300,
+                          "height": 300
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "ownerV2": {
+                  "data": {
+                    "__typename": "User",
+                    "username": "listener1",
+                    "name": "Listener One",
+                    "uri": "spotify:user:listener1"
+                  }
+                }
+              }
+            },
+            "pinnable": true,
+            "pinned": false,
+            "playedAt": {
+              "isoString": "2026-10-24T19:17:02.052Z"
+            }
+          },
+          {
+            "addedAt": {
+              "isoString": "2026-07-25T01:54:54.214Z"
+            },
+            "depth": 0,
+            "item": {
+              "__typename": "PlaylistResponseWrapper",
+              "_uri": "spotify:playlist:1TtBMcv2UQ8RFHnDsO8yrN",
+              "data": {
+                "__typename": "Playlist",
+                "uri": "spotify:playlist:1TtBMcv2UQ8RFHnDsO8yrN",
+                "name": "Playlist 8yrN",
+                "description": "",
+                "images": {
+                  "items": [
+                    {
+                      "sources": [
+                        {
+                          "url": "https://i.scdn.co/image/cover",
+                          "width": 300,
+                          "height": 300
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "ownerV2": {
+                  "data": {
+                    "__typename": "User",
+                    "username": "listener1",
+                    "name": "Listener One",
+                    "uri": "spotify:user:listener1"
+                  }
+                }
+              }
+            },
+            "pinnable": true,
+            "pinned": false,
+            "playedAt": {
+              "isoString": "2026-10-16T17:04:01.201Z"
+            }
+          },
+          {
+            "addedAt": {
+              "isoString": "2026-03-28T08:54:33.762Z"
+            },
+            "depth": 0,
+            "item": {
+              "__typename": "PlaylistResponseWrapper",
+              "_uri": "spotify:playlist:0AJXyTJJdhILvG6NrHhCVq",
+              "data": {
+                "__typename": "Playlist",
+                "uri": "spotify:playlist:0AJXyTJJdhILvG6NrHhCVq",
+                "name": "Playlist hCVq",
+                "description": "",
+                "images": {
+                  "items": [
+                    {
+                      "sources": [
+                        {
+                          "url": "https://i.scdn.co/image/cover",
+                          "width": 300,
+                          "height": 300
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "ownerV2": {
+                  "data": {
+                    "__typename": "User",
+                    "username": "listener1",
+                    "name": "Listener One",
+                    "uri": "spotify:user:listener1"
+                  }
+                }
+              }
+            },
+            "pinnable": true,
+            "pinned": false,
+            "playedAt": {
+              "isoString": "2026-10-15T10:41:50.500Z"
+            }
+          },
+          {
+            "addedAt": {
+              "isoString": "2022-03-20T07:50:51Z"
+            },
+            "depth": 0,
+            "item": {
+              "__typename": "PlaylistResponseWrapper",
+              "_uri": "spotify:playlist:37i9dQZEVXbpUdKykASiIm",
+              "data": {
+                "__typename": "Playlist",
+                "uri": "spotify:playlist:37i9dQZEVXbpUdKykASiIm",
+                "name": "Playlist SiIm",
+                "description": "",
+                "images": {
+                  "items": [
+                    {
+                      "sources": [
+                        {
+                          "url": "https://i.scdn.co/image/cover",
+                          "width": 300,
+                          "height": 300
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "ownerV2": {
+                  "data": {
+                    "__typename": "User",
+                    "username": "listener1",
+                    "name": "Listener One",
+                    "uri": "spotify:user:listener1"
+                  }
+                }
+              }
+            },
+            "pinnable": true,
+            "pinned": false,
+            "playedAt": {
+              "isoString": "2026-10-13T15:35:35.538Z"
+            }
+          }
+        ],
+        "totalCount": 54
+      }
+    }
+  }
+}

@@ -280,37 +280,15 @@ impl WebPlayer {
     pub fn query(
         &self,
         query: &serde_json::Value,
-    ) -> impl std::future::Future<Output = QueryReply> + Send + 'static {
-        let (sender, receiver) = tokio::sync::oneshot::channel();
-        let id = {
-            let mut pending = self.queries.lock().unwrap_or_else(|p| p.into_inner());
-            pending.next += 1;
-            let id = pending.next;
-            pending.waiting.insert(id, sender);
-            id
-        };
-        let line = serde_json::json!({ "cmd": "query", "id": id, "query": query }).to_string();
-        let sent = {
-            let mut stdin = self.stdin.lock().unwrap_or_else(|p| p.into_inner());
-            writeln!(stdin, "{line}").and_then(|()| stdin.flush())
-        };
-        let queries = Arc::clone(&self.queries);
-        async move {
-            let reply = if sent.is_err() {
-                QueryReply::Unavailable
-            } else {
-                tokio::time::timeout(QUERY_TIMEOUT, receiver)
-                    .await
-                    .ok()
-                    .and_then(Result::ok)
-                    .unwrap_or(QueryReply::Unavailable)
-            };
-            queries
-                .lock()
-                .unwrap_or_else(|p| p.into_inner())
-                .waiting
-                .remove(&id);
-            reply
+    ) -> impl std::future::Future<Output = QueryReply> + Send + 'static + use<> {
+        self.reader().query(query)
+    }
+
+    /// A handle that sends queries to this helper from anywhere.
+    pub fn reader(&self) -> Reader {
+        Reader {
+            stdin: Arc::clone(&self.stdin),
+            queries: Arc::clone(&self.queries),
         }
     }
 
@@ -421,6 +399,54 @@ fn query_reply(event: &serde_json::Value) -> Option<(u64, QueryReply)> {
         },
     };
     Some((id, reply))
+}
+
+/// Sends queries of Spotify's web player API through the helper's page,
+/// from any task (`WebPlayer::reader`).
+#[derive(Clone)]
+pub struct Reader {
+    stdin: Arc<Mutex<ChildStdin>>,
+    queries: Queries,
+}
+
+impl Reader {
+    /// `WebPlayer::query`, from a handle.
+    pub fn query(
+        &self,
+        query: &serde_json::Value,
+    ) -> impl std::future::Future<Output = QueryReply> + Send + 'static + use<> {
+        let (sender, receiver) = tokio::sync::oneshot::channel();
+        let id = {
+            let mut pending = self.queries.lock().unwrap_or_else(|p| p.into_inner());
+            pending.next += 1;
+            let id = pending.next;
+            pending.waiting.insert(id, sender);
+            id
+        };
+        let line = serde_json::json!({ "cmd": "query", "id": id, "query": query }).to_string();
+        let sent = {
+            let mut stdin = self.stdin.lock().unwrap_or_else(|p| p.into_inner());
+            writeln!(stdin, "{line}").and_then(|()| stdin.flush())
+        };
+        let queries = Arc::clone(&self.queries);
+        async move {
+            let reply = if sent.is_err() {
+                QueryReply::Unavailable
+            } else {
+                tokio::time::timeout(QUERY_TIMEOUT, receiver)
+                    .await
+                    .ok()
+                    .and_then(Result::ok)
+                    .unwrap_or(QueryReply::Unavailable)
+            };
+            queries
+                .lock()
+                .unwrap_or_else(|p| p.into_inner())
+                .waiting
+                .remove(&id);
+            reply
+        }
+    }
 }
 
 /// Appends one ad event to the local ad log, one JSON object per line with
