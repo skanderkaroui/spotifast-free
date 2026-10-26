@@ -147,9 +147,23 @@ mod live {
             .unwrap()
             .id;
         let playlist = format!("spotify:playlist:{PLAYLIST_ID}");
-        let both = [ALBUM.to_owned(), playlist.clone()];
+        // `areEntitiesInLibrary` answers for albums but not for followed
+        // playlists, so the playlist is looked up in the whole library.
         let in_library = |read: &dyn Fn(Value) -> Value| {
-            free::contains(&read(free::contains_query(&both)), 2).unwrap()
+            let album =
+                free::contains(&read(free::contains_query(&[ALBUM.to_owned()])), 1).unwrap()[0];
+            let mut offset = 0;
+            let mut followed = false;
+            loop {
+                let page = free::library_playlists(&read(free::library_query(offset, 50)), offset)
+                    .unwrap();
+                followed |= page.items.iter().any(|item| item.uri == playlist);
+                if page.next.is_none() {
+                    break;
+                }
+                offset += page.limit;
+            }
+            vec![album, followed]
         };
         let before = in_library(&read);
         eprintln!(
