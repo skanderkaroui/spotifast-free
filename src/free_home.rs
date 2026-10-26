@@ -99,8 +99,42 @@ pub async fn handle(
             full: *full,
             generation: *generation,
         },
+        ApiRequest::Recommendations {
+            seed_tracks,
+            generation,
+            ..
+        } => {
+            let reads = seed_tracks
+                .iter()
+                .map(|id| read(recommender_query(&format!("spotify:track:{id}"), 10)));
+            let answers = futures_join(reads).await;
+            let found: Vec<Value> = answers.iter().filter_map(|a| a.as_ref().ok()).cloned().collect();
+            ApiResponse::Recommendations {
+                generation: *generation,
+                result: match answers.into_iter().find_map(Result::err) {
+                    Some(error) if found.is_empty() => Err(error),
+                    _ => Ok(recommended(&found, seed_tracks, 20)),
+                },
+            }
+        }
         _ => return None,
     })
+}
+
+/// Every read at once, answers in the order asked.
+async fn futures_join<F, T>(reads: impl Iterator<Item = F>) -> Vec<T>
+where
+    F: std::future::Future<Output = T> + Send + 'static,
+    T: Send + 'static,
+{
+    let handles: Vec<_> = reads.map(tokio::spawn).collect();
+    let mut answers = Vec::new();
+    for handle in handles {
+        if let Ok(answer) = handle.await {
+            answers.push(answer);
+        }
+    }
+    answers
 }
 
 #[cfg(test)]
@@ -163,15 +197,42 @@ mod tests {
 
 /// Songs like a seed song, as the song's own page lists them.
 pub fn recommender_query(uri: &str, limit: u32) -> Value {
-    let _ = (uri, limit);
-    Value::Null
+    free::persisted(
+        "internalLinkRecommenderTrack",
+        "642923b2e705fceb9984697c1620fecd42615fd8b116b8a9faf2786b389d3e4a",
+        json!({"uri": uri, "limit": limit}),
+    )
 }
 
 /// Songs like the seeds, a few from each seed in turn, without the seeds
 /// themselves or repeats, at most `limit` of them.
 pub fn recommended(answers: &[Value], seeds: &[String], limit: usize) -> Vec<Track> {
-    let _ = (answers, seeds, limit);
-    Vec::new()
+    let lists: Vec<Vec<Track>> = answers
+        .iter()
+        .map(|answer| {
+            answer
+                .pointer("/data/seoRecommendedTrack/items")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(|row| free::track(row.get("data")?, None))
+                .collect()
+        })
+        .collect();
+    let mut songs: Vec<Track> = Vec::new();
+    let longest = lists.iter().map(Vec::len).max().unwrap_or_default();
+    for index in 0..longest {
+        for song in lists.iter().filter_map(|list| list.get(index)) {
+            let id = song.id.as_deref().unwrap_or_default();
+            if songs.len() < limit
+                && !seeds.iter().any(|seed| seed == id)
+                && !songs.iter().any(|known| known.uri == song.uri)
+            {
+                songs.push(song.clone());
+            }
+        }
+    }
+    songs
 }
 
 #[cfg(test)]
