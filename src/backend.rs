@@ -3031,6 +3031,15 @@ impl Worker {
             && !self.signed_in
             && self.web_tokens.iter().all(Option::is_none)
         {
+            // A Free sign-in has no grant here: Spotify's own sign-in lives
+            // in the helper's website data, and the page signs in again.
+            #[cfg(target_os = "macos")]
+            if !self.free_session
+                && crate::web_player::saved_free_sign_in(&self.dirs.volume_dir()).is_some()
+            {
+                self.sign_in_free();
+                return;
+            }
             self.emit(Event::Auth(AuthStatus::SignedOut));
         }
     }
@@ -3433,6 +3442,7 @@ impl Worker {
         {
             self.free_session = false;
             self.free_account = None;
+            crate::web_player::save_free_sign_in(&self.dirs.volume_dir(), None);
         }
         self.rootlist_pending = false;
         self.made_for_you = Arc::new(crate::made_for_you::MadeForYou::new(self.http.clone()));
@@ -4124,6 +4134,15 @@ impl Worker {
                 log::info!("signed in through Spotify's web player");
                 self.signed_in = true;
                 self.free_account = Some(user.id.clone());
+                // Answers are bound to the account they were read for; the
+                // shared session names it, with no Web API grant behind it.
+                if let Err(error) = self
+                    .api
+                    .install(ApiSource::Shared, AccountId::new(user.id.clone()))
+                {
+                    log::warn!("couldn't name the Free account: {error}");
+                }
+                crate::web_player::save_free_sign_in(&self.dirs.volume_dir(), Some(&user.id));
                 self.emit(Event::Auth(AuthStatus::Connected {
                     username: user.name().to_string(),
                 }));
@@ -5117,10 +5136,14 @@ impl Worker {
                 result = async {
                     // What the page does not read yet goes the usual way.
                     #[cfg(target_os = "macos")]
-                    if let Some((reader, account)) = &free
-                        && let Some(response) = handle_free(reader, account.as_deref(), &request).await
-                    {
-                        return (response, Vec::new());
+                    if let Some((reader, account)) = &free {
+                        let name = format!("{request:?}");
+                        let name = name.split([' ', '(', '{']).next().unwrap_or_default().to_owned();
+                        if let Some(response) = handle_free(reader, account.as_deref(), &request).await {
+                            log::info!("free read {name}: web player");
+                            return (response, Vec::new());
+                        }
+                        log::info!("free read {name}: not read through the web player");
                     }
                     handle(&api, &made_for_you, &new_releases, &connect, engine.as_deref(), &background_session, request).await
                 } => result,
@@ -5666,6 +5689,135 @@ async fn handle_free(
             .await
             .and_then(|body| free::album(&body, *offset))
             .map(|album| album.tracks.unwrap_or_default()),
+        },
+        ApiRequest::SavedAlbums { offset } => ApiResponse::SavedAlbums {
+            offset: *offset,
+            result: read(free::saved_albums_query(*offset, 50))
+                .await
+                .and_then(|body| free::saved_albums(&body, *offset)),
+        },
+        ApiRequest::Artist { id } => ApiResponse::Artist {
+            id: id.clone(),
+            result: read(free::artist_query(&format!("spotify:artist:{id}")))
+                .await
+                .and_then(|body| free::artist_overview(&body)),
+        },
+        ApiRequest::ArtistTopTracks { id } => ApiResponse::ArtistTopTracks {
+            id: id.clone(),
+            result: read(free::artist_query(&format!("spotify:artist:{id}")))
+                .await
+                .and_then(|body| free::artist_top_tracks(&body)),
+        },
+        ApiRequest::ArtistAlbums { id, groups, offset } => ApiResponse::ArtistAlbums {
+            id: id.clone(),
+            groups: groups.clone(),
+            offset: *offset,
+            result: read(free::discography_query(
+                &format!("spotify:artist:{id}"),
+                *offset,
+                50,
+            ))
+            .await
+            .and_then(|body| free::discography(&body, *offset)),
+        },
+        ApiRequest::Search { query, serial } | ApiRequest::SearchCatalogue { query, serial } => {
+            use free::SearchKind;
+            let (tracks, artists, albums, playlists) = tokio::join!(
+                read(free::search_query(SearchKind::Tracks, query, 20)),
+                read(free::search_query(SearchKind::Artists, query, 20)),
+                read(free::search_query(SearchKind::Albums, query, 20)),
+                read(free::search_query(SearchKind::Playlists, query, 20)),
+            );
+            let found: Vec<_> = [
+                (SearchKind::Tracks, tracks),
+                (SearchKind::Artists, artists),
+                (SearchKind::Albums, albums),
+                (SearchKind::Playlists, playlists),
+            ]
+            .into_iter()
+            .filter_map(|(kind, answer)| Some((kind, answer.ok()?)))
+            .collect();
+            ApiResponse::Search {
+                query: query.clone(),
+                serial: *serial,
+                result: if found.is_empty() {
+                    Err(ApiError::Network(
+                        "Spotify's web player did not answer".into(),
+                    ))
+                } else {
+                    Ok(free::search_results(&found))
+                },
+            }
+        }
+        ApiRequest::RecentlyPlayed {
+            who,
+            generation,
+            limit,
+            ..
+        } => ApiResponse::RecentlyPlayed {
+            who: *who,
+            generation: *generation,
+            limit: *limit,
+            result: async {
+                let account = account.ok_or(ApiError::NotSignedIn)?;
+                let contexts =
+                    free::recent_contexts(&read(free::recently_played_query(account, 50)).await?);
+                let uris: Vec<String> = contexts
+                    .iter()
+                    .take(50)
+                    .map(|(track, _, _)| track.clone())
+                    .collect();
+                let details = if uris.is_empty() {
+                    serde_json::Value::Null
+                } else {
+                    read(free::tracks_query(&uris)).await?
+                };
+                Ok(free::recently_played(&contexts, &details))
+            }
+            .await,
+        },
+        ApiRequest::Contains { uris } => ApiResponse::Contains {
+            uris: uris.clone(),
+            result: read(free::contains_query(uris))
+                .await
+                .and_then(|body| free::contains(&body, uris.len())),
+        },
+        ApiRequest::FollowedArtists { after } => {
+            let offset = after
+                .as_deref()
+                .and_then(|after| after.parse().ok())
+                .unwrap_or(0);
+            ApiResponse::FollowedArtists {
+                after: after.clone(),
+                result: read(free::followed_artists_query(offset, 50))
+                    .await
+                    .and_then(|body| free::followed_artists(&body, offset)),
+            }
+        }
+        ApiRequest::MadeForYou { generation, .. } => {
+            let timezone = jiff::tz::TimeZone::system()
+                .iana_name()
+                .unwrap_or("UTC")
+                .to_owned();
+            let shelves = read(free::home_query(&timezone))
+                .await
+                .and_then(|body| free::home_shelves(&body));
+            let (result, top_mixes) = match shelves {
+                Ok((made_for_you, top_mixes)) => (Ok(made_for_you), Ok(top_mixes)),
+                Err(error) => (Err(error.clone()), Err(error)),
+            };
+            ApiResponse::MadeForYou {
+                generation: *generation,
+                personalized: true,
+                result,
+                top_mixes,
+            }
+        }
+        ApiRequest::Track { id } => ApiResponse::Track {
+            id: id.clone(),
+            result: read(free::track_query(&format!("spotify:track:{id}")))
+                .await
+                .and_then(|body| free::single_track(&body)),
         },
         _ => return None,
     })
@@ -8814,6 +8966,13 @@ mod authorization_tests {
         }));
         assert!(worker.signed_in);
         assert_eq!(worker.premium, Some(false));
+        // Live, 2026-10-26: answers bound to the account (Home's Made For
+        // shelf, playlist caches) were dropped as belonging to nobody.
+        assert_eq!(
+            worker.api.account().as_ref().map(AccountId::as_str),
+            Some("listener1"),
+            "the backend knows whose answers these are"
+        );
         let events: Vec<_> = events.try_iter().collect();
         assert!(events.iter().any(|event| matches!(
             event,
@@ -8825,6 +8984,58 @@ mod authorization_tests {
         )));
         worker.sign_out();
         assert!(!worker.free_session, "signing out ends the Free session");
+    }
+
+    /// Live, 2026-10-26: after signing in through the web player, the next
+    /// launch showed the sign-in screen again; nothing remembered the Free
+    /// sign-in. With no Web API grant to restore, a remembered Free sign-in
+    /// signs in again through the helper's page.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_free_sign_in_is_restored_on_the_next_launch() {
+        let (runtime, mut worker, events) = worker("free-sign-in-restore");
+        let _entered = runtime.enter();
+        worker.free_session = true;
+        worker.on_free_signed_in(Ok(User {
+            id: "listener1".into(),
+            product: Some("free".into()),
+            ..User::default()
+        }));
+        let _ = events.try_iter().count();
+        // The next launch: a new worker on the same folders, no Web API grant.
+        let mut next = Worker::new(
+            worker.dirs.clone(),
+            worker.engine_config.clone(),
+            None,
+            worker.http.clone(),
+            worker.art.clone(),
+            Arc::new(NetActivity::default()),
+            worker.events.clone(),
+            worker.commands.clone(),
+            Waker::default(),
+        );
+        next.restore_pending = [false; 3];
+        next.on_credentials_restored(
+            CredentialSlot::Shared,
+            next.credentials.lease(CredentialSlot::Shared),
+            Ok(crate::credentials::Loaded {
+                grant: None,
+                warning: None,
+            }),
+        );
+        let first = events.try_iter().find_map(|event| match event {
+            Event::Auth(status) => Some(status),
+            _ => None,
+        });
+        assert!(
+            matches!(first, Some(AuthStatus::Connecting)),
+            "the Free sign-in comes back instead of the sign-in screen: {first:?}"
+        );
+        worker.sign_out();
+        assert!(
+            crate::web_player::saved_free_sign_in(&worker.dirs.volume_dir()).is_none(),
+            "signing out forgets it"
+        );
     }
 
     /// Live, 2026-10-26: the helper's page left for Spotify's login, so the
