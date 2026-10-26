@@ -99,6 +99,18 @@ pub async fn handle(
             )
             .await,
         },
+        ApiRequest::UploadPlaylistCover {
+            id,
+            request,
+            previous_urls,
+            cover,
+        } => ApiResponse::PlaylistCoverUploaded {
+            id: id.clone(),
+            request: *request,
+            previous_urls: previous_urls.clone(),
+            cover: cover.clone(),
+            result: upload_cover(reader, id, &cover.encoded).await,
+        },
         _ => return None,
     })
 }
@@ -465,6 +477,34 @@ async fn update(
         ask(reader, published_query(account, &playlist_uri(id), public)).await?;
     }
     Ok(())
+}
+
+/// A new cover for `id`, as the web player sets one: the JPEG goes to the
+/// image service, which registers it as a picture, and the list's
+/// attributes then name that picture.
+async fn upload_cover(
+    reader: &crate::web_player::Reader,
+    id: &str,
+    encoded: &str,
+) -> Result<(), ApiError> {
+    let registered = ask(
+        reader,
+        json!({"playlistImage": {"playlist": id, "jpeg": encoded}}),
+    )
+    .await?;
+    let picture = registered["picture"]
+        .as_str()
+        .ok_or_else(|| ApiError::Decode("Spotify registered no cover picture".into()))?;
+    ask(reader, picture_query(id, picture)).await?;
+    Ok(())
+}
+
+/// Names `picture`, as Spotify registered it, as the list's cover.
+pub fn picture_query(id: &str, picture: &str) -> Value {
+    json!({"playlistChanges": {"playlist": id, "body": list_changes(json!([
+        {"kind": "UPDATE_LIST_ATTRIBUTES", "updateListAttributes": {
+            "newAttributes": {"values": {"picture": picture}}}}
+    ]))}})
 }
 
 /// Deletes the account's own playlist `id` from its library. Only the
@@ -1085,6 +1125,46 @@ mod tests {
                 ));
             }
             eprintln!("renamed");
+            // A plain blue square as the scratch list's cover.
+            let mut png = Vec::new();
+            image::DynamicImage::ImageRgb8(image::RgbImage::from_pixel(
+                300,
+                300,
+                image::Rgb([40, 110, 230]),
+            ))
+            .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
+            .map_err(|e| e.to_string())?;
+            let cover = crate::playlist_cover::prepare(&png)?;
+            match runtime.block_on(handle(
+                &reader,
+                Some(&account),
+                &ApiRequest::UploadPlaylistCover {
+                    id: id.clone(),
+                    request: 1,
+                    previous_urls: vec![],
+                    cover,
+                },
+            )) {
+                Some(ApiResponse::PlaylistCoverUploaded { result: Ok(()), .. }) => {}
+                other => return Err(format!("cover: {other:?}")),
+            }
+            let body = runtime
+                .block_on(ask(&reader, free::playlist_query(&playlist_uri(&id), 0, 1)))
+                .map_err(|e| e.to_string())?;
+            let covered = free::playlist(&body).map_err(|e| e.to_string())?;
+            let first = covered.images.first().map(|i| i.url.clone());
+            eprintln!(
+                "cover: {first:?} (was {:?})",
+                renamed.images.first().map(|i| &i.url)
+            );
+            // Two songs: the list showed Spotify's mosaic of their art; an
+            // uploaded cover replaces it with one image of its own.
+            if first.is_none()
+                || first == renamed.images.first().map(|i| i.url.clone())
+                || first.as_deref().is_some_and(|url| url.contains("mosaic"))
+            {
+                return Err(format!("no uploaded cover: {:?}", covered.images));
+            }
             Ok(())
         };
         let outcome = steps();

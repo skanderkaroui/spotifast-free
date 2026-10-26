@@ -493,6 +493,33 @@
     }
     return null;
   };
+  // A playlist cover, as the web player uploads one (REA: image-upload/v4
+  // takes the JPEG with only the sign-in, no client token, and answers an
+  // upload token; playlist/<id>/register-image turns that into the picture
+  // the list's attributes then name). Answers the registered picture.
+  const uploadPlaylistImage = async (id, image) => {
+    if (typeof image.playlist !== 'string' || !/^[A-Za-z0-9]{22}$/.test(image.playlist) || typeof image.jpeg !== 'string') {
+      return post('query', { id, status: 400, body: 'refused: not a playlist' });
+    }
+    try {
+      const jpeg = Uint8Array.from(atob(image.jpeg), (c) => c.charCodeAt(0));
+      const uploaded = await pageFetch('https://image-upload.spotify.com/v4/playlist', {
+        method: 'POST',
+        headers: { authorization: connect.auth.authorization, 'content-type': 'image/jpeg' },
+        body: jpeg,
+      });
+      const token = await uploaded.text();
+      if (uploaded.status !== 200) return post('query', { id, status: uploaded.status, body: token });
+      const registered = await pageFetch(`${PLAYLISTS}/playlist/${image.playlist}/register-image`, {
+        method: 'POST',
+        headers: { ...headers(), accept: 'application/json' },
+        body: JSON.stringify({ uploadToken: JSON.parse(token).uploadToken }),
+      });
+      return post('query', { id, status: registered.status, body: await registered.text() });
+    } catch (error) {
+      return post('query', { id, status: 0, how: 'network', message: text(error) });
+    }
+  };
   window.__spotifastQuery = async (id, query) => {
     // A signed-out page has an anonymous token too; a read with it answers
     // an empty profile. Wait for Spotify's own sign-in marker instead.
@@ -504,6 +531,7 @@
     }
     if (account === 'signed-out') return post('query', { id, status: 0, how: 'signed-out' });
     if (!connect.auth || account !== 'signed-in') return post('query', { id, status: 0, how: 'not-ready' });
+    if (query?.playlistImage) return uploadPlaylistImage(id, query.playlistImage);
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const used = connect.auth.authorization;
       try {
