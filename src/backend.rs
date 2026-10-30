@@ -4672,8 +4672,18 @@ impl Worker {
     }
 
     fn fetch_album_types(&mut self, uris: Vec<String>) {
+        // A Free sign-in has no librespot session, but its web player's page
+        // reads the album type the same way Spotify's album page does.
+        #[cfg(target_os = "macos")]
+        let premium = if self.free_session {
+            None
+        } else {
+            self.premium
+        };
+        #[cfg(not(target_os = "macos"))]
+        let premium = self.premium;
         self.album_type_lookup
-            .enqueue(self.signed_in, self.premium, uris);
+            .enqueue(self.signed_in, premium, uris);
         self.start_album_type_lookup();
     }
 
@@ -4981,6 +4991,39 @@ impl Worker {
     }
 
     fn start_album_type_lookup(&mut self) {
+        #[cfg(target_os = "macos")]
+        if self.free_session {
+            let Some(reader) = self
+                .web_player
+                .as_ref()
+                .map(crate::web_player::WebPlayer::reader)
+            else {
+                return;
+            };
+            let Some(request) = self.album_type_lookup.next() else {
+                return;
+            };
+            let commands = self.commands.clone();
+            tokio::spawn(async move {
+                let pending = reader.query(&crate::free_reads::album_query(&request.uri, 0, 1));
+                let result = match tokio::time::timeout(ALBUM_TYPE_TIMEOUT, pending).await {
+                    Ok(reply) => crate::free_reads::answer(reply)
+                        .map_err(|error| error.to_string())
+                        .and_then(|body| {
+                            crate::free_reads::album_is_ep(&body)
+                                .ok_or_else(|| "Spotify sent no album type".to_string())
+                        }),
+                    Err(_) => Err("album metadata timed out".into()),
+                };
+                let _ = commands.send(Command::AlbumTypeResolved {
+                    uri: request.uri,
+                    session_generation: request.session_generation,
+                    engine_generation: request.engine_generation,
+                    result,
+                });
+            });
+            return;
+        }
         let Some(engine) = self.engine.clone() else {
             return;
         };
