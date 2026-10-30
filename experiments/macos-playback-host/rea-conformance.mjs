@@ -112,6 +112,13 @@ check('signed-out marker data-testid "login-button"', app, '"data-testid":"login
 check('signed-in marker data-testid "user-widget-link"', app, '"data-testid":"user-widget-link"');
 // Canvas player: playTracks(..., {muted:!0, loop:!0}).
 check('Canvas playTracks({muted:!0,loop:!0})', all, /playTracks\(\[\w\],\{[^}]*muted:!0,loop:!0/);
+// Free playlist folders: the sidebar's own rootlist read, a GET with these
+// decorations, answering contents.items and contents.metaItems.
+check('rootlist GET /user/{username}/rootlist', all,
+  /withMethod\("GET"\)\.withPath\(`\/user\/\$\{encodeURIComponent\(\w\)\}\/rootlist`\)/);
+check('rootlist decorate revision,length,attributes,timestamp,owner,capabilities', all,
+  'decorate:"revision,length,attributes,timestamp,owner,capabilities"');
+check('rootlist contents.metaItems', all, /metaItems:globalThis\.Array\.isArray\(\w\?\.metaItems\)/);
 
 console.log('\n-- Every path Diagnostics.js sends appears in Spotify\'s bundles');
 // Pull the URL templates out of Diagnostics.js and normalise ${...} to a wildcard.

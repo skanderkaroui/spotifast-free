@@ -529,6 +529,11 @@
     recentlyPlayed: (recent) => (recent && typeof recent === 'object' && USERNAME.test(recent.username ?? '')
       ? `https://spclient.wg.spotify.com/recently-played/v3/user/${encodeURIComponent(recent.username)}/recently-played?format=json&limit=${Number(recent.limit) || 50}&filter=default`
       : null),
+    // The account's playlist list with its folders, as the sidebar reads it
+    // (REA: GET playlist/v2/user/<username>/rootlist with these decorations).
+    rootlist: (username) => (typeof username === 'string' && USERNAME.test(username)
+      ? `${PLAYLISTS}/user/${encodeURIComponent(username)}/rootlist?decorate=revision,length,attributes,timestamp,owner,capabilities&bustCache=${Date.now()}`
+      : null),
   };
   window.__spotifastQuery = async (id, query) => {
     // A signed-out page has an anonymous token too; a read with it answers
