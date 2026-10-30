@@ -4714,6 +4714,45 @@ impl Worker {
     /// Asks the streaming session about the waiting shows. Without a
     /// session they wait; a failed answer leaves them shown.
     fn start_audiobook_lookup(&mut self) {
+        // A Free sign-in asks its web player's page for each show's own
+        // page, which says whether it is a podcast or an audiobook.
+        #[cfg(target_os = "macos")]
+        if let Some(reader) = self
+            .free_session
+            .then(|| {
+                self.web_player
+                    .as_ref()
+                    .map(crate::web_player::WebPlayer::reader)
+            })
+            .flatten()
+        {
+            if self.audiobook_lookup.is_empty() {
+                return;
+            }
+            let uris: Vec<String> = std::mem::take(&mut self.audiobook_lookup)
+                .into_iter()
+                .collect();
+            let session_generation = *self.session.borrow();
+            let commands = self.commands.clone();
+            tokio::spawn(async move {
+                let mut audiobooks = Vec::new();
+                for uri in uris {
+                    let pending = reader.query(&crate::free_podcasts::show_query(&uri));
+                    match crate::free_reads::answer(pending.await) {
+                        Ok(body) if crate::free_podcasts::is_audiobook(&body) == Some(true) => {
+                            audiobooks.push(uri);
+                        }
+                        Ok(_) => {}
+                        Err(error) => log::debug!("audiobook lookup failed: {error}"),
+                    }
+                }
+                let _ = commands.send(Command::AudiobookShowsResolved {
+                    session_generation,
+                    audiobooks,
+                });
+            });
+            return;
+        }
         let Some(engine) = self.engine.clone() else {
             return;
         };
