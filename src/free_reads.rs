@@ -981,6 +981,15 @@ pub async fn play_counts(
     Ok(counts)
 }
 
+/// Whether an album answer is an EP, which the Web API files under singles.
+/// The web player's `getAlbum` names the type (`albumUnion.type`: ALBUM,
+/// SINGLE, COMPILATION or EP); `None` when it does not say.
+pub fn album_is_ep(body: &Value) -> Option<bool> {
+    body.pointer("/data/albumUnion/type")
+        .and_then(Value::as_str)
+        .map(|kind| kind == "EP")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1024,6 +1033,20 @@ mod tests {
         assert_eq!(artist.followers.map(|f| f.total), Some(10_204_311));
         let bare = json!({"data": {"artistUnion": {"uri": "spotify:artist:x"}}});
         assert!(artist_overview(&bare).unwrap().followers.is_none());
+    }
+
+    #[test]
+    fn the_album_answer_says_whether_it_is_an_ep() {
+        let recorded: Value =
+            serde_json::from_str(include_str!("testdata/free/album.json")).unwrap();
+        assert_eq!(
+            album_is_ep(&recorded),
+            Some(false),
+            "the recorded album is an ALBUM"
+        );
+        let ep = json!({"data": {"albumUnion": {"type": "EP"}}});
+        assert_eq!(album_is_ep(&ep), Some(true));
+        assert_eq!(album_is_ep(&json!({"data": {}})), None);
     }
     use crate::web_player::QueryReply;
 
