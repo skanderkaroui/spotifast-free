@@ -2228,6 +2228,10 @@ impl Worker {
                             crate::soloist::Status::Off,
                         )));
                     }
+                    if !soloist_allowed(enabled, self.free_session) {
+                        self.stop_soloist().await;
+                        continue;
+                    }
                     if enabled && let Some(account) = self.api.account() {
                         let commands = self.commands.clone();
                         let generation = self.soloist_generation;
@@ -6075,6 +6079,13 @@ async fn handle_free(
     })
 }
 
+/// Whether an enabled Soloist may start. Soloist needs Premium, so a Free
+/// sign-in, which plays through Spotify's web player, never starts it, even
+/// with Soloist left on from a Premium account.
+fn soloist_allowed(enabled: bool, free_session: bool) -> bool {
+    !(enabled && free_session)
+}
+
 /// Tries the session Home route before the shared fallback and routes other API work.
 async fn handle(
     api: &ApiGateway,
@@ -9277,6 +9288,16 @@ mod authorization_tests {
             Waker::default(),
         );
         (runtime, worker, events)
+    }
+
+    #[test]
+    fn soloist_never_starts_on_a_free_sign_in() {
+        assert!(soloist_allowed(true, false), "Premium keeps Soloist");
+        assert!(!soloist_allowed(true, true), "Free never starts it");
+        assert!(
+            soloist_allowed(false, true),
+            "turning it off always goes through"
+        );
     }
 
     /// A Free sign-in signs the app in with the account the web player's
