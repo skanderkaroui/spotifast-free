@@ -5130,6 +5130,38 @@ impl Worker {
             let _ = events.send(Event::PlayCounts { uri, result });
             waker.wake();
         };
+        // A Free sign-in has no librespot session: its web player's page
+        // reads the same artist and album queries, counts included.
+        #[cfg(target_os = "macos")]
+        if let Some(reader) = self
+            .free_session
+            .then(|| {
+                self.web_player
+                    .as_ref()
+                    .map(crate::web_player::WebPlayer::reader)
+            })
+            .flatten()
+        {
+            let mut cancelled = self.session.subscribe();
+            tokio::spawn(async move {
+                let read = tokio::time::timeout(
+                    Duration::from_secs(15),
+                    crate::free_reads::play_counts(&reader, &uri),
+                );
+                let result = tokio::select! {
+                    biased;
+                    _ = cancelled.changed() => Err("The playback session ended.".to_string()),
+                    result = read => result
+                        .map_err(|_| "Spotify took too long to answer.".to_string())
+                        .and_then(|result| result),
+                };
+                if let Err(error) = &result {
+                    log::debug!("Play counts unavailable through the web player: {error}");
+                }
+                send(uri, result);
+            });
+            return;
+        }
         let Some(engine) = self.engine.clone() else {
             return send(uri, Err("Play counts need playback enabled.".into()));
         };

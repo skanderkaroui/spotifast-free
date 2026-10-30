@@ -907,9 +907,102 @@ pub fn user(profile: &Value, account: &Value) -> Result<User, ApiError> {
     })
 }
 
+/// Album pages of play counts, as Spotify's album page reads them.
+const PLAY_COUNT_PAGE: u32 = 50;
+/// No album runs longer; a page that never ends stops here.
+const MAX_PLAY_COUNT_ROWS: u32 = 1000;
+
+/// The play counts in one answer to `queryArtistOverview` (its popular
+/// songs) or `getAlbum` (one page of songs), with the rows it held and the
+/// album's song total. The web player's own artist and album pages show
+/// these, so a Free sign-in reads them through its page, as Premium reads
+/// the same queries through librespot's session.
+pub fn play_count_page(
+    body: &Value,
+    counts: &mut std::collections::HashMap<String, u64>,
+) -> Result<(u32, u32), ApiError> {
+    if let Some(top) = body.pointer("/data/artistUnion/discography/topTracks") {
+        let rows = crate::session_reads::play_counts_from(top, counts);
+        return Ok((u32::try_from(rows).unwrap_or(u32::MAX), 0));
+    }
+    let page = body
+        .pointer("/data/albumUnion/tracksV2")
+        .ok_or_else(|| ApiError::Decode("Spotify sent no play counts".into()))?;
+    let rows = crate::session_reads::play_counts_from(page, counts);
+    Ok((
+        u32::try_from(rows).unwrap_or(u32::MAX),
+        u32_at(page, "/totalCount").unwrap_or_default(),
+    ))
+}
+
+/// Spotify's play count for each song of the album or artist `uri`, read
+/// through the Free web player's page.
+#[cfg(target_os = "macos")]
+pub async fn play_counts(
+    reader: &crate::web_player::Reader,
+    uri: &str,
+) -> Result<std::collections::HashMap<String, u64>, String> {
+    let read = |query: Value| {
+        let pending = reader.query(&query);
+        async move { answer(pending.await) }
+    };
+    let mut counts = std::collections::HashMap::new();
+    match crate::util::uri_kind(uri) {
+        Some("artist") => {
+            let body = read(artist_query(uri))
+                .await
+                .map_err(|error| error.to_string())?;
+            play_count_page(&body, &mut counts).map_err(|error| error.to_string())?;
+        }
+        Some("album") => {
+            let mut offset = 0;
+            loop {
+                let body = read(album_query(uri, offset, PLAY_COUNT_PAGE))
+                    .await
+                    .map_err(|error| error.to_string())?;
+                let (rows, total) =
+                    play_count_page(&body, &mut counts).map_err(|error| error.to_string())?;
+                offset += rows;
+                if rows == 0 || offset >= total || offset >= MAX_PLAY_COUNT_ROWS {
+                    break;
+                }
+            }
+        }
+        _ => return Err("Spotify counts plays only for album and artist songs".into()),
+    }
+    Ok(counts)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn play_counts_come_from_the_artist_and_album_pages() {
+        let mut counts = std::collections::HashMap::new();
+        let artist = json!({"data": {"artistUnion": {"discography": {"topTracks": {"items": [
+            {"track": {"uri": "spotify:track:a", "playcount": "10808862"}},
+            {"track": {"uri": "spotify:track:b", "playcount": "7"}},
+        ]}}}}});
+        assert_eq!(play_count_page(&artist, &mut counts).unwrap(), (2, 0));
+        let album = json!({"data": {"albumUnion": {"tracksV2": {"totalCount": 12, "items": [
+            {"track": {"uri": "spotify:track:c", "playcount": "42"}},
+        ]}}}});
+        assert_eq!(play_count_page(&album, &mut counts).unwrap(), (1, 12));
+        assert_eq!(counts.get("spotify:track:a"), Some(&10_808_862));
+        assert_eq!(counts.get("spotify:track:c"), Some(&42));
+        assert!(play_count_page(&json!({"data": {}}), &mut counts).is_err());
+
+        // The web player's own album answer, recorded on a Free sign-in.
+        let recorded: Value =
+            serde_json::from_str(include_str!("testdata/free/album.json")).unwrap();
+        let mut counts = std::collections::HashMap::new();
+        assert_eq!(play_count_page(&recorded, &mut counts).unwrap(), (2, 13));
+        assert_eq!(
+            counts.get("spotify:track:0dEIca2nhcxDUV8C5QkPYb"),
+            Some(&165_635_846)
+        );
+    }
     use crate::web_player::QueryReply;
 
     /// The web player's answers, as recorded from open.spotify.com for a
