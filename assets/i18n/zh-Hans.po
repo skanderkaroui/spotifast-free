@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Spotifast\n"
 "Report-Msgid-Bugs-To: https://github.com/crmne/spotifast/issues/new?"
 "template=translation.yml\n"
-"POT-Creation-Date: 2026-10-31 20:16+0100\n"
+"POT-Creation-Date: 2026-10-31 20:22+0100\n"
 "PO-Revision-Date: 2026-09-09 13:30+0000\n"
 "Last-Translator: Spotifast contributors\n"
 "Language-Team: Simplified Chinese\n"
@@ -28,12 +28,12 @@ msgstr "暂停 {name}"
 msgid "Play {name}"
 msgstr "播放 {name}"
 
-#: src/ui/sidebar.rs:302 src/app.rs:3695 src/app.rs:23772
+#: src/ui/sidebar.rs:302 src/app.rs:3695 src/app.rs:23773
 #: src/ui/collection.rs:2139 src/ui/collection.rs:2368
 msgid "Playlist"
 msgstr "歌单"
 
-#: src/ui/sidebar.rs:312 src/ui/friends.rs:304 src/app.rs:3669 src/app.rs:23777
+#: src/ui/sidebar.rs:312 src/ui/friends.rs:304 src/app.rs:3669 src/app.rs:23778
 #: src/ui/collection.rs:2361 src/ui/home.rs:93 src/ui/keys.rs:360
 #: src/ui/winamp/playlist.rs:653
 msgid "Liked Songs"
@@ -79,7 +79,7 @@ msgstr "歌单 • {owner}"
 msgid "Home"
 msgstr "首页"
 
-#: src/ui/sidebar.rs:979 src/app.rs:8504 src/ui/keys.rs:339
+#: src/ui/sidebar.rs:979 src/app.rs:8505 src/ui/keys.rs:339
 msgid "Search"
 msgstr "搜索"
 
@@ -111,7 +111,7 @@ msgstr "搜索音乐库"
 msgid "Library"
 msgstr "音乐库"
 
-#: src/ui/sidebar.rs:1095 src/app.rs:8478 src/model.rs:807 src/ui/search.rs:668
+#: src/ui/sidebar.rs:1095 src/app.rs:8479 src/model.rs:807 src/ui/search.rs:668
 msgid "Playlists"
 msgstr "歌单"
 
@@ -248,7 +248,7 @@ msgstr "点击切换可视化效果"
 msgid "Nothing playing"
 msgstr "暂无播放曲目"
 
-#: src/ui/player_bar.rs:446 src/app.rs:9978
+#: src/ui/player_bar.rs:446 src/app.rs:9979
 msgid "Pick a song, album, or playlist"
 msgstr "选择歌曲、专辑或歌单"
 
@@ -443,7 +443,7 @@ msgid "No timed lyrics for this track."
 msgstr "这首歌没有同步歌词。"
 
 #: src/ui/lyrics.rs:462 src/ui/widgets.rs:2829 src/ui/widgets.rs:2869
-#: src/ui/widgets.rs:2897 src/app.rs:13897 src/ui/collection.rs:902
+#: src/ui/widgets.rs:2897 src/app.rs:13898 src/ui/collection.rs:902
 msgid "Loading…"
 msgstr "加载中…"
 
@@ -652,7 +652,7 @@ msgstr "播放次数"
 msgid "Sort by duration"
 msgstr "按时长排序"
 
-#: src/ui/widgets.rs:2908 src/app.rs:14112 src/app.rs:14126
+#: src/ui/widgets.rs:2908 src/app.rs:14113 src/app.rs:14127
 msgid "Network connection error. Check your connection."
 msgstr "网络连接错误。请检查连接。"
 
@@ -805,379 +805,379 @@ msgid "Podcast"
 msgstr "播客"
 
 #. Translators: {count} is the number of visualizer presets added.
-#: src/app.rs:4290
+#: src/app.rs:4291
 #, rust-format
 msgid "Added {count} MilkDrop preset"
 msgid_plural "Added {count} MilkDrop presets"
 msgstr[0] "已添加 {count} 个 MilkDrop 预设"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:4306
+#: src/app.rs:4307
 #, rust-format
 msgid "Couldn't fetch presets: {error}"
 msgstr "无法获取预设：{error}"
 
 #. Translators: {folder} is a folder path and {error} is an error message.
-#: src/app.rs:4439
+#: src/app.rs:4440
 #, rust-format
 msgid "Couldn't open {folder}: {error}"
 msgstr "无法打开 {folder}：{error}"
 
 #. Translators: {skin} is the name of a Winamp skin.
-#: src/app.rs:4455
+#: src/app.rs:4456
 #, rust-format
 msgid "Added {skin} skin"
 msgstr "已添加皮肤“{skin}”"
 
-#: src/app.rs:4556
+#: src/app.rs:4557
 msgid "Proxy applied. Restarting local playback."
 msgstr "代理已应用，正在重启本地播放。"
 
-#: src/app.rs:4558
+#: src/app.rs:4559
 msgid "Proxy settings applied"
 msgstr "代理设置已应用"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:4565
+#: src/app.rs:4566
 #, rust-format
 msgid ""
 "Proxy could not be applied: {error}. Previous connection settings are still "
 "in use."
 msgstr "无法应用代理：{error}。仍在使用之前的连接设置。"
 
-#: src/app.rs:6593
+#: src/app.rs:6594
 msgid "Queue cleared"
 msgstr "播放队列已清空"
 
 #. Translators: Keep {date} unchanged. It is a date in YYYY-MM-DD form.
-#: src/app.rs:6623 src/app.rs:23762
+#: src/app.rs:6624 src/app.rs:23763
 #, rust-format
 msgid "Queue {date}"
 msgstr "队列 {date}"
 
-#: src/app.rs:7186 src/ui/login.rs:185
+#: src/app.rs:7187 src/ui/login.rs:185
 msgid "Your Spotify sign-in expired. Please sign in again."
 msgstr "你的 Spotify 登录已过期，请重新登录。"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:7193
+#: src/app.rs:7194
 #, rust-format
 msgid "Couldn't load your profile: {error}"
 msgstr "无法加载你的个人资料：{error}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:7255
+#: src/app.rs:7256
 #, rust-format
 msgid "Couldn't list devices: {error}"
 msgstr "无法列出设备：{error}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:7722
+#: src/app.rs:7723
 #, rust-format
 msgid "Couldn't load more playlists: {error}"
 msgstr "无法加载更多歌单：{error}"
 
-#: src/app.rs:7768
+#: src/app.rs:7769
 msgid ""
 "Spotify hasn't confirmed your playlist changes yet. Try refreshing again."
 msgstr "Spotify 尚未确认你的歌单更改，请再次刷新。"
 
 #. Translators: {name} is a playlist name.
-#: src/app.rs:7972
+#: src/app.rs:7973
 #, rust-format
 msgid "Created {name}"
 msgstr "已创建 {name}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:7998
+#: src/app.rs:7999
 #, rust-format
 msgid "Couldn't create the playlist: {error}"
 msgstr "无法创建歌单：{error}"
 
-#: src/app.rs:8052
+#: src/app.rs:8053
 msgid "Playlist cover updated"
 msgstr "歌单封面已更新"
 
-#: src/app.rs:8061
+#: src/app.rs:8062
 msgid "Playlist updated"
 msgstr "歌单已更新"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8071 src/app.rs:8188
+#: src/app.rs:8072 src/app.rs:8189
 #, rust-format
 msgid "Couldn't update the playlist: {error}"
 msgstr "无法更新歌单：{error}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8145
+#: src/app.rs:8146
 #, rust-format
 msgid "Playlist change failed: {error}"
 msgstr "歌单更改失败：{error}"
 
-#: src/app.rs:8172
+#: src/app.rs:8173
 msgid "Added to Your Library"
 msgstr "已添加到音乐库"
 
-#: src/app.rs:8174 src/app.rs:8382
+#: src/app.rs:8175 src/app.rs:8383
 msgid "Removed from Your Library"
 msgstr "已从音乐库中移除"
 
-#: src/app.rs:8375
+#: src/app.rs:8376
 msgid "Added to Liked Songs"
 msgstr "已添加到已点赞的歌曲"
 
-#: src/app.rs:8377
+#: src/app.rs:8378
 msgid "Removed from Liked Songs"
 msgstr "已从已点赞的歌曲中移除"
 
-#: src/app.rs:8379
+#: src/app.rs:8380
 msgid "Following artist"
 msgstr "已关注艺人"
 
-#: src/app.rs:8380
+#: src/app.rs:8381
 msgid "Unfollowed artist"
 msgstr "已取消关注艺人"
 
-#: src/app.rs:8381
+#: src/app.rs:8382
 msgid "Saved to Your Library"
 msgstr "已保存到音乐库"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8396
+#: src/app.rs:8397
 #, rust-format
 msgid "Couldn't update your library: {error}"
 msgstr "无法更新你的音乐库：{error}"
 
 #. Translators: {query} is the words someone searched for.
-#: src/app.rs:8448
+#: src/app.rs:8449
 #, rust-format
 msgid "Nothing on Spotify matches “{query}”"
 msgstr "Spotify 上没有与“{query}”匹配的内容"
 
 #. Translators: {query} is the words someone searched for; {error} is an error message.
-#: src/app.rs:8456
+#: src/app.rs:8457
 #, rust-format
 msgid "Couldn't search for “{query}”: {error}"
 msgstr "无法搜索“{query}”：{error}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8711
+#: src/app.rs:8712
 #, rust-format
 msgid "Cannot open this song: {error}"
 msgstr "无法打开这首歌曲：{error}"
 
-#: src/app.rs:8725
+#: src/app.rs:8726
 msgid "This episode's podcast is not on Spotify"
 msgstr "这个单集所属的播客不在 Spotify 上"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8730
+#: src/app.rs:8731
 #, rust-format
 msgid "Cannot open this episode: {error}"
 msgstr "无法打开这个单集：{error}"
 
-#: src/app.rs:8782
+#: src/app.rs:8783
 msgid "Choose a device from the devices menu first."
 msgstr "请先在设备菜单中选择一个设备。"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8806
+#: src/app.rs:8807
 #, rust-format
 msgid "Couldn't switch device: {error}"
 msgstr "无法切换设备：{error}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8817 src/app.rs:8841
+#: src/app.rs:8818 src/app.rs:8842
 #, rust-format
 msgid "Couldn't add to queue: {error}"
 msgstr "无法添加到播放队列：{error}"
 
-#: src/app.rs:8932
+#: src/app.rs:8933
 msgid "This song's album is not on Spotify"
 msgstr "这首歌曲所属的专辑不在 Spotify 上"
 
-#: src/app.rs:8949
+#: src/app.rs:8950
 msgid "Spotifast cannot open this kind of Spotify link"
 msgstr "Spotifast 无法打开这类 Spotify 链接"
 
-#: src/app.rs:9197
+#: src/app.rs:9198
 msgid "Nothing is playing. Pick something first"
 msgstr "当前没有播放内容，请先选择要播放的内容"
 
-#: src/app.rs:9599
+#: src/app.rs:9600
 msgid "Choose a device, or enable playback on this computer"
 msgstr "请选择一个设备，或在这台电脑上启用播放"
 
-#: src/app.rs:9961 src/app.rs:9966
+#: src/app.rs:9962 src/app.rs:9967
 msgid "Pick something to play"
 msgstr "选择要播放的内容"
 
 #. Translators: {name} is an album name.
-#: src/app.rs:10391
+#: src/app.rs:10392
 #, rust-format
 msgid "Loading {name} to queue…"
 msgstr "正在将 {name} 添加到播放队列…"
 
-#: src/app.rs:10410
+#: src/app.rs:10411
 msgid "Playback device changed. Add the album to queue again"
 msgstr "播放设备已更改，请重新将专辑添加到播放队列"
 
-#: src/app.rs:10419 src/app.rs:10437 src/app.rs:10446
+#: src/app.rs:10420 src/app.rs:10438 src/app.rs:10447
 msgid "Couldn't load the album's songs in order. Try again"
 msgstr "无法按顺序加载专辑中的歌曲，请重试"
 
 #. Translators: {name} is an album name and {error} is an error message.
-#: src/app.rs:10426
+#: src/app.rs:10427
 #, rust-format
 msgid "Couldn't add {name} to queue: {error}"
 msgstr "无法将 {name} 添加到播放队列：{error}"
 
-#: src/app.rs:10484
+#: src/app.rs:10485
 msgid "This album has no playable songs to queue"
 msgstr "这张专辑没有可添加到播放队列的歌曲"
 
 #. Translators: {count} is a number of songs and {name} is an album name.
-#: src/app.rs:10493
+#: src/app.rs:10494
 #, rust-format
 msgid "{count} song from {name} added to queue"
 msgid_plural "{count} songs from {name} added to queue"
 msgstr[0] "已将 {name} 中的 {count} 首歌曲添加到播放队列"
 
 #. Translators: {count} is a number of songs.
-#: src/app.rs:10541
+#: src/app.rs:10542
 #, rust-format
 msgid "{count} song added to queue"
 msgid_plural "{count} songs added to queue"
 msgstr[0] "已将 {count} 首歌曲添加到播放队列"
 
 #. Translators: {name} is a song, episode, album, or playlist name.
-#: src/app.rs:10581
+#: src/app.rs:10582
 #, rust-format
 msgid "{name} added to queue"
 msgstr "已将 {name} 添加到播放队列"
 
-#: src/app.rs:11133
+#: src/app.rs:11134
 msgid "The clipboard has no Spotify song links"
 msgstr "剪贴板中没有 Spotify 歌曲链接"
 
 #. Translators: {count} is the number of pasted links that failed.
-#: src/app.rs:11214
+#: src/app.rs:11215
 #, rust-format
 msgid "{count} pasted link could not be added"
 msgid_plural "{count} pasted links could not be added"
 msgstr[0] "有 {count} 个粘贴的链接无法添加"
 
-#: src/app.rs:11979
+#: src/app.rs:11980
 msgid "Spotify doesn't let apps remove a playlist description, so it was kept"
 msgstr "Spotify 不允许应用删除歌单简介，因此简介已保留"
 
-#: src/app.rs:12010
+#: src/app.rs:12011
 msgid "Spotify Free plays on this computer only"
 msgstr "Spotify Free 只在这台电脑上播放"
 
-#: src/app.rs:12047 src/app.rs:12060
+#: src/app.rs:12048 src/app.rs:12061
 msgid "Link copied"
 msgstr "链接已复制"
 
 #. Translators: {count} is a number of song links, always more than one.
-#: src/app.rs:12064
+#: src/app.rs:12065
 #, rust-format
 msgid "{count} link copied"
 msgid_plural "{count} links copied"
 msgstr[0] "已复制 {count} 个链接"
 
-#: src/app.rs:12365
+#: src/app.rs:12366
 msgid ""
 "Spotify doesn't let apps reorder your playlists, so this order is saved on "
 "this computer"
 msgstr "Spotify 不允许应用调整歌单顺序，因此此顺序保存在这台电脑上"
 
-#: src/app.rs:12513
+#: src/app.rs:12514
 msgid "Restarting local playback"
 msgstr "正在重启本地播放"
 
-#: src/app.rs:12551
+#: src/app.rs:12552
 msgid "Local playback needs Spotify Premium"
 msgstr "本地播放需要 Spotify Premium"
 
-#: src/app.rs:12602
+#: src/app.rs:12603
 msgid "Play history cleared"
 msgstr "播放记录已清除"
 
 #. Translators: {size} is a size in megabytes, such as 12.5.
-#: src/app.rs:12613
+#: src/app.rs:12614
 #, rust-format
 msgid "Cleared {size} MB of artwork"
 msgstr "已清除 {size} MB 封面图片"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:12619
+#: src/app.rs:12620
 #, rust-format
 msgid "Couldn't clear artwork: {error}"
 msgstr "无法清除封面图片：{error}"
 
-#: src/app.rs:12846
+#: src/app.rs:12847
 msgid "Downloading MilkDrop preset packs"
 msgstr "正在下载 MilkDrop 预设包"
 
 #. Translators: {name} is the name of a visualizer preset pack.
-#: src/app.rs:12880
+#: src/app.rs:12881
 #, rust-format
 msgid "Downloading {name} presets"
 msgstr "正在下载 {name} 预设"
 
-#: src/app.rs:14046
+#: src/app.rs:14047
 msgid "Couldn't start playback"
 msgstr "无法开始播放"
 
-#: src/app.rs:14047
+#: src/app.rs:14048
 msgid "Couldn't pause"
 msgstr "无法暂停"
 
-#: src/app.rs:14048
+#: src/app.rs:14049
 msgid "Couldn't skip"
 msgstr "无法跳过"
 
-#: src/app.rs:14049
+#: src/app.rs:14050
 msgid "Couldn't go back"
 msgstr "无法返回上一首"
 
-#: src/app.rs:14050
+#: src/app.rs:14051
 msgid "Couldn't seek"
 msgstr "无法调整播放进度"
 
-#: src/app.rs:14051
+#: src/app.rs:14052
 msgid "Couldn't change the volume"
 msgstr "无法调整音量"
 
-#: src/app.rs:14052
+#: src/app.rs:14053
 msgid "Couldn't change shuffle"
 msgstr "无法切换随机播放"
 
-#: src/app.rs:14053
+#: src/app.rs:14054
 msgid "Couldn't change repeat"
 msgstr "无法切换循环模式"
 
-#: src/app.rs:14096 src/ui/mod.rs:433
+#: src/app.rs:14097 src/ui/mod.rs:433
 msgid "Spotify won't let this computer play this song right now."
 msgstr "Spotify 现在不让这台电脑播放这首歌。"
 
-#: src/app.rs:14103
+#: src/app.rs:14104
 msgid ""
 "No audio output device was found. Connect or enable one, then press play "
 "again."
 msgstr "未找到音频输出设备。请连接或启用一个设备，然后再次点击播放。"
 
-#: src/app.rs:14117
+#: src/app.rs:14118
 msgid ""
 "Spotify doesn't make this playlist's songs available to third-party apps."
 msgstr "Spotify 不向第三方应用提供此歌单中的歌曲。"
 
-#: src/app.rs:14238
+#: src/app.rs:14239
 msgid "Spotify sign-in expired. Sign in again, then retry the cover upload."
 msgstr "Spotify 登录已过期。请重新登录，然后重试上传封面。"
 
-#: src/app.rs:14243
+#: src/app.rs:14244
 msgid ""
 "Spotify refused this cover. Check that you own the playlist, then sign in "
 "again to grant image upload permission. If using a personal app, reconnect "
@@ -1186,19 +1186,19 @@ msgstr ""
 "Spotify 拒绝了此封面。请确认你是歌单的所有者，然后重新登录以授予上传图片的权"
 "限。如果使用个人应用，也请在设置中重新连接它。"
 
-#: src/app.rs:14247
+#: src/app.rs:14248
 msgid "Spotify rejected the image size. Choose a smaller image."
 msgstr "Spotify 拒绝了此图片尺寸，请选择更小的图片。"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:14250
+#: src/app.rs:14251
 #, rust-format
 msgid "Couldn't upload the cover: {error}. Try again."
 msgstr "无法上传封面：{error}。请重试。"
 
 #. Translators: Keep {track} unchanged. It is the name of the song,
 #. playlist, album, or artist the radio is based on, not translated.
-#: src/app.rs:23782 src/app/radio.rs:38
+#: src/app.rs:23783 src/app/radio.rs:38
 #, rust-format
 msgid "{track} Radio"
 msgstr "{track} 电台"
