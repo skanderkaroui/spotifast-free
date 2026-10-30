@@ -982,6 +982,10 @@ pub struct LyricsRequest {
     /// The local file a `spotify:local:` track plays from, whose own
     /// lyrics come before LRCLIB's.
     pub local_file: Option<std::path::PathBuf>,
+    /// The song's cover URL. Spotify's web player asks for lyrics by song
+    /// and cover image (`color-lyrics/v2/track/<id>/image/<image>`), so a
+    /// Free sign-in reads them that way.
+    pub cover: Option<String>,
 }
 
 pub enum Event {
@@ -5085,6 +5089,25 @@ impl Worker {
         let waker = self.waker.clone();
         let cache_dir = self.dirs.lyrics_cache_dir();
         let engine = self.engine.clone();
+        #[cfg(target_os = "macos")]
+        let free: Option<FreeLyricsRead> = self
+            .free_session
+            .then(|| {
+                self.web_player
+                    .as_ref()
+                    .map(crate::web_player::WebPlayer::reader)
+            })
+            .flatten()
+            .zip(crate::free_reads::lyrics_query(
+                &request.uri,
+                request.cover.as_deref(),
+            ))
+            .map(|(reader, query)| {
+                let pending = reader.query(&query);
+                Box::pin(async move { crate::free_reads::answer(pending.await) }) as FreeLyricsRead
+            });
+        #[cfg(not(target_os = "macos"))]
+        let free: Option<FreeLyricsRead> = None;
         tokio::spawn(async move {
             // A local file's own words go first, then Spotify's: they
             // follow the recording exactly. Everything else, a signed-out
@@ -5098,7 +5121,7 @@ impl Worker {
             };
             let exact = match own {
                 Some(found) => Some(found),
-                None => spotify_lyrics(engine, &request.uri, &cache_dir).await,
+                None => spotify_lyrics(engine, free, &request.uri, &cache_dir).await,
             };
             let result = match exact {
                 Some(found) => Ok(Some(found)),
@@ -7088,11 +7111,17 @@ fn settle<T>(result: Result<T, session_reads::Failure>) -> Option<ApiResult<T>> 
     }
 }
 
+/// A Free sign-in's lyrics read through its web player's page, ready to run.
+type FreeLyricsRead = std::pin::Pin<
+    Box<dyn std::future::Future<Output = Result<serde_json::Value, ApiError>> + Send>,
+>;
+
 /// Spotify's transcription of the track, when the local session can ask for
 /// one. Answers are cached like LRCLIB's, "none" included; `None` falls
 /// back to LRCLIB.
 async fn spotify_lyrics(
     engine: Option<Arc<Engine>>,
+    free: Option<FreeLyricsRead>,
     uri: &str,
     cache_dir: &std::path::Path,
 ) -> Option<crate::lyrics::Lyrics> {
@@ -7100,6 +7129,30 @@ async fn spotify_lyrics(
     let path = cache_dir.join(format!("spotify-{id}.json"));
     if let Some(cached) = crate::lyrics::cached(&path) {
         return cached;
+    }
+    // A Free sign-in reads them through its web player's page.
+    if let Some(read) = free {
+        return match read.await {
+            Ok(body) => {
+                let found = crate::lyrics::from_spotify(&body);
+                // Capped lyrics are not "none": the account may lift the
+                // cap, and LRCLIB still gets its turn now.
+                if !crate::lyrics::spotify_capped(&body) {
+                    crate::lyrics::store(&path, &found);
+                }
+                found
+            }
+            // No lyrics for this song: remember that, as below.
+            Err(ApiError::Status { status: 404, .. }) => {
+                crate::lyrics::store(&path, &None);
+                None
+            }
+            // An outage keeps what was found before, as below.
+            Err(error) => {
+                log::debug!("spotify lyrics unavailable through the web player: {error}");
+                crate::lyrics::previously_found(&path)
+            }
+        };
     }
     let Some(engine) = engine else {
         return crate::lyrics::previously_found(&path);
