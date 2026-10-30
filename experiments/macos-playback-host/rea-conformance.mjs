@@ -119,6 +119,13 @@ check('rootlist GET /user/{username}/rootlist', all,
 check('rootlist decorate revision,length,attributes,timestamp,owner,capabilities', all,
   'decorate:"revision,length,attributes,timestamp,owner,capabilities"');
 check('rootlist contents.metaItems', all, /metaItems:globalThis\.Array\.isArray\(\w\?\.metaItems\)/);
+// Free lyrics: the lyrics view reads color-lyrics/v2 by song and cover with
+// format=json and vocalRemoval, and treats capStatus "CAPPED" as cut short.
+check('lyrics GET color-lyrics/v2/track/{id}/image/{image}', all,
+  /withPath\(`\/track\/\$\{encodeURIComponent\(\w\)\}\/image\/\$\{encodeURIComponent\(\w\)\}`\)\.withQueryParameters\(\w\)/);
+check('lyrics host color-lyrics/v2', all, '/color-lyrics/v2`');
+check('lyrics query format json + vocalRemoval', all, /\{format:"json",vocalRemoval:\w\}/);
+check('lyrics capStatus "CAPPED"', all, '"CAPPED"===t.capStatus');
 
 console.log('\n-- Every path Diagnostics.js sends appears in Spotify\'s bundles');
 // Pull the URL templates out of Diagnostics.js and normalise ${...} to a wildcard.
@@ -140,6 +147,7 @@ const pathEvidence = {
   '/connect-state/v1/cluster': [/connect-state\\\/v1\\\/cluster/, /\/v1\/cluster`/],
   '/melody/v1/time': ['@webgate/melody/v1/time'],
   '/inspiredby-mix/v2/seed_to_playlist/*': ['/inspiredby-mix/v2`', '/seed_to_playlist/${'],
+  '/color-lyrics/v2/track/*/image/*': ['/color-lyrics/v2`', /\/track\/\$\{encodeURIComponent\(\w\)\}\/image\/\$\{encodeURIComponent\(\w\)\}`/],
   '/track-playback/v1/devices/*/state': ['@webgate/track-playback', /\/v1\/devices\/\$\{this\._deviceId\}\/state`/],
   '/connect-state/v1/devices/hobs_*': [/"hobs_"\+this\._localDeviceId/, /\/v1\/devices\/\$\{/],
 };

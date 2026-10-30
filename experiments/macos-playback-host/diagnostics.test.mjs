@@ -689,6 +689,42 @@ for (const name of fixtureNames) {
   console.log('ok: the playlist list is read for the username asked only');
 }
 
+// A Free account's lyrics: the page reads color-lyrics for the song and
+// cover asked, with a GET and its sign-in, and refuses anything else.
+{
+  const out = [];
+  const asked = [];
+  const page = {
+    ...context,
+    document: { ...document, querySelector: (selector) => (selector.includes('user-widget-link') ? {} : null) },
+    window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } },
+      fetch: async (input, init = {}) => {
+        const url = typeof input === 'string' ? input : input.url;
+        if (url.includes('/color-lyrics/')) {
+          asked.push({ url, method: init.method, headers: init.headers });
+          return { ok: true, status: 200, text: async () => '{"lyrics":{"lines":[]}}' };
+        }
+        return { ok: true, status: 200, json: async () => ({}) };
+      } },
+    setInterval: () => {},
+    setTimeout,
+    navigator: {},
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer first' } });
+  const image = 'spotify:image:ab67616d0000b273c8b444df094279e70d0ed856';
+  await page.window.__spotifastQuery(1, { lyrics: { track: '0DiWol3AO6WpXZgp0goxAV', image } });
+  await page.window.__spotifastQuery(2, { lyrics: { track: '../x', image } });
+  await page.window.__spotifastQuery(3, { lyrics: { track: '0DiWol3AO6WpXZgp0goxAV', image: 'https://evil' } });
+  assert.equal(asked.length, 1);
+  assert.equal(asked[0].url, `https://spclient.wg.spotify.com/color-lyrics/v2/track/0DiWol3AO6WpXZgp0goxAV/image/${encodeURIComponent(image)}?format=json&vocalRemoval=false`);
+  assert.equal(asked[0].method, undefined, 'a GET');
+  assert.equal(asked[0].headers.authorization, 'Bearer first');
+  const answers = out.filter((event) => event.event === 'query');
+  assert.deepEqual(answers.map((a) => [a.id, a.status]), [[1, 200], [2, 400], [3, 400]]);
+  console.log('ok: lyrics are read for the song and cover asked only');
+}
+
 // Spotify's code page (accounts.spotify.com/login/otp) has one box per digit
 // and keeps only the last character put into a box (REA, authn-web chunk 39:
 // the box's onChange takes value.slice(-1); only onPaste fills every box).

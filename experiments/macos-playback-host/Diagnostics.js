@@ -534,6 +534,14 @@
     rootlist: (username) => (typeof username === 'string' && USERNAME.test(username)
       ? `${PLAYLISTS}/user/${encodeURIComponent(username)}/rootlist?decorate=revision,length,attributes,timestamp,owner,capabilities&bustCache=${Date.now()}`
       : null),
+    // A song's lyrics, as the lyrics view reads them (REA: GET
+    // color-lyrics/v2/track/<id>/image/<cover> with format=json and
+    // vocalRemoval). A Free account may get them capped (capStatus).
+    lyrics: (asked) => (asked
+      && /^[A-Za-z0-9]{22}$/.test(asked.track ?? '')
+      && /^spotify:image:[a-f0-9]{40}$/.test(asked.image ?? '')
+      ? `https://spclient.wg.spotify.com/color-lyrics/v2/track/${asked.track}/image/${encodeURIComponent(asked.image)}?format=json&vocalRemoval=false`
+      : null),
   };
   window.__spotifastQuery = async (id, query) => {
     // A signed-out page has an anonymous token too; a read with it answers
