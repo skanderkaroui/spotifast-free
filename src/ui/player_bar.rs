@@ -66,7 +66,10 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
             // Its empty space is the visualizer's control, as Winamp's
             // visualizer was: a click moves to the next mode. The controls
             // drawn after it take their own clicks.
-            if app.settings.player_bar_vis_click && app.capabilities().visualizers {
+            if app.settings.player_bar_vis_click
+                && app.capabilities().visualizers
+                && !app.settings.soloist_enabled
+            {
                 let empty = ui.interact(
                     behind,
                     ui.id().with("player-bar-visualizer"),
@@ -1020,10 +1023,10 @@ fn extras(app: &mut App, ui: &mut egui::Ui, now: Option<&NowPlaying>, transport_
         ));
     }
     ui.add_space(4.0);
-    let remote = now.is_some_and(|now| !now.local);
+    let remote = now.is_some_and(|now| !now.local) && !app.targets_own_soloist();
     // Playing elsewhere, the button shows that device's own icon.
     let icon = now
-        .filter(|now| !now.local)
+        .filter(|_| remote)
         .and_then(|now| now.device_kind.as_deref())
         .map_or(Icon::Speaker, super::devices::device_icon);
     let devices = theme::icon_button(

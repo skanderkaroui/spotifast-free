@@ -102,12 +102,22 @@ Spotifast Free remembers your sign-in in the macOS Keychain. A local build
 is signed again on every rebuild, so macOS asks once more after each one;
 choose **Always Allow**.
 
+On `main` (not yet released), setup leads with Spotify's
+[Soloist player](https://spotifast.rocks/soloist/), with guided key setup,
+one-time pairing and automatic renewal of expiring builds. New listeners and
+people updating see this choice once after sign-in on supported platforms.
+**Use the built-in player** keeps librespot, with Spotifast's EQ, visualizers,
+local files and full queue editing. The choice is remembered.
+When enabled, Soloist appears as **This computer**; settings show the controls
+that apply to it. Turning it off restores the built-in player's preferences.
+
 ## Your music, on your desktop
 
 | Feature | What you can do |
 |---|---|
 | **Library and search** | Browse playlists, Liked Songs, albums, artists, and podcasts. Search the catalogue and edit playlists you own. |
 | **Local files** | Premium: play the local files your playlists list from a folder you choose in Settings, at any sample rate. Names show spaces and accents correctly, including in cached playlists. |
+| **Lyrics** | Spotify lyrics when the playback session is signed in, with LRCLIB as fallback. Temporary LRCLIB overloads retry and try search; older cached lyrics remain available during outages. |
 | **Spotify Connect** | Premium: play on this computer or control your other devices, including Google Cast speakers and groups. Cast devices appear as they are discovered; frequently and recently chosen outputs rise to the top. Remote volume keeps your chosen level while Spotify updates. |
 | **Queue** | Add songs to the queue. On Premium, **Play next** puts a song or selection first when playing on this computer. |
 | **Themes** | Choose light, dark, system appearance, or custom colours, with one theme for light mode and one for dark mode that switch with the system. On Omarchy, follow your desktop theme. |

@@ -27,6 +27,9 @@ unchanged.
   `experiments/macos-playback-host/rea-conformance.mjs`.
 - Premium behaviour must not change. Every Free change keeps
   `src/app/free_matrix_tests.rs` passing for both plans.
+- Spotify Soloist is an approved optional Premium player that uses Spotify's
+  own player and documented API. Do not claim a delivered lossless format
+  Soloist does not report, and never offer it on a Free account.
 - Do not broaden a task into adjacent features or a general refactor. Preserve
   existing user behaviour unless the task explicitly changes it.
 - Do not add a setting without the maintainer's approval in the issue first;
