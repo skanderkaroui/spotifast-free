@@ -107,7 +107,7 @@ choose **Always Allow**.
 | Feature | What you can do |
 |---|---|
 | **Library and search** | Browse playlists, Liked Songs, albums, artists, and podcasts. Search the catalogue and edit playlists you own. |
-| **Local files** | Premium: play the local files your playlists list from a folder you choose in Settings, at any sample rate. |
+| **Local files** | Premium: play the local files your playlists list from a folder you choose in Settings, at any sample rate. Names show spaces and accents correctly, including in cached playlists. |
 | **Spotify Connect** | Premium: play on this computer or control your other devices, including Google Cast speakers and groups. Cast devices appear as they are discovered; frequently and recently chosen outputs rise to the top. Remote volume keeps your chosen level while Spotify updates. |
 | **Queue** | Add songs to the queue. On Premium, **Play next** puts a song or selection first when playing on this computer. |
 | **Themes** | Choose light, dark, system appearance, or custom colours, with one theme for light mode and one for dark mode that switch with the system. On Omarchy, follow your desktop theme. |
