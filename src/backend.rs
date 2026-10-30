@@ -4625,6 +4625,26 @@ impl Worker {
     }
 
     fn start_rootlist(&mut self) {
+        // A Free sign-in has no librespot session: its web player's page
+        // reads the same list, folders included, for the signed-in account.
+        #[cfg(target_os = "macos")]
+        if self.free_session {
+            let reader = self
+                .web_player
+                .as_ref()
+                .map(crate::web_player::WebPlayer::reader);
+            let fetch = reader
+                .zip(self.free_account.clone())
+                .map(|(reader, account)| async move {
+                    let pending =
+                        reader.query(&crate::free_playlist_edits::rootlist_query(&account));
+                    crate::free_reads::answer(pending.await)
+                        .and_then(|body| crate::free_playlist_edits::rootlist(&body))
+                        .map_err(|error| error.to_string())
+                });
+            self.start_pending_rootlist(fetch);
+            return;
+        }
         let fetch = self.engine.clone().map(|engine| async move {
             engine
                 .rootlist()
