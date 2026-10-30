@@ -364,6 +364,50 @@ pub fn create_query(name: &str, description: &str) -> Value {
     }}})
 }
 
+/// The account's playlist list, folders included, as the web player's
+/// sidebar reads it through the helper (GET playlist/v2/.../rootlist).
+pub fn rootlist_query(username: &str) -> Value {
+    json!({"rootlist": username})
+}
+
+/// The rows of a rootlist answer in Spotify's order (REA: the page finds a
+/// row by `contents.items[].uri`), with the playlists the account may edit
+/// from `contents.metaItems[].capabilities.canEditItems`, as librespot reads
+/// the same list for Premium.
+pub fn rootlist(body: &Value) -> Result<crate::player::Rootlist, ApiError> {
+    let contents = body
+        .get("contents")
+        .ok_or_else(|| ApiError::Decode("Spotify sent no playlist list".into()))?;
+    let items = contents
+        .get("items")
+        .and_then(Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    let metas = contents
+        .get("metaItems")
+        .and_then(Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    let uris: Vec<String> = items
+        .iter()
+        .filter_map(|item| item.get("uri").and_then(Value::as_str).map(str::to_owned))
+        .collect();
+    let editable = items
+        .iter()
+        .zip(metas)
+        .filter(|(_, meta)| {
+            meta.pointer("/capabilities/canEditItems")
+                .and_then(Value::as_bool)
+                .unwrap_or(false)
+        })
+        .filter_map(|(item, _)| item.get("uri").and_then(Value::as_str).map(str::to_owned))
+        .collect();
+    Ok(crate::player::Rootlist {
+        entries: crate::player::parse_rootlist(&uris),
+        editable,
+    })
+}
+
 /// Puts `uri` at the top of the account's library, on the profile when
 /// `public`.
 pub fn library_add_query(username: &str, uri: &str, public: bool, timestamp_ms: i64) -> Value {
@@ -521,6 +565,45 @@ pub async fn delete_own(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn the_free_rootlist_keeps_folders_and_editable_playlists() {
+        let body = serde_json::json!({"revision": "AAAA", "contents": {
+            "items": [
+                {"uri": "spotify:playlist:aaaaaaaaaaaaaaaaaaaaaa"},
+                {"uri": "spotify:start-group:f1:Road%20trips"},
+                {"uri": "spotify:playlist:bbbbbbbbbbbbbbbbbbbbbb"},
+                {"uri": "spotify:end-group:f1"},
+            ],
+            "metaItems": [
+                {"capabilities": {"canEditItems": true}},
+                {},
+                {"capabilities": {"canEditItems": false}},
+                {},
+            ],
+        }});
+        let list = super::rootlist(&body).unwrap();
+        assert_eq!(
+            list.entries,
+            vec![
+                crate::player::RootlistEntry::Playlist(
+                    "spotify:playlist:aaaaaaaaaaaaaaaaaaaaaa".into()
+                ),
+                crate::player::RootlistEntry::FolderStart {
+                    id: "f1".into(),
+                    name: "Road trips".into()
+                },
+                crate::player::RootlistEntry::Playlist(
+                    "spotify:playlist:bbbbbbbbbbbbbbbbbbbbbb".into()
+                ),
+                crate::player::RootlistEntry::FolderEnd,
+            ]
+        );
+        assert_eq!(
+            list.editable.into_iter().collect::<Vec<_>>(),
+            vec!["spotify:playlist:aaaaaaaaaaaaaaaaaaaaaa".to_string()]
+        );
+        assert!(super::rootlist(&serde_json::json!({})).is_err());
+    }
     use super::*;
     use crate::api::models::{PlayableItem, Track};
 
