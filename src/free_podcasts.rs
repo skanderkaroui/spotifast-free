@@ -146,10 +146,23 @@ fn next(offset: u32, count: usize, total: u32) -> Option<String> {
     (fetched < total && count > 0).then(|| format!("offset:{fetched}"))
 }
 
-/// A podcast from its page.
+/// Whether a show page answer is an audiobook, which Spotify lists with
+/// saved podcasts (REA: `queryShowMetadataV2` answers `podcastUnionV2`
+/// with `__typename` "Podcast" or "Audiobook"). `None` when it says neither.
+pub fn is_audiobook(body: &Value) -> Option<bool> {
+    match str_at(body, "/data/podcastUnionV2/__typename")? {
+        "Audiobook" => Some(true),
+        "Podcast" => Some(false),
+        _ => None,
+    }
+}
+
+/// A podcast from its page. An audiobook's page has the same shape and is
+/// kept too: Spotify lists both among saved shows, and the app sets
+/// audiobooks apart (see `is_audiobook`).
 pub fn show(body: &Value) -> Result<Show, ApiError> {
     body.pointer("/data/podcastUnionV2")
-        .filter(|data| str_at(data, "/__typename") == Some("Podcast"))
+        .filter(|data| matches!(str_at(data, "/__typename"), Some("Podcast" | "Audiobook")))
         .and_then(podcast)
         .ok_or_else(|| ApiError::Decode("Spotify sent no podcast".into()))
 }
@@ -420,6 +433,26 @@ mod tests {
 
     fn body(text: &str) -> Value {
         serde_json::from_str(text).unwrap()
+    }
+
+    /// The show page says podcast or audiobook; an audiobook still lists
+    /// among saved shows so the app can set it apart.
+    #[test]
+    fn a_show_page_tells_audiobooks_from_podcasts() {
+        let podcast = body(include_str!("testdata/free/show.json"));
+        assert_eq!(
+            is_audiobook(&podcast),
+            Some(false),
+            "recorded page is a Podcast"
+        );
+        let mut audiobook = podcast.clone();
+        audiobook["data"]["podcastUnionV2"]["__typename"] = "Audiobook".into();
+        assert_eq!(is_audiobook(&audiobook), Some(true));
+        assert!(show(&audiobook).is_ok(), "audiobooks stay in the list");
+        let mut restricted = podcast;
+        restricted["data"]["podcastUnionV2"]["__typename"] = "RestrictedContent".into();
+        assert_eq!(is_audiobook(&restricted), None);
+        assert!(show(&restricted).is_err());
     }
 
     /// A podcast's page gives its name, publisher, description and cover.
