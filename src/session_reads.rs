@@ -447,7 +447,10 @@ pub async fn play_counts(
 /// Adds the counts of a Pathfinder list of `{track: {uri, playcount}}`
 /// rows, and says how many rows it held. Spotify sends each count as a
 /// string of digits.
-fn play_counts_from(list: &serde_json::Value, counts: &mut HashMap<String, u64>) -> usize {
+pub(crate) fn play_counts_from(
+    list: &serde_json::Value,
+    counts: &mut HashMap<String, u64>,
+) -> usize {
     let rows = list
         .get("items")
         .and_then(|items| items.as_array())
