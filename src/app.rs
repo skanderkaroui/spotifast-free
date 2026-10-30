@@ -21310,6 +21310,17 @@ mod tests {
         );
         app.user.as_mut().unwrap().product = Some("free".into());
         assert!(!app.show_soloist_onboarding());
+        // A Free sign-in playing through Spotify's web player is never
+        // offered Soloist, even before its plan is known.
+        app.user.as_mut().unwrap().product = None;
+        #[cfg(target_os = "macos")]
+        {
+            app.local_device_id = Some(crate::web_player::DEVICE_ID.into());
+            assert!(!app.soloist_offered());
+            assert!(!app.show_soloist_onboarding());
+            app.local_device_id = None;
+        }
+        assert_eq!(app.soloist_offered(), crate::soloist::install::supported());
         app.user.as_mut().unwrap().product = Some("premium".into());
         app.apply(Action::StartSoloistSetup, &ctx);
         app.settings.soloist_enabled = true;
