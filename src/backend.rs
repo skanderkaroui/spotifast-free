@@ -2228,7 +2228,12 @@ impl Worker {
                             crate::soloist::Status::Off,
                         )));
                     }
-                    if !soloist_allowed(enabled, self.free_session) {
+                    #[cfg(target_os = "macos")]
+                    let free_session = self.free_session;
+                    // The Free web player exists only on macOS.
+                    #[cfg(not(target_os = "macos"))]
+                    let free_session = false;
+                    if !soloist_allowed(enabled, free_session) {
                         self.stop_soloist().await;
                         continue;
                     }
