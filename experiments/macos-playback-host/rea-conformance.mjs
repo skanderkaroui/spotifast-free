@@ -132,7 +132,7 @@ console.log('\n-- Every path Diagnostics.js sends appears in Spotify\'s bundles'
 const sentPaths = new Set();
 // base() is `https://${connect.host}/connect-state/v1`; inline it first.
 const expanded = page.replaceAll('${base()}', '/connect-state/v1');
-for (const m of expanded.matchAll(/`([^`\n]*\/(?:v1|v2)\/[^`\n]*)`/g)) {
+for (const m of expanded.matchAll(/`([^`\n]*\/v\d+\/[^`\n]*)`/g)) {
   if (m[1].endsWith('/connect-state/v1')) continue;
   const path = m[1].replace(/^https:\/\/[^/]+/, '')
     .replace(/^\$\{[^}]+\}/, '').replace(/\?.*$/, '');
@@ -146,6 +146,8 @@ const pathEvidence = {
   '/connect-state/v1/connect/volume/from/*/to/*': [/@webgate\/connect-state"/, /`connect\/\$\{\w\}`/, /_sendConnectCommand\("volume"/],
   '/connect-state/v1/cluster': [/connect-state\\\/v1\\\/cluster/, /\/v1\/cluster`/],
   '/melody/v1/time': ['@webgate/melody/v1/time'],
+  '/user-profile-view/v3/profile/*': ['/user-profile-view/v3`', /path:`\/profile\/\$\{encodeURIComponent\(/, /playlist_limit:\w,artist_limit:\w,episode_limit:\w/],
+  '/recently-played/v3/user/*/recently-played': ['/recently-played/v3`', /withPath\(`\/user\/\$\{encodeURIComponent\(\w\)\}\/recently-played`\)/],
   '/inspiredby-mix/v2/seed_to_playlist/*': ['/inspiredby-mix/v2`', '/seed_to_playlist/${'],
   '/color-lyrics/v2/track/*/image/*': ['/color-lyrics/v2`', /\/track\/\$\{encodeURIComponent\(\w\)\}\/image\/\$\{encodeURIComponent\(\w\)\}`/],
   '/track-playback/v1/devices/*/state': ['@webgate/track-playback', /\/v1\/devices\/\$\{this\._deviceId\}\/state`/],

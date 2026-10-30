@@ -542,6 +542,13 @@
       && /^spotify:image:[a-f0-9]{40}$/.test(asked.image ?? '')
       ? `https://spclient.wg.spotify.com/color-lyrics/v2/track/${asked.track}/image/${encodeURIComponent(asked.image)}?format=json&vocalRemoval=false`
       : null),
+    // Who a user id is, for who added songs to a shared playlist (REA: the
+    // profile view reads user-profile-view/v3/profile/<username>; with no
+    // playlists, artists or episodes asked it is the name and picture). Read
+    // as JSON, as Spotify's desktop client and librespot read it.
+    profile: (username) => (typeof username === 'string' && USERNAME.test(username)
+      ? `https://spclient.wg.spotify.com/user-profile-view/v3/profile/${encodeURIComponent(username)}?playlist_limit=0&artist_limit=0&episode_limit=0`
+      : null),
   };
   window.__spotifastQuery = async (id, query) => {
     // A signed-out page has an anonymous token too; a read with it answers
