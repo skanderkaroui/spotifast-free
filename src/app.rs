@@ -71,6 +71,9 @@ const TOAST_LIFETIME: Duration = Duration::from_millis(3200);
 /// Match other interface animations. egui subtracts the predicted frame time
 /// from delayed repaints, so 33 ms drives roughly one frame per 16 ms.
 const TOAST_FRAME: Duration = Duration::from_millis(33);
+/// The least time between volume writes that cost a round trip to Spotify
+/// while the slider is dragged, so a drag cannot hit its rate limits.
+const VOLUME_DRAG_INTERVAL: Duration = Duration::from_millis(120);
 const OPTIMISTIC_HOLD: Duration = Duration::from_millis(2500);
 /// The banner suggesting a personal app appears at most this often.
 const SLOW_BANNER_INTERVAL: jiff::SignedDuration = jiff::SignedDuration::from_hours(24);
@@ -667,6 +670,10 @@ pub struct App {
     /// reports `VolumeChanged` asynchronously while position snapshots land
     /// every second, so a snapshot must not undo the change on its way past.
     pending_local_volume: Option<(u16, Instant)>,
+    /// When a volume drag last reached Spotify (Web API, Cast or the Free
+    /// helper), and the newest level still waiting for the throttle.
+    volume_drag_sent: Option<Instant>,
+    volume_drag_queued: Option<u8>,
     /// A local seek position set here that the engine has not confirmed yet.
     pending_local_position: Option<(u32, Instant)>,
     optimistic_playing: Option<(bool, Instant)>,
@@ -1277,6 +1284,8 @@ impl App {
             pending_remote_volume: None,
             remote_volume_request: 0,
             pending_local_volume: None,
+            volume_drag_sent: None,
+            volume_drag_queued: None,
             pending_local_position: None,
             optimistic_playing: None,
             intent_track: None,
@@ -3944,6 +3953,15 @@ impl App {
                 self.load_playlists();
             } else {
                 ctx.request_repaint_after(at - Instant::now());
+            }
+        }
+
+        if let Some(percent) = self.volume_drag_queued {
+            match self.volume_drag_sent {
+                Some(at) if at.elapsed() < VOLUME_DRAG_INTERVAL => {
+                    ctx.request_repaint_after(VOLUME_DRAG_INTERVAL - at.elapsed());
+                }
+                _ => self.set_volume(percent, false),
             }
         }
 
@@ -9838,6 +9856,23 @@ impl App {
         Capabilities::new(Engine::FreeWebPlayer, self.local.restrictions, in_ad)
     }
 
+    /// Whether a mid-drag write that costs a request may go now. If not, the
+    /// level waits and the newest one goes once the interval has passed.
+    fn volume_drag_due(&mut self, percent: u8, settle: bool) -> bool {
+        let now = Instant::now();
+        if !settle
+            && self
+                .volume_drag_sent
+                .is_some_and(|at| now.duration_since(at) < VOLUME_DRAG_INTERVAL)
+        {
+            self.volume_drag_queued = Some(percent);
+            return false;
+        }
+        self.volume_drag_queued = None;
+        self.volume_drag_sent = (!settle).then_some(now);
+        true
+    }
+
     fn set_volume(&mut self, percent: u8, settle: bool) {
         let percent = percent.min(100);
         match self.target() {
@@ -9853,14 +9888,37 @@ impl App {
                     self.settings.volume = volume;
                     self.settings_dirty = true;
                 }
-                self.backend.player(if settle {
-                    PlayerCommand::Volume(volume)
+                if self.free_web_player() {
+                    // Each level is a Connect round trip for the helper.
+                    if self.volume_drag_due(percent, settle) {
+                        self.backend.player(PlayerCommand::Volume(volume));
+                    }
                 } else {
-                    PlayerCommand::VolumePreview(volume)
-                });
+                    self.backend.player(if settle {
+                        PlayerCommand::Volume(volume)
+                    } else {
+                        PlayerCommand::VolumePreview(volume)
+                    });
+                }
             }
-            Target::Remote(_) if !settle || !self.can_set_volume() => {}
+            Target::Remote(_) if !self.can_set_volume() => {}
             Target::Remote(device_id) => {
+                if let Some(pending) = &mut self.pending_remote_volume {
+                    // Shown at once even while the write waits its turn.
+                    pending.percent = percent;
+                }
+                if !self.volume_drag_due(percent, settle) {
+                    if self.pending_remote_volume.is_none() {
+                        self.pending_remote_volume = Some(PendingRemoteVolume {
+                            percent,
+                            device_id,
+                            request: self.remote_volume_request,
+                            after_poll: None,
+                            mismatches: 0,
+                        });
+                    }
+                    return;
+                }
                 self.remote_volume_request += 1;
                 self.pending_remote_volume = Some(PendingRemoteVolume {
                     percent,
@@ -29296,6 +29354,46 @@ mod tests {
         report_remote_volume(&mut app, 10, Some(65));
         assert!(app.pending_remote_volume.is_none());
         assert_eq!(app.now_playing().unwrap().volume_percent, 65);
+        app.backend.shutdown();
+    }
+
+    #[test]
+    fn remote_volume_drag_sends_throttled_levels_and_the_release() {
+        let mut app = remote_volume_app();
+        let ctx = egui::Context::default();
+        app.apply(Action::PreviewVolume(50), &ctx);
+        assert_eq!(app.remote_volume_request, 1, "the press is heard at once");
+        assert_eq!(app.now_playing().unwrap().volume_percent, 50);
+
+        // Moves within the interval are shown but wait their turn.
+        app.apply(Action::PreviewVolume(55), &ctx);
+        app.apply(Action::PreviewVolume(60), &ctx);
+        assert_eq!(app.remote_volume_request, 1);
+        assert_eq!(app.volume_drag_queued, Some(60));
+        assert_eq!(app.now_playing().unwrap().volume_percent, 60);
+
+        // Once the interval has passed, the newest level goes.
+        app.volume_drag_sent = Some(Instant::now() - VOLUME_DRAG_INTERVAL);
+        app.apply(Action::PreviewVolume(65), &ctx);
+        assert_eq!(app.remote_volume_request, 2);
+        assert_eq!(app.volume_drag_queued, None);
+
+        // A stale echo of an earlier level does not move the handle back.
+        app.handle_api(ApiResponse::Remote {
+            action: RemoteAction::Volume { request: 1 },
+            result: Ok(()),
+        });
+        report_remote_volume(&mut app, 1, Some(50));
+        assert_eq!(app.now_playing().unwrap().volume_percent, 65);
+
+        // The release always goes, throttle or not.
+        app.apply(Action::PreviewVolume(70), &ctx);
+        app.apply(Action::SetVolume(72), &ctx);
+        assert_eq!(app.remote_volume_request, 3);
+        assert_eq!(app.volume_drag_queued, None);
+        assert_eq!(app.pending_remote_volume.as_ref().unwrap().percent, 72);
+        report_remote_volume(&mut app, 2, Some(65));
+        assert_eq!(app.now_playing().unwrap().volume_percent, 72);
         app.backend.shutdown();
     }
 
