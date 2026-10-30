@@ -71,8 +71,22 @@ impl Lyrics {
     }
 }
 
+/// Whether Spotify capped these lyrics for the account
+/// (`lyrics.capStatus == "CAPPED"`): its own view then shows only the start,
+/// behind an upsell.
+pub fn spotify_capped(json: &serde_json::Value) -> bool {
+    json.pointer("/lyrics/capStatus")
+        .and_then(|status| status.as_str())
+        == Some("CAPPED")
+}
+
 /// Parses Spotify's `color-lyrics` response.
 pub fn from_spotify(json: &serde_json::Value) -> Option<Lyrics> {
+    // Cut-short lyrics are left to the next source rather than shown as if
+    // whole.
+    if spotify_capped(json) {
+        return None;
+    }
     let lyrics = json.get("lyrics")?;
     let synced = lyrics.get("syncType").and_then(|value| value.as_str()) == Some("LINE_SYNCED");
     let lines: Vec<Line> = lyrics
@@ -756,6 +770,20 @@ fn write_cache(path: &Path, found: &Option<Lyrics>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn capped_spotify_lyrics_are_not_shown_as_whole() {
+        let whole = serde_json::json!({"lyrics": {"syncType": "LINE_SYNCED", "lines": [
+            {"startTimeMs": "1000", "words": "First"},
+            {"startTimeMs": "2000", "words": "Second"},
+        ]}});
+        assert!(!spotify_capped(&whole));
+        assert_eq!(from_spotify(&whole).map(|found| found.lines.len()), Some(2));
+        let mut capped = whole.clone();
+        capped["lyrics"]["capStatus"] = "CAPPED".into();
+        assert!(spotify_capped(&capped));
+        assert!(from_spotify(&capped).is_none());
+    }
 
     /// A local LRCLIB that gives each request, in turn, one of `answers`.
     async fn lrclib(
