@@ -1098,7 +1098,7 @@ pub async fn user_profile(session: &Session, user_id: &str) -> Option<UserProfil
 }
 
 /// Reads the name and avatar out of a profile view answer.
-fn profile_from_json(json: &serde_json::Value) -> UserProfile {
+pub(crate) fn profile_from_json(json: &serde_json::Value) -> UserProfile {
     let text = |key: &str| {
         json.get(key)
             .and_then(|value| value.as_str())
@@ -1107,7 +1107,9 @@ fn profile_from_json(json: &serde_json::Value) -> UserProfile {
     };
     UserProfile {
         name: text("name"),
-        image_url: text("image_url"),
+        // The service's JSON says image_url; its protobuf-to-JSON form, as
+        // the web player decodes the same message, says imageUrl.
+        image_url: text("image_url").or_else(|| text("imageUrl")),
     }
 }
 

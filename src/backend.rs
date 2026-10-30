@@ -5187,6 +5187,36 @@ impl Worker {
     /// Ask Spotify who is behind each user id. Only the streaming session
     /// can ask; without one the interface shows the bare ids.
     fn fetch_user_names(&self, ids: Vec<String>) {
+        // A Free sign-in asks its web player's page for the same profile
+        // view, one id at a time as below.
+        #[cfg(target_os = "macos")]
+        if let Some(reader) = self
+            .free_session
+            .then(|| {
+                self.web_player
+                    .as_ref()
+                    .map(crate::web_player::WebPlayer::reader)
+            })
+            .flatten()
+        {
+            let events = self.events.clone();
+            let waker = self.waker.clone();
+            tokio::spawn(async move {
+                for id in ids {
+                    let pending = reader.query(&serde_json::json!({ "profile": id }));
+                    let profile = crate::free_reads::answer(pending.await)
+                        .ok()
+                        .map(|body| session_reads::profile_from_json(&body));
+                    let (name, image) = match profile {
+                        Some(profile) => (profile.name, profile.image_url),
+                        None => (None, None),
+                    };
+                    let _ = events.send(Event::UserName { id, name, image });
+                    waker.wake();
+                }
+            });
+            return;
+        }
         let Some(engine) = self.engine.clone() else {
             return;
         };
