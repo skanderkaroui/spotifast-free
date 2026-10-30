@@ -990,9 +990,36 @@ pub fn album_is_ep(body: &Value) -> Option<bool> {
         .map(|kind| kind == "EP")
 }
 
+/// A song's lyrics as the web player reads them: by song id and cover image
+/// (REA: GET color-lyrics/v2/track/<id>/image/<image>). `None` for anything
+/// that is not a Spotify song with an `i.scdn.co` cover.
+pub fn lyrics_query(uri: &str, cover: Option<&str>) -> Option<Value> {
+    let track = uri.strip_prefix("spotify:track:")?;
+    let image = cover?
+        .rsplit('/')
+        .next()
+        .filter(|id| id.len() == 40 && id.bytes().all(|b| b.is_ascii_hexdigit()))?;
+    Some(json!({"lyrics": {"track": track, "image": format!("spotify:image:{image}")}}))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn lyrics_are_asked_by_song_and_cover_as_the_web_player_asks() {
+        let cover = "https://i.scdn.co/image/ab67616d0000b273c8b444df094279e70d0ed856";
+        assert_eq!(
+            lyrics_query("spotify:track:0DiWol3AO6WpXZgp0goxAV", Some(cover)),
+            Some(json!({"lyrics": {
+                "track": "0DiWol3AO6WpXZgp0goxAV",
+                "image": "spotify:image:ab67616d0000b273c8b444df094279e70d0ed856",
+            }}))
+        );
+        assert!(lyrics_query("spotify:episode:0DiWol3AO6WpXZgp0goxAV", Some(cover)).is_none());
+        assert!(lyrics_query("spotify:track:0DiWol3AO6WpXZgp0goxAV", None).is_none());
+        assert!(lyrics_query("spotify:track:x", Some("https://example.com/a.png")).is_none());
+    }
 
     #[test]
     fn play_counts_come_from_the_artist_and_album_pages() {
