@@ -21,6 +21,7 @@ pub mod search;
 pub mod settings;
 pub mod show;
 pub mod sidebar;
+mod soloist;
 pub mod topbar;
 mod update;
 pub mod widgets;
@@ -48,6 +49,14 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
         player_bar::end_tint_session(ctx);
         login::show(app, ui, connecting);
         update::show(app, ctx);
+        toasts(app, ctx, 20.0);
+        caption_buttons(ui, &app.palette, app.locale);
+        fastframe_titlebar::resize(ui);
+        return;
+    }
+    if app.show_soloist_onboarding() {
+        player_bar::end_tint_session(ctx);
+        soloist::onboarding(app, ui);
         toasts(app, ctx, 20.0);
         caption_buttons(ui, &app.palette, app.locale);
         fastframe_titlebar::resize(ui);

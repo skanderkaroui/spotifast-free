@@ -282,7 +282,9 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
 
             // The badges sit at the right end but grow with their text, so
             // measure them here, before the search field takes its share.
-            let remote_now = app.now_playing().filter(|now| !now.local);
+            let remote_now = app
+                .now_playing()
+                .filter(|now| !now.local && !app.targets_own_soloist());
             let device_icon = remote_now
                 .as_ref()
                 .and_then(|now| now.device_kind.as_deref())
@@ -324,6 +326,11 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                     + badge_width(update_galley.as_ref(), UPDATE_BADGE_PADDING, labels)
             };
             let controls = RIGHT_CONTROLS_WIDTH
+                - if app.settings.soloist_enabled {
+                    ICON_BUTTON_SIZE + ITEM_SPACING
+                } else {
+                    0.0
+                }
                 + if !app.network_reachable {
                     ICON_BUTTON_SIZE + 4.0
                 } else {
@@ -538,6 +545,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                     app.actions.push(Action::Open(Page::Settings));
                 }
                 if app.capabilities().visualizers
+                    && !app.settings.soloist_enabled
                     && theme::icon_button(
                         ui,
                         Icon::AudioLines,

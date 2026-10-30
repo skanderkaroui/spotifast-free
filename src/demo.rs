@@ -341,6 +341,7 @@ fn demo_local_rows(app: &mut App) {
 
 /// Populates the offline app with cards for screenshots and UI tests.
 pub fn populate(app: &mut App) {
+    app.soloist_onboarding = crate::settings::SoloistOnboarding::Complete;
     app.backend.set_offline(true);
     app.offline = true;
     // A demo never reads the real login registration; it shows it off.
@@ -1096,6 +1097,66 @@ pub fn apply_flags(app: &mut App, page: Option<&str>, show: Option<&str>) {
     }
     for surface in show.unwrap_or("").split(',').map(str::trim) {
         match surface {
+            "soloist-welcome" => {
+                app.soloist_onboarding = crate::settings::SoloistOnboarding::Welcome;
+            }
+            "soloist-onboarding" => {
+                app.soloist_onboarding = crate::settings::SoloistOnboarding::Setup;
+            }
+            "soloist-setup"
+            | "soloist-downloading"
+            | "soloist-pairing"
+            | "soloist-ready"
+            | "soloist-playing"
+            | "soloist-error" => {
+                use crate::soloist::Status;
+                if surface != "soloist-playing" {
+                    app.open(Page::Settings);
+                }
+                app.settings.soloist_enabled = surface != "soloist-setup";
+                app.soloist_status = match surface {
+                    "soloist-downloading" => Status::Downloading {
+                        received: 8_000_000,
+                        total: 14_000_000,
+                    },
+                    "soloist-pairing" => Status::Pairing {
+                        name: "Spotifast Soloist (12345678)".into(),
+                        version: "1.3.10".into(),
+                    },
+                    "soloist-ready" | "soloist-playing" => {
+                        app.soloist_device_id = Some("demo-soloist".into());
+                        if surface == "soloist-playing" {
+                            let device = Device {
+                                id: app.soloist_device_id.clone(),
+                                name: "Spotifast Soloist (12345678)".into(),
+                                kind: "speaker".into(),
+                                is_active: true,
+                                volume_percent: Some(62),
+                                supports_volume: Some(true),
+                                ..Default::default()
+                            };
+                            for other in &mut app.devices {
+                                other.is_active = false;
+                            }
+                            app.devices.push(device.clone());
+                            app.selected_device = device.id.clone();
+                            if let Some(remote) = &mut app.remote {
+                                remote.state.device = Some(device);
+                            }
+                        }
+                        Status::Ready {
+                            name: "Spotifast Soloist (12345678)".into(),
+                            version: "1.3.10".into(),
+                            expires: crate::soloist::install::now()
+                                + 75 * crate::soloist::install::DAY,
+                        }
+                    }
+                    "soloist-error" => Status::Failed(
+                        "Soloist could not start. Check your key and try again.".into(),
+                    ),
+                    _ => Status::Off,
+                };
+            }
             "presaved" => {
                 for page in app.album_pages.values_mut() {
                     if let Some(data) = &mut page.prerelease {
@@ -8045,6 +8106,226 @@ mod tests {
             sizes[0], sizes[1],
             "highlighting must not rewrap or resize a line"
         );
+    }
+
+    #[test]
+    fn soloist_mode_hides_only_builtin_preferences_and_preserves_them() {
+        let (ctx, mut app) = accessible_app("soloist-preferences");
+        app.settings.bitrate = 160;
+        app.settings.normalisation = false;
+        app.settings.audio_cache_mb = 4096;
+        for enabled in [true, false] {
+            app.settings.soloist_enabled = enabled;
+            for title in [
+                "Audio quality",
+                "Normalize volume",
+                "Autoplay",
+                "Gapless playback",
+                "Local files",
+                "Audio cache",
+                "Equalizer",
+                "MilkDrop",
+                "Player bar visualizer",
+            ] {
+                let text = settings_text(&ctx, &mut app, title);
+                assert_eq!(
+                    text.iter().filter(|label| *label == title).count() > 1,
+                    !enabled,
+                    "{title}: {text:?}"
+                );
+            }
+            for title in [
+                "Keep music playing when the window closes",
+                "Start with your computer",
+                "Automatic update checks",
+                "Download updates automatically",
+            ] {
+                let text = settings_text(&ctx, &mut app, title);
+                assert!(
+                    text.iter().filter(|label| *label == title).count() > 1,
+                    "{title}: {text:?}"
+                );
+            }
+        }
+        assert_eq!(app.settings.bitrate, 160);
+        assert!(!app.settings.normalisation);
+        assert_eq!(app.settings.audio_cache_mb, 4096);
+        app.backend.shutdown();
+    }
+
+    #[cfg(feature = "demo")]
+    #[test]
+    fn soloist_local_presentation_keeps_remote_routing_and_other_devices() {
+        use egui::accesskit::Role;
+        let (ctx, mut app) = accessible_app("soloist-local-ui");
+        app.backend.set_offline(true);
+        apply_flags(&mut app, None, Some("soloist-playing,devices"));
+        // A matching name is not proof that a player belongs to this process.
+        app.devices.push(Device {
+            id: Some("someone-elses-soloist".into()),
+            name: "Spotifast Soloist (12345678)".into(),
+            kind: "speaker".into(),
+            ..Default::default()
+        });
+        accessible_frame(&ctx, &mut app, vec![]);
+        let tree = accessible_frame(&ctx, &mut app, vec![]);
+        accessible_node(&tree, "This computer", Role::Button);
+        accessible_node(&tree, "Spotifast Soloist (12345678)", Role::Button);
+        assert!(!tree.nodes.iter().any(|(_, n)| n.label().is_some_and(|s| {
+            s.starts_with("Playing on") || s == "Spotifast (this computer)" || s == "Audio output"
+        })));
+        assert!(app.targets_own_soloist());
+        assert!(
+            matches!(app.target(), crate::app::Target::Remote(Some(id)) if id == "demo-soloist")
+        );
+        assert!(
+            !app.now_playing().unwrap().local,
+            "Soloist cannot inherit the built-in audio/queue capabilities"
+        );
+
+        app.selected_device = Some("someone-elses-soloist".into());
+        app.remote.as_mut().unwrap().state.device = app.devices.last().cloned();
+        accessible_frame(&ctx, &mut app, vec![]);
+        let tree = accessible_frame(&ctx, &mut app, vec![]);
+        assert!(!app.targets_own_soloist());
+        accessible_node(
+            &tree,
+            "Playing on Spotifast Soloist (12345678)",
+            Role::Button,
+        );
+
+        app.apply(Action::SetSoloist(false), &ctx);
+        accessible_frame(&ctx, &mut app, vec![]);
+        let tree = accessible_frame(&ctx, &mut app, vec![]);
+        accessible_node(&tree, "Spotifast (this computer)", Role::Button);
+        accessible_node(&tree, "Audio output", Role::Button);
+        app.backend.shutdown();
+    }
+
+    #[cfg(feature = "demo")]
+    #[test]
+    fn soloist_ready_card_keeps_details_collapsed_and_can_switch_back() {
+        if !crate::soloist::install::supported() {
+            return;
+        }
+        use egui::accesskit::{Action as AccessibleAction, Role};
+        let (ctx, mut app) = accessible_app("soloist-compact-card");
+        app.backend.set_offline(true);
+        apply_flags(&mut app, None, Some("soloist-ready"));
+        let text = settings_text(&ctx, &mut app, "Spotify Soloist");
+        assert!(text.iter().any(|s| s == "Enabled on this computer"));
+        assert!(
+            !text
+                .iter()
+                .any(|s| s.contains("expires") || s.contains("12345678"))
+        );
+        let tree = accessible_frame(&ctx, &mut app, vec![]);
+        let off = accessible_node(&tree, "Turn off Soloist", Role::Button);
+        accessible_frame(
+            &ctx,
+            &mut app,
+            vec![accessible_action(off, AccessibleAction::Click, None)],
+        );
+        assert!(!app.settings.soloist_enabled);
+        assert!(matches!(app.soloist_status, crate::soloist::Status::Off));
+        app.backend.shutdown();
+    }
+
+    #[cfg(feature = "demo")]
+    #[test]
+    fn soloist_setup_is_the_first_screen_and_the_builtin_exit_works_during_pairing() {
+        if !crate::soloist::install::supported() {
+            return;
+        }
+        use crate::settings::SoloistOnboarding;
+        use egui::accesskit::{Action as AccessibleAction, Role};
+        let (ctx, mut app) = accessible_app("soloist-welcome");
+        apply_flags(&mut app, None, Some("soloist-welcome"));
+        accessible_frame(&ctx, &mut app, vec![]);
+        let tree = accessible_frame(&ctx, &mut app, vec![]);
+        let setup = accessible_node(&tree, "Set up Soloist", Role::Button);
+        accessible_node(&tree, "Use the built-in player", Role::Button);
+        accessible_frame(
+            &ctx,
+            &mut app,
+            vec![accessible_action(setup, AccessibleAction::Click, None)],
+        );
+        assert_eq!(app.soloist_onboarding, SoloistOnboarding::Setup);
+        assert!(
+            !app.settings.soloist_enabled,
+            "choosing setup does not download without a key"
+        );
+        apply_flags(&mut app, None, Some("soloist-pairing"));
+        accessible_frame(&ctx, &mut app, vec![]);
+        let tree = accessible_frame(&ctx, &mut app, vec![]);
+        let builtin = accessible_node(&tree, "Use the built-in player", Role::Button);
+        accessible_frame(
+            &ctx,
+            &mut app,
+            vec![accessible_action(builtin, AccessibleAction::Click, None)],
+        );
+        assert!(!app.settings.soloist_enabled);
+        assert_eq!(app.soloist_onboarding, SoloistOnboarding::Complete);
+        app.backend.shutdown();
+    }
+
+    #[test]
+    fn soloist_can_be_enabled_again_without_pasting_the_saved_key() {
+        if !crate::soloist::install::supported() {
+            return;
+        }
+        use egui::accesskit::{Action as AccessibleAction, Role};
+        let (ctx, mut app) = accessible_app("soloist-saved-key");
+        app.backend.set_offline(true);
+        app.open(Page::Settings);
+        let tree = accessible_frame(&ctx, &mut app, vec![]);
+        let button = accessible_node(&tree, "Enable with saved key", Role::Button);
+        accessible_frame(
+            &ctx,
+            &mut app,
+            vec![accessible_action(button, AccessibleAction::Click, None)],
+        );
+        assert!(app.settings.soloist_enabled);
+        assert!(app.soloist_key.is_empty());
+        assert!(matches!(
+            app.soloist_status,
+            crate::soloist::Status::Starting
+        ));
+        app.backend.shutdown();
+    }
+
+    #[test]
+    fn soloist_setup_states_render_in_both_themes() {
+        let (ctx, mut app) = accessible_app("soloist");
+        app.open(Page::Settings);
+        for dark in [false, true] {
+            app.settings.theme = if dark {
+                crate::settings::ThemeChoice::Dark
+            } else {
+                crate::settings::ThemeChoice::Light
+            };
+            for status in [
+                crate::soloist::Status::Off,
+                crate::soloist::Status::NeedsKey,
+                crate::soloist::Status::Downloading {
+                    received: 5,
+                    total: 10,
+                },
+                crate::soloist::Status::Pairing {
+                    name: "Spotifast Soloist (12345678)".into(),
+                    version: "1.3".into(),
+                },
+                crate::soloist::Status::Ready {
+                    name: "Spotifast Soloist (12345678)".into(),
+                    version: "1.3".into(),
+                    expires: crate::soloist::install::now() + 86400,
+                },
+                crate::soloist::Status::Failed("Could not connect".into()),
+            ] {
+                app.soloist_status = status;
+                frame(&ctx, &mut app);
+            }
+        }
     }
 
     /// Every page, panel, and dialog lays out without panicking.
