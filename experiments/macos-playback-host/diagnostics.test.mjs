@@ -623,6 +623,37 @@ for (const name of fixtureNames) {
   console.log('ok: playlist edits go only to the playlist service paths asked');
 }
 
+// Read-only GETs go through one table of the web player's own reads: the
+// recently played list is a GET for a well-formed username only.
+{
+  const out = [];
+  const asked = [];
+  const page = {
+    ...context,
+    document: { ...document, querySelector: (selector) => (selector.includes('user-widget-link') ? {} : null) },
+    window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } },
+      fetch: async (input, init = {}) => {
+        const url = typeof input === 'string' ? input : input.url;
+        if (url.includes('/recently-played/')) {
+          asked.push({ url, method: init.method });
+          return { ok: true, status: 200, text: async () => '{"playContexts":[]}' };
+        }
+        return { ok: true, status: 200, json: async () => ({}) };
+      } },
+    setInterval: () => {},
+    setTimeout,
+    navigator: {},
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer first' } });
+  await page.window.__spotifastQuery(1, { recentlyPlayed: { username: 'listener1', limit: 20 } });
+  await page.window.__spotifastQuery(2, { recentlyPlayed: { username: '../me' } });
+  assert.deepEqual(asked, [{ url: 'https://spclient.wg.spotify.com/recently-played/v3/user/listener1/recently-played?format=json&limit=20&filter=default', method: undefined }]);
+  const answers = out.filter((event) => event.event === 'query');
+  assert.deepEqual(answers.map((a) => [a.id, a.status]), [[1, 200], [2, 400]]);
+  console.log('ok: read-only GETs go only to the web player reads asked');
+}
+
 // Spotify's code page (accounts.spotify.com/login/otp) has one box per digit
 // and keeps only the last character put into a box (REA, authn-web chunk 39:
 // the box's onChange takes value.slice(-1); only onPaste fills every box).
