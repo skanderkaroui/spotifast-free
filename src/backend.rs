@@ -10907,7 +10907,7 @@ mod tests {
             .unwrap();
         assert!(crate::lyrics::cached(&path).is_none());
         assert_eq!(
-            spotify_lyrics(None, "spotify:track:test", &root).await,
+            spotify_lyrics(None, None, "spotify:track:test", &root).await,
             found
         );
         assert!(
@@ -10920,10 +10920,58 @@ mod tests {
                 > Duration::from_secs(60 * 60 * 24 * 30)
         );
         assert!(
-            spotify_lyrics(None, "spotify:track:other", &root)
+            spotify_lyrics(None, None, "spotify:track:other", &root)
                 .await
                 .is_none()
         );
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    /// A Free sign-in's lyrics come from its web player's page: found ones
+    /// are cached, an outage keeps what was found before, and capped ones
+    /// are neither shown nor remembered as none.
+    #[tokio::test]
+    async fn free_lyrics_come_from_the_page_and_keep_old_ones_in_an_outage() {
+        let root =
+            std::env::temp_dir().join(format!("spotifast-free-lyrics-{}", std::process::id()));
+        let read = |answer: Result<serde_json::Value, ApiError>| -> Option<FreeLyricsRead> {
+            Some(Box::pin(async move { answer }))
+        };
+        let whole = serde_json::json!({"lyrics": {"syncType": "LINE_SYNCED", "lines": [
+            {"startTimeMs": "1000", "words": "First"},
+        ]}});
+        let found = spotify_lyrics(None, read(Ok(whole.clone())), "spotify:track:one", &root).await;
+        assert_eq!(found.as_ref().map(|lyrics| lyrics.lines.len()), Some(1));
+        assert!(crate::lyrics::cached(&root.join("spotify-one.json")).is_some());
+
+        // Stale cache, then an outage: the old lyrics stay.
+        let path = root.join("spotify-two.json");
+        crate::lyrics::store(&path, &crate::lyrics::from_spotify(&whole));
+        let stale = std::time::SystemTime::now() - Duration::from_secs(60 * 60 * 24 * 60);
+        std::fs::File::options()
+            .write(true)
+            .open(&path)
+            .unwrap()
+            .set_times(std::fs::FileTimes::new().set_modified(stale))
+            .unwrap();
+        let outage = Err(ApiError::Status {
+            status: 503,
+            message: "down".into(),
+        });
+        assert!(
+            spotify_lyrics(None, read(outage), "spotify:track:two", &root)
+                .await
+                .is_some()
+        );
+
+        let mut capped = whole;
+        capped["lyrics"]["capStatus"] = "CAPPED".into();
+        assert!(
+            spotify_lyrics(None, read(Ok(capped)), "spotify:track:three", &root)
+                .await
+                .is_none()
+        );
+        assert!(crate::lyrics::cached(&root.join("spotify-three.json")).is_none());
         std::fs::remove_dir_all(root).unwrap();
     }
 
