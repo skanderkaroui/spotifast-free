@@ -197,8 +197,9 @@
   // Acknowledgements of this page's commands, as Spotify's dealer
   // connection delivers them: a cluster update naming the command's ack_id
   // (REA: _onClusterMessage -> trackCommandAcknowledged). Spotify's player
-  // waits for one before trusting a command, up to 3400 ms (REA:
-  // trackAcknowledgementRequired, CONNECTAPI_CLIENT_ACK_TIMEOUT).
+  // waits up to 30 s for one (REA: trackAcknowledgementRequired). This page
+  // waits 3.4 s at most, then sends the next press anyway, so a lost ack
+  // never holds the buttons for half a minute.
   const ACK_TIMEOUT_MS = 3400;
   const acked = new Set();
   const ackWaiters = new Map();
