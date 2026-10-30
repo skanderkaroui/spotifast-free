@@ -739,3 +739,33 @@ fn free_has_no_visualizers_or_sound_effects_even_through_upstreams_helpers() {
         }
     });
 }
+
+#[test]
+fn volume_drag_follows_the_handle() {
+    both("volume-drag", |free, app| {
+        let first = run(app, Action::PreviewVolume(30));
+        let quick = run(app, Action::PreviewVolume(35));
+        if free {
+            // The helper hears the press at once, then at most one level
+            // per interval, then the release.
+            assert!(matches!(first.as_slice(), [PlayerCommand::Volume(_)]));
+            assert!(quick.is_empty());
+            app.volume_drag_sent = Some(Instant::now() - VOLUME_DRAG_INTERVAL);
+            let later = run(app, Action::PreviewVolume(40));
+            assert_eq!(later, vec![PlayerCommand::Volume(percent_to_volume(40))]);
+        } else {
+            // librespot previews every move.
+            assert!(matches!(
+                first.as_slice(),
+                [PlayerCommand::VolumePreview(_)]
+            ));
+            assert!(matches!(
+                quick.as_slice(),
+                [PlayerCommand::VolumePreview(_)]
+            ));
+        }
+        let released = run(app, Action::SetVolume(45));
+        assert_eq!(released, vec![PlayerCommand::Volume(percent_to_volume(45))]);
+        assert_eq!(app.now_playing().unwrap().volume_percent, 45);
+    });
+}
