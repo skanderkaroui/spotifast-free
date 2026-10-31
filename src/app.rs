@@ -29961,15 +29961,14 @@ mod tests {
         app.soloist_audio = true;
         let native_mac = cfg!(all(target_os = "macos", feature = "soloist-native-audio"));
         let builtin = app.settings.volume;
-        // Slider motion changes the local fader at once, with no Spotify write.
+        // Slider motion changes the local fader at once, with no Spotify
+        // write. Without the Mac fader, Soloist is a Connect device and the
+        // level follows the drag there too, the first write going at once.
         app.set_volume(25, false);
-        assert_eq!(
-            app.now_playing().unwrap().volume_percent,
-            if native_mac { 25 } else { 40 }
-        );
+        assert_eq!(app.now_playing().unwrap().volume_percent, 25);
         app.set_volume(0, true);
         assert_eq!(app.now_playing().unwrap().volume_percent, 0);
-        assert_eq!(app.remote_volume_request, u64::from(!native_mac));
+        assert_eq!(app.remote_volume_request, if native_mac { 0 } else { 2 });
         assert_eq!(app.settings.volume, builtin);
         if native_mac {
             assert!(app.pending_remote_volume.is_none());
