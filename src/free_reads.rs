@@ -990,16 +990,19 @@ pub fn album_is_ep(body: &Value) -> Option<bool> {
         .map(|kind| kind == "EP")
 }
 
-/// A song's lyrics as the web player reads them: by song id and cover image
-/// (REA: GET color-lyrics/v2/track/<id>/image/<image>). `None` for anything
-/// that is not a Spotify song with an `i.scdn.co` cover.
+/// A song's lyrics as the web player reads them: by song id and its cover's
+/// own `i.scdn.co` URL (REA: the lyrics view passes the cover image's URL,
+/// encoded, as `color-lyrics/v2/track/<id>/image/<url>`; a `spotify:image:`
+/// id there answers 400). `None` for anything that is not a Spotify song with
+/// an `i.scdn.co` cover.
 pub fn lyrics_query(uri: &str, cover: Option<&str>) -> Option<Value> {
     let track = uri.strip_prefix("spotify:track:")?;
-    let image = cover?
-        .rsplit('/')
-        .next()
-        .filter(|id| id.len() == 40 && id.bytes().all(|b| b.is_ascii_hexdigit()))?;
-    Some(json!({"lyrics": {"track": track, "image": format!("spotify:image:{image}")}}))
+    let cover = cover?;
+    let id = cover.strip_prefix("https://i.scdn.co/image/")?;
+    if id.len() != 40 || !id.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
+    }
+    Some(json!({"lyrics": {"track": track, "image": cover}}))
 }
 
 #[cfg(test)]
@@ -1013,7 +1016,7 @@ mod tests {
             lyrics_query("spotify:track:0DiWol3AO6WpXZgp0goxAV", Some(cover)),
             Some(json!({"lyrics": {
                 "track": "0DiWol3AO6WpXZgp0goxAV",
-                "image": "spotify:image:ab67616d0000b273c8b444df094279e70d0ed856",
+                "image": "https://i.scdn.co/image/ab67616d0000b273c8b444df094279e70d0ed856",
             }}))
         );
         assert!(lyrics_query("spotify:episode:0DiWol3AO6WpXZgp0goxAV", Some(cover)).is_none());
@@ -1364,6 +1367,35 @@ mod live {
             contains(&answer(read(contains_query(&liked_first))).unwrap(), 2).unwrap();
         let followed =
             followed_artists(&answer(read(followed_artists_query(0, 50))).unwrap(), 0).unwrap();
+        // The reads the Free gap PRs added, against the live web player.
+        // Play counts (#22): Daft Punk's popular songs carry counts.
+        let mut counts = std::collections::HashMap::new();
+        play_count_page(&answer(read(artist_query(daft))).unwrap(), &mut counts).unwrap();
+        // EP type (#28): the album answer names its type.
+        let ep = album_is_ep(
+            &answer(read(album_query(
+                "spotify:album:4m2880jivSbbyEGAKfITCa",
+                0,
+                1,
+            )))
+            .unwrap(),
+        );
+        // Folders (#26): the account's own rootlist.
+        let rootlist = crate::free_playlist_edits::rootlist(
+            &answer(read(json!({"rootlist": user.id}))).unwrap(),
+        )
+        .unwrap();
+        // Lyrics (#27): the first song of the album read above, with the
+        // album's real cover.
+        let lyric_song = album
+            .tracks
+            .as_ref()
+            .and_then(|songs| songs.items.first())
+            .map(|song| song.uri.clone())
+            .unwrap_or_default();
+        let lyric_cover = album.images.first().map(|image| image.url.clone());
+        let lyrics =
+            lyrics_query(&lyric_song, lyric_cover.as_deref()).map(|query| answer(read(query)));
         player.shutdown();
         assert!(!made_for_you.is_empty(), "Made For shelf");
         assert!(!recent.items.is_empty(), "recently played");
@@ -1436,6 +1468,44 @@ mod live {
             songs.total,
             songs.items.len(),
             album.name,
+        );
+
+        eprintln!(
+            "LIVE free gaps: play counts {} (sample {:?}); followers {:?}; album EP {:?}; \
+             rootlist {} rows, {} editable; lyrics {}",
+            counts.len(),
+            counts.values().next(),
+            artist.followers.as_ref().map(|f| f.total),
+            ep,
+            rootlist.entries.len(),
+            rootlist.editable.len(),
+            match &lyrics {
+                Some(Ok(body)) => format!(
+                    "ok lines={} capped={}",
+                    crate::lyrics::from_spotify(body).map_or(0, |found| found.lines.len()),
+                    crate::lyrics::spotify_capped(body)
+                ),
+                Some(Err(error)) => format!("error {error:?}"),
+                None => "no query".into(),
+            },
+        );
+        assert!(!counts.is_empty(), "the artist page carries play counts");
+        assert!(
+            artist.followers.is_some(),
+            "the artist page carries followers"
+        );
+        assert!(ep.is_some(), "the album answer names its type");
+        assert!(
+            !rootlist.entries.is_empty(),
+            "the playlist list reads with its rows"
+        );
+        let lyrics = lyrics
+            .expect("a song with a cover asks for lyrics")
+            .expect("the web player's lyrics answer");
+        assert!(
+            crate::lyrics::spotify_capped(&lyrics)
+                || crate::lyrics::from_spotify(&lyrics).is_some(),
+            "lyrics, or Spotify's cap on them"
         );
     }
 }
