@@ -1396,6 +1396,16 @@ mod live {
         let lyric_cover = album.images.first().map(|image| image.url.clone());
         let lyrics =
             lyrics_query(&lyric_song, lyric_cover.as_deref()).map(|query| answer(read(query)));
+        // Contributor names (#29): the account's own profile, by its id.
+        let profile = answer(read(json!({"profile": user.id})));
+        // Audiobooks (#31): a show page names its kind. The Joe Rogan
+        // Experience is a podcast; the check is that the kind is named.
+        let show_kind = crate::free_podcasts::is_audiobook(
+            &answer(read(crate::free_podcasts::show_query(
+                "spotify:show:4rOoJ6Egrf8K2IrywzwOMk",
+            )))
+            .unwrap(),
+        );
         player.shutdown();
         assert!(!made_for_you.is_empty(), "Made For shelf");
         assert!(!recent.items.is_empty(), "recently played");
@@ -1507,5 +1517,15 @@ mod live {
                 || crate::lyrics::from_spotify(&lyrics).is_some(),
             "lyrics, or Spotify's cap on them"
         );
+        let profile = profile.expect("the profile view answers JSON to the web player");
+        let named = crate::session_reads::profile_from_json(&profile);
+        eprintln!(
+            "LIVE names and shows: profile name {}, picture {}; show kind audiobook={:?}",
+            named.name.is_some(),
+            named.image_url.is_some(),
+            show_kind,
+        );
+        assert!(named.name.is_some(), "the profile view names the account");
+        assert_eq!(show_kind, Some(false), "the show page says Podcast");
     }
 }
