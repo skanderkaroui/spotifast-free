@@ -711,15 +711,19 @@ for (const name of fixtureNames) {
     navigator: {},
   };
   runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
-  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer first' } });
-  const image = 'spotify:image:ab67616d0000b273c8b444df094279e70d0ed856';
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer first', 'app-platform': 'WebPlayer', 'spotify-app-version': '896000000' } });
+  const image = 'https://i.scdn.co/image/ab67616d0000b273c8b444df094279e70d0ed856';
   await page.window.__spotifastQuery(1, { lyrics: { track: '0DiWol3AO6WpXZgp0goxAV', image } });
   await page.window.__spotifastQuery(2, { lyrics: { track: '../x', image } });
   await page.window.__spotifastQuery(3, { lyrics: { track: '0DiWol3AO6WpXZgp0goxAV', image: 'https://evil' } });
   assert.equal(asked.length, 1);
-  assert.equal(asked[0].url, `https://spclient.wg.spotify.com/color-lyrics/v2/track/0DiWol3AO6WpXZgp0goxAV/image/${encodeURIComponent(image)}?format=json&vocalRemoval=false`);
+  assert.equal(asked[0].url, `https://spclient.wg.spotify.com/color-lyrics/v2/track/0DiWol3AO6WpXZgp0goxAV/image/${encodeURIComponent(image)}?format=json&vocalRemoval=false&market=from_token`);
   assert.equal(asked[0].method, undefined, 'a GET');
   assert.equal(asked[0].headers.authorization, 'Bearer first');
+  // Live, 31 Oct: color-lyrics answers 400 without the web player's own
+  // platform and version headers.
+  assert.equal(asked[0].headers['app-platform'], 'WebPlayer');
+  assert.equal(asked[0].headers['spotify-app-version'], '896000000');
   const answers = out.filter((event) => event.event === 'query');
   assert.deepEqual(answers.map((a) => [a.id, a.status]), [[1, 200], [2, 400], [3, 400]]);
   console.log('ok: lyrics are read for the song and cover asked only');
