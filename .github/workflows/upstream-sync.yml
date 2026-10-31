@@ -50,7 +50,12 @@ jobs:
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           log=$(git log --format='- %s' HEAD..upstream/main)
           git switch --quiet -c "$branch"
-          if git merge --no-ff --no-edit -m "Merge upstream Spotifast $head" upstream/main; then
+          # The fork's renames (.github/fork-rename.toml) are applied to
+          # upstream's side before the merge, so a clash over the app's name
+          # resolves itself; anything else still conflicts for a person.
+          if python3 .github/scripts/fork-rename.py merge upstream/main \
+            && git commit --quiet --no-edit -m "Merge upstream Spotifast $head" \
+            && python3 .github/scripts/fork-rename.py check; then
             git push --quiet origin "$branch"
             gh pr create --base main --head "$branch" \
               --title "Merge upstream Spotifast $head" \
@@ -64,7 +69,10 @@ jobs:
             gh workflow run ci.yml --ref "$branch"
           else
             conflicts=$(git diff --name-only --diff-filter=U | sed 's/^/- `/; s/$/`/')
-            git merge --abort
+            # A merge that went through but left a rename unapplied reports
+            # the check's findings instead of conflicting files.
+            [ -n "$conflicts" ] || conflicts=$(python3 .github/scripts/fork-rename.py check | sed 's/^/- /')
+            git merge --abort 2>/dev/null || true
             title="Upstream Spotifast $head conflicts with the fork"
             if gh issue list --state open --search "in:title \"$title\"" --json number --jq 'length' | grep -qx 0; then
               gh issue create --title "$title" \
