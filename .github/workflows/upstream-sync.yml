@@ -31,6 +31,10 @@ jobs:
       - name: Merge upstream
         env:
           GH_TOKEN: ${{ github.token }}
+          # With an `upstream` remote added, gh in a fork resolves the parent
+          # (crmne/spotifast), where this token can do nothing: issues and
+          # pull requests failed with "Resource not accessible by integration".
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           git remote add upstream https://github.com/crmne/spotifast.git
