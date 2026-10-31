@@ -439,6 +439,7 @@ pub struct App {
     pub local_ready: bool,
     pub local_playback: LocalPlayback,
     pub soloist_status: crate::soloist::Status,
+    pub soloist_audio: bool,
     pub soloist_onboarding: crate::settings::SoloistOnboarding,
     pub soloist_key: String,
     pub soloist_device_id: Option<String>,
@@ -1032,6 +1033,9 @@ impl App {
             applied_proxy
         };
         let session = SessionState::load(&dirs.session_file());
+        backend
+            .soloist_output_volume
+            .set(session.soloist_output_volume.unwrap_or(100));
         let soloist_onboarding = session.soloist_onboarding.restore(settings.soloist_enabled);
         let wake = waker.clone();
         let media_controls = options
@@ -1143,6 +1147,7 @@ impl App {
             local_ready: false,
             local_playback: LocalPlayback::Unavailable,
             soloist_status: crate::soloist::Status::Off,
+            soloist_audio: false,
             soloist_onboarding,
             soloist_key: String::new(),
             soloist_device_id: None,
@@ -1772,10 +1777,72 @@ impl App {
         }
     }
 
-    /// Presentation only: Soloist's own local process still uses the remote
-    /// command path and must not inherit librespot's audio/queue capabilities.
+    /// Soloist's own local process still uses the remote command path and
+    /// queue capabilities. Its private audio route is tracked separately.
     pub fn targets_own_soloist(&self) -> bool {
         matches!(self.target(), Target::Remote(Some(id)) if self.soloist_device_id.as_ref() == Some(&id))
+    }
+
+    /// Only the Mac rerenderer owns a fader after capture. Windows observes
+    /// Soloist's output; Linux already applies synchronized Connect volume.
+    fn has_soloist_output_volume(&self) -> bool {
+        cfg!(all(target_os = "macos", feature = "soloist-native-audio"))
+            && self.settings.soloist_enabled
+            && self.soloist_audio
+    }
+
+    /// The built-in sink or an audible processing route from our Soloist child.
+    /// Spotify Free's sound never passes through Spotifast, so it has none.
+    pub fn audio_processing_available(&self) -> bool {
+        self.capabilities().sound_effects
+            && (!self.settings.soloist_enabled
+                || (self.soloist_audio && !cfg!(target_os = "windows")))
+    }
+
+    /// Windows process capture can observe audio without processing its output.
+    ///
+    /// Visualizers read Spotifast's own sound. Spotify Free's web player
+    /// plays inside its own page and never reaches them, so Free has none.
+    pub fn visualizers_available(&self) -> bool {
+        self.capabilities().visualizers && (!self.settings.soloist_enabled || self.soloist_audio)
+    }
+
+    pub fn visualizer_sounding(&self, now: Option<&NowPlaying>) -> bool {
+        // On Free, drawing the tap would show old or no sound out of time
+        // with the song, so the bar and Winamp stay plain.
+        self.capabilities().visualizers
+            && now.is_some_and(|now| {
+                (now.playing || now.loading)
+                    && (now.local || (self.soloist_audio && self.targets_own_soloist()))
+            })
+    }
+
+    pub fn visualizer_lag(&self) -> usize {
+        if self.soloist_audio && self.targets_own_soloist() {
+            0
+        } else {
+            crate::vis::LAG
+        }
+    }
+
+    /// A running child is not usable until its Connect device has been
+    /// verified against the signed-in account. Never fall through to the
+    /// built-in player while the chosen player is starting or needs help.
+    pub fn soloist_waiting(&self) -> bool {
+        self.settings.soloist_enabled
+            && !(matches!(self.soloist_status, crate::soloist::Status::Ready { .. })
+                && self.soloist_device_id.is_some())
+    }
+
+    pub fn soloist_wait_message(&self) -> Cow<'static, str> {
+        use crate::soloist::Status;
+        match self.soloist_status {
+            Status::Starting | Status::Off => gettext(self.locale, "Starting Soloist…"),
+            Status::Downloading { .. } => gettext(self.locale, "Downloading Soloist from Spotify…"),
+            Status::Ready { .. } => gettext(self.locale, "Verifying Soloist…"),
+            Status::Pairing { .. } => gettext(self.locale, "3. Pair once in Spotify"),
+            Status::NeedsKey | Status::Failed(_) => gettext(self.locale, "Soloist needs attention"),
+        }
     }
 
     /// Context shown as playing, including pending local play requests.
@@ -2141,16 +2208,23 @@ impl App {
                 }
             }
         };
-        let volume = match &self.pending_remote_volume {
-            Some(pending)
-                if pending.device_id.as_deref()
-                    == device.and_then(|device| device.id.as_deref()) =>
-            {
-                pending.percent
+        let volume = if self.has_soloist_output_volume()
+            && self.soloist_device_id.is_some()
+            && self.soloist_device_id.as_deref() == device.and_then(|d| d.id.as_deref())
+        {
+            self.backend.soloist_output_volume.percent()
+        } else {
+            match &self.pending_remote_volume {
+                Some(pending)
+                    if pending.device_id.as_deref()
+                        == device.and_then(|device| device.id.as_deref()) =>
+                {
+                    pending.percent
+                }
+                _ => device
+                    .and_then(|device| device.volume_percent)
+                    .unwrap_or(50),
             }
-            _ => device
-                .and_then(|device| device.volume_percent)
-                .unwrap_or(50),
         };
         let (artists, album_name, album_id, show_id, is_episode) = match item {
             PlayableItem::Track(track) => (
@@ -2854,6 +2928,7 @@ impl App {
                 let ready = matches!(status, Status::Ready { .. });
                 if matches!(status, Status::Ready { .. } | Status::Pairing { .. }) { self.soloist_key.clear(); }
                 if !ready {
+                    self.soloist_audio = false;
                     self.clear_soloist_target();
                     self.backend.send(Command::SoloistDevice(None));
                 }
@@ -2864,6 +2939,8 @@ impl App {
                     self.refresh_devices();
                 }
             }
+            Update::Audio(available) => self.soloist_audio = available && self.settings.soloist_enabled && matches!(self.soloist_status, Status::Ready { .. }),
+            Update::OutputVolume => self.session_dirty = true,
             Update::Changed { queue } => {
                 if self.soloist_device_id.is_some() {
                     self.poll_remote_soon();
@@ -2929,6 +3006,7 @@ impl App {
                 self.soloist_key.clear();
                 self.soloist_device_id = None;
                 self.soloist_status = crate::soloist::Status::Off;
+                self.soloist_audio = false;
                 self.soloist_update = None;
                 self.soloist_select = false;
                 if matches!(self.dialog, Some(Dialog::PersonalAppIntro)) {
@@ -2989,6 +3067,21 @@ impl App {
                         self.load_new_releases();
                     }
                     self.load_hidden_songs();
+                    if self.settings.soloist_enabled {
+                        // Reads made before this separate approval could not
+                        // use Spotify's session. Retry visible missing data.
+                        if self.show_friends_panel {
+                            self.friends_generation += 1;
+                            self.friends_in_flight = false;
+                            self.refresh_friends();
+                        }
+                        if matches!(self.lyrics, Loadable::Loaded(None) | Loadable::Failed(_)) {
+                            self.lyrics = Loadable::NotLoaded;
+                            if self.show_lyrics_panel || self.lyrics_fullscreen.is_some() {
+                                self.request_lyrics();
+                            }
+                        }
+                    }
                 }
                 self.replay_queued_play();
             }
@@ -3004,15 +3097,21 @@ impl App {
                 }
                 self.toast_error(
                     // Translators: {error} is an error message from the playback engine.
-                    gettext(self.locale, "Local playback: {error}").replace("{error}", message),
+                    if self.settings.soloist_enabled {
+                        gettext(self.locale, "Spotify connection: {error}")
+                    } else {
+                        gettext(self.locale, "Local playback: {error}")
+                    }
+                    .replace("{error}", message),
                 );
             }
             LocalPlayback::Authorizing => {
                 if !matches!(self.local_playback, LocalPlayback::Authorizing) {
-                    self.toast(gettext(
-                        self.locale,
-                        "Opening your browser to set up local playback",
-                    ));
+                    self.toast(if self.settings.soloist_enabled {
+                        gettext(self.locale, "Opening your browser to connect Spotify")
+                    } else {
+                        gettext(self.locale, "Opening your browser to set up local playback")
+                    });
                 }
             }
             LocalPlayback::Connecting | LocalPlayback::WaitingForNetwork => {}
@@ -9337,6 +9436,9 @@ impl App {
     /// in one ordered exchange: two independent requests race, and shuffle
     /// sometimes lost.
     fn play_request(&mut self, request: PlayRequest, shuffle_first: bool) {
+        if self.soloist_waiting() {
+            return;
+        }
         // Whatever starts now outranks a play-search still in flight.
         self.supersede_play_search();
         // A play from a row names its row again after this.
@@ -9360,6 +9462,10 @@ impl App {
     }
 
     fn start_play(&mut self, request: PlayRequest, shuffle_first: bool) {
+        if self.soloist_waiting() {
+            self.clear_play_pending();
+            return;
+        }
         // Shuffle applies across contexts until disabled. A selected row still
         // starts first; otherwise choose a random starting track.
         let mut request = request;
@@ -9971,6 +10077,12 @@ impl App {
 
     fn set_volume(&mut self, percent: u8, settle: bool) {
         let percent = percent.min(100);
+        if self.has_soloist_output_volume() && self.targets_own_soloist() {
+            self.backend.soloist_output_volume.set(percent);
+            self.pending_remote_volume = None;
+            self.session_dirty = true;
+            return;
+        }
         match self.target() {
             Target::Local => {
                 let volume = percent_to_volume(percent);
@@ -11163,6 +11275,44 @@ impl App {
     /// Apply one queued UI action after drawing, updating optimistic local state
     /// and scheduling any backend work or preference persistence it requires.
     pub(crate) fn apply(&mut self, action: Action, ctx: &egui::Context) {
+        // Covers buttons, row double-clicks, keyboard/media shortcuts and IPC
+        // before any optimistic state or queued request can change.
+        if self.soloist_waiting()
+            && matches!(
+                &action,
+                Action::PlayContext { .. }
+                    | Action::PlaySearch { .. }
+                    | Action::PlaySearchMatch { .. }
+                    | Action::PlayEpisode { .. }
+                    | Action::PlayUris { .. }
+                    | Action::PlayFromRow { .. }
+                    | Action::ShufflePlay(_)
+                    | Action::TogglePlay
+                    | Action::Next
+                    | Action::Previous
+                    | Action::Seek(_)
+                    | Action::SeekBy(_)
+                    | Action::SetVolume(_)
+                    | Action::PreviewVolume(_)
+                    | Action::VolumeBy(_)
+                    | Action::ToggleMute
+                    | Action::ToggleShuffle
+                    | Action::CycleRepeat
+                    | Action::SetShuffle(_)
+                    | Action::SetRepeat(_)
+                    | Action::Transfer(_)
+                    | Action::ActivateReceiver(_)
+                    | Action::AddToQueue { .. }
+                    | Action::QueueMany { .. }
+                    | Action::PlayNext { .. }
+                    | Action::MoveInQueue { .. }
+                    | Action::InsertInQueue { .. }
+                    | Action::RemoveFromQueue { .. }
+                    | Action::ClearQueue
+            )
+        {
+            return;
+        }
         if matches!(
             &action,
             Action::Open(_)
@@ -12321,7 +12471,15 @@ impl App {
                 self.apply(Action::EnablePlayback, ctx);
             }
             Action::SetSoloist(enabled) => {
+                if enabled && self.settings.soloist_enabled && !self.soloist_waiting() {
+                    return;
+                }
+                self.clear_soloist_target();
+                self.queued_play = None;
+                self.clear_play_pending();
+                self.supersede_play_search();
                 self.settings.soloist_enabled = enabled;
+                self.soloist_audio = false;
                 self.mark_settings_dirty();
                 self.soloist_select = enabled;
                 self.soloist_update = None;
@@ -12335,9 +12493,6 @@ impl App {
                 } else {
                     crate::soloist::Status::Off
                 };
-                if !enabled {
-                    self.clear_soloist_target();
-                }
                 self.backend.send(Command::Soloist {
                     enabled,
                     key: (!key.trim().is_empty()).then_some(key),
@@ -13528,6 +13683,7 @@ impl App {
         if !self.offline {
             let session = SessionState {
                 soloist_onboarding: self.soloist_onboarding,
+                soloist_output_volume: Some(self.backend.soloist_output_volume.percent()),
                 device_history: self.device_history.clone(),
                 last_page: Some(self.page().encode()),
                 recent_contexts: self.recent_contexts.clone(),
@@ -21261,6 +21417,126 @@ mod tests {
     }
 
     #[test]
+    fn soloist_verification_blocks_playback_until_binding_and_after_failure() {
+        use crate::soloist::{Status, Update};
+        let mut app = test_app("soloist-verification");
+        let ctx = egui::Context::default();
+        app.backend.set_offline(true);
+        app.auth = AuthStatus::Connected {
+            username: "listener".into(),
+        };
+        app.settings.soloist_enabled = true;
+        app.local_ready = true; // A saved librespot grant must not bypass the check.
+        let ready = Status::Ready {
+            name: "owned".into(),
+            version: "test".into(),
+            expires: u64::MAX,
+        };
+        for status in [
+            Status::Off,
+            Status::Starting,
+            Status::Downloading {
+                received: 1,
+                total: 2,
+            },
+            Status::Pairing {
+                name: "owned".into(),
+                version: "test".into(),
+            },
+            ready.clone(),
+            Status::NeedsKey,
+            Status::Failed("unavailable".into()),
+        ] {
+            app.on_soloist(Update::Status(status));
+            assert!(app.soloist_waiting());
+            app.queued_play = Some(PlayRequest::tracks(vec!["spotify:track:old".into()]));
+            app.replay_queued_play();
+            for action in [
+                Action::PlayUris {
+                    uris: vec!["spotify:track:test".into()],
+                    index: 0,
+                },
+                Action::PlayFromRow {
+                    context: RowContext::Uris(vec!["spotify:track:test".into()].into()),
+                    uri: "spotify:track:test".into(),
+                    index: 0,
+                },
+                Action::TogglePlay,
+                Action::Next,
+                Action::Previous,
+                Action::Transfer("other".into()),
+                Action::ToggleShuffle,
+            ] {
+                app.apply(action, &ctx);
+            }
+            assert!(app.intent_track.is_none());
+            assert!(app.played_row.is_none());
+            assert!(!app.any_play_pending());
+            assert!(app.optimistic_playing.is_none());
+            assert!(app.selected_device.is_none());
+            assert!(!app.shuffle_wanted);
+            assert!(app.backend.take_remote_play_requests().is_empty());
+        }
+        app.on_soloist(Update::Status(ready));
+        assert_eq!(app.soloist_wait_message(), "Verifying Soloist…");
+        app.devices = vec![Device {
+            id: Some("own".into()),
+            name: "owned".into(),
+            ..Default::default()
+        }];
+        app.bind_soloist_device();
+        assert!(!app.soloist_waiting());
+        app.apply(Action::ToggleShuffle, &ctx);
+        assert!(app.shuffle_wanted);
+        app.on_soloist(Update::Status(Status::Starting));
+        assert!(app.soloist_waiting());
+        app.apply(Action::Open(Page::Settings), &ctx);
+        assert_eq!(app.page(), &Page::Settings);
+        app.apply(Action::SetSoloist(false), &ctx);
+        assert!(!app.soloist_waiting());
+        app.backend.shutdown();
+    }
+
+    #[test]
+    fn soloist_audio_capability_is_cleared_on_restart_and_disable() {
+        use crate::soloist::{Status, Update};
+        let mut app = test_app("soloist-audio-capability");
+        app.backend.set_offline(true);
+        app.settings.soloist_enabled = true;
+        assert!(!app.audio_processing_available());
+        app.on_soloist(Update::Audio(true));
+        assert!(
+            !app.soloist_audio,
+            "an unready child cannot enable processing"
+        );
+        app.on_soloist(Update::Status(Status::Ready {
+            name: "owned".into(),
+            version: "test".into(),
+            expires: u64::MAX,
+        }));
+        app.on_soloist(Update::Audio(true));
+        assert!(app.visualizers_available());
+        assert_eq!(
+            app.audio_processing_available(),
+            !cfg!(target_os = "windows")
+        );
+        app.on_soloist(Update::Status(Status::Starting));
+        assert!(!app.audio_processing_available());
+        assert!(!app.visualizers_available());
+        app.settings.soloist_enabled = false;
+        app.on_soloist(Update::Audio(true));
+        assert!(
+            !app.soloist_audio,
+            "late events cannot restore a stopped route"
+        );
+        assert!(
+            app.audio_processing_available(),
+            "built-in player remains available"
+        );
+        app.backend.shutdown();
+    }
+
+    #[test]
     fn soloist_binding_requires_one_exact_device_in_the_signed_in_account() {
         let mut app = test_app("soloist-bind");
         app.soloist_status = crate::soloist::Status::Ready {
@@ -21407,6 +21683,39 @@ mod tests {
         );
         app.reveal_theme_changes = false;
         app
+    }
+
+    #[test]
+    fn soloist_spotify_access_retries_missing_features_without_switching_player() {
+        let mut app = test_app("soloist-spotify-access");
+        app.backend.set_offline(true);
+        app.settings.soloist_enabled = true;
+        app.selected_device = Some("own-soloist".into());
+        app.soloist_device_id = app.selected_device.clone();
+        app.show_friends_panel = true;
+        app.friends = Loadable::Failed("no session".into());
+        app.lyrics = Loadable::Loaded(None);
+        let generation = app.friends_generation;
+        app.handle_playback(LocalPlayback::Ready {
+            device_id: "built-in".into(),
+        });
+        assert!(app.settings.soloist_enabled);
+        assert_eq!(app.selected_device.as_deref(), Some("own-soloist"));
+        assert!(app.friends_generation > generation);
+        assert!(app.friends_in_flight);
+        assert!(app.friends.is_loading());
+        assert!(matches!(app.lyrics, Loadable::NotLoaded));
+        app.receive_friends(generation, Err("stale missing-session error".into()));
+        assert!(app.friends.is_loading());
+        let retried = app.friends_generation;
+        app.handle_playback(LocalPlayback::Ready {
+            device_id: "built-in".into(),
+        });
+        assert_eq!(
+            app.friends_generation, retried,
+            "no repeated refresh on ready updates"
+        );
+        app.backend.shutdown();
     }
 
     /// Friend activity takes the right panel's place: opening it closes the
@@ -29556,6 +29865,82 @@ mod tests {
             seq,
             result: Ok(Some(state)),
         });
+    }
+
+    #[test]
+    fn soloist_phone_output_volume_marks_the_session_for_saving() {
+        let mut app = remote_volume_app();
+        let builtin = app.settings.volume;
+        app.session_dirty = false;
+        app.backend.soloist_output_volume.set(30);
+        app.on_soloist(crate::soloist::Update::OutputVolume);
+        assert!(app.session_dirty);
+        assert_eq!(app.backend.soloist_output_volume.percent(), 30);
+        assert_eq!(app.settings.volume, builtin);
+        app.backend.shutdown();
+    }
+
+    #[test]
+    fn soloist_output_volume_is_local_only_when_mac_capture_is_ready() {
+        let mut app = remote_volume_app();
+        let id = app
+            .remote
+            .as_ref()
+            .unwrap()
+            .state
+            .device
+            .as_ref()
+            .unwrap()
+            .id
+            .clone();
+        app.settings.soloist_enabled = true;
+        app.soloist_device_id = id;
+        app.soloist_status = crate::soloist::Status::Ready {
+            name: "owned".into(),
+            version: "test".into(),
+            expires: u64::MAX,
+        };
+        app.soloist_audio = true;
+        let native_mac = cfg!(all(target_os = "macos", feature = "soloist-native-audio"));
+        let builtin = app.settings.volume;
+        // Slider motion changes the local fader at once, with no Spotify write.
+        app.set_volume(25, false);
+        assert_eq!(
+            app.now_playing().unwrap().volume_percent,
+            if native_mac { 25 } else { 40 }
+        );
+        app.set_volume(0, true);
+        assert_eq!(app.now_playing().unwrap().volume_percent, 0);
+        assert_eq!(app.remote_volume_request, u64::from(!native_mac));
+        assert_eq!(app.settings.volume, builtin);
+        if native_mac {
+            assert!(app.pending_remote_volume.is_none());
+            report_remote_volume(&mut app, 20, Some(75));
+            assert_eq!(
+                app.now_playing().unwrap().volume_percent,
+                0,
+                "phone volume must not move the local fader"
+            );
+            let ctx = egui::Context::default();
+            app.apply(Action::VolumeBy(5), &ctx);
+            assert_eq!(app.now_playing().unwrap().volume_percent, 5);
+            app.apply(Action::ToggleMute, &ctx);
+            assert_eq!(app.now_playing().unwrap().volume_percent, 0);
+            app.apply(Action::ToggleMute, &ctx);
+            assert_eq!(app.now_playing().unwrap().volume_percent, 5);
+            // Capture failure immediately restores the real source control.
+            app.soloist_audio = false;
+            assert_eq!(app.now_playing().unwrap().volume_percent, 75);
+            app.set_volume(40, true);
+            assert_eq!(app.remote_volume_request, 1);
+            // Another device never uses the Mac's private fader.
+            app.soloist_audio = true;
+            app.soloist_device_id = Some("different-device".into());
+            app.set_volume(60, true);
+            assert_eq!(app.remote_volume_request, 2);
+            assert_eq!(app.backend.soloist_output_volume.percent(), 5);
+        }
+        app.backend.shutdown();
     }
 
     #[test]

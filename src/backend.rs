@@ -1178,6 +1178,7 @@ pub use fastframe_shell::Waker;
 
 /// The interface's handle to the runtime.
 pub struct Backend {
+    pub soloist_output_volume: crate::soloist::OutputVolume,
     commands: mpsc::UnboundedSender<Command>,
     events: std::sync::mpsc::Receiver<Event>,
     art: ArtLoader,
@@ -1248,6 +1249,8 @@ impl Backend {
         let art = ArtLoader::new(http.clone(), runtime.handle().clone(), dirs.art_cache_dir());
         let activity = Arc::new(NetActivity::default());
 
+        let soloist_output_volume = crate::soloist::OutputVolume::default();
+        let worker_output_volume = soloist_output_volume.clone();
         let worker_activity = Arc::clone(&activity);
         let worker_art = art.clone();
         let worker_commands = command_tx.clone();
@@ -1266,6 +1269,7 @@ impl Backend {
                         worker_commands,
                         waker,
                     );
+                    worker.soloist_output_volume = worker_output_volume;
                     if restore_sign_in {
                         worker.restore_session();
                     }
@@ -1277,6 +1281,7 @@ impl Backend {
             .expect("unable to start the backend thread");
 
         Self {
+            soloist_output_volume,
             commands: command_tx,
             events: event_rx,
             art,
@@ -1833,6 +1838,7 @@ impl PlaylistHeaderLookup {
 }
 
 struct Worker {
+    soloist_output_volume: crate::soloist::OutputVolume,
     soloist: Option<crate::soloist::Handle>,
     soloist_generation: u64,
     dirs: AppDirs,
@@ -1976,6 +1982,7 @@ impl Worker {
         waker: Waker,
     ) -> Self {
         Self {
+            soloist_output_volume: crate::soloist::OutputVolume::default(),
             soloist: None,
             soloist_generation: 0,
             #[cfg(not(test))]
@@ -2243,14 +2250,17 @@ impl Worker {
                         let notify = Arc::new(move |update| {
                             let _ = commands.send(Command::SoloistUpdate { generation, update });
                         });
-                        self.soloist = Some(crate::soloist::Handle::start(
-                            self.dirs.clone(),
-                            account.as_str().to_owned(),
-                            key,
-                            self.credentials.lease(CredentialSlot::Soloist),
-                            self.http.clone(),
-                            notify,
-                        ));
+                        self.soloist =
+                            Some(crate::soloist::Handle::start(crate::soloist::Config {
+                                dirs: self.dirs.clone(),
+                                account: account.as_str().to_owned(),
+                                key,
+                                lease: self.credentials.lease(CredentialSlot::Soloist),
+                                http: self.http.clone(),
+                                notify,
+                                audio_config: self.engine_config.clone(),
+                                output_volume: self.soloist_output_volume.clone(),
+                            }));
                     }
                 }
                 Command::SoloistDevice(device) => {

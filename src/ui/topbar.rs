@@ -326,7 +326,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                     + badge_width(update_galley.as_ref(), UPDATE_BADGE_PADDING, labels)
             };
             let controls = RIGHT_CONTROLS_WIDTH
-                - if app.settings.soloist_enabled {
+                - if !app.visualizers_available() {
                     ICON_BUTTON_SIZE + ITEM_SPACING
                 } else {
                     0.0
@@ -544,8 +544,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                 {
                     app.actions.push(Action::Open(Page::Settings));
                 }
-                if app.capabilities().visualizers
-                    && !app.settings.soloist_enabled
+                if app.visualizers_available()
                     && theme::icon_button(
                         ui,
                         Icon::AudioLines,

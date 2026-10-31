@@ -54,7 +54,23 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
         fastframe_titlebar::resize(ui);
         return;
     }
-    if app.show_soloist_onboarding() {
+    if app.soloist_waiting()
+        && !app.show_soloist_onboarding()
+        && matches!(
+            app.soloist_status,
+            crate::soloist::Status::Off
+                | crate::soloist::Status::Starting
+                | crate::soloist::Status::Ready { .. }
+        )
+    {
+        player_bar::end_tint_session(ctx);
+        login::show(app, ui, true);
+        toasts(app, ctx, 20.0);
+        caption_buttons(ui, &app.palette, app.locale);
+        fastframe_titlebar::resize(ui);
+        return;
+    }
+    if app.show_soloist_onboarding() || app.soloist_waiting() {
         player_bar::end_tint_session(ctx);
         soloist::onboarding(app, ui);
         toasts(app, ctx, 20.0);

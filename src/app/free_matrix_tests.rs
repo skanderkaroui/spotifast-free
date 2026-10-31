@@ -725,3 +725,17 @@ fn next_onto_a_free_queued_song_consumes_it() {
     assert!(app.manual_queue.is_empty(), "{:?}", app.manual_queue);
     app.backend.shutdown();
 }
+
+#[test]
+fn free_has_no_visualizers_or_sound_effects_even_through_upstreams_helpers() {
+    both("free-vis-gates", |free, app| {
+        let now = app.now_playing();
+        // Upstream gates visualizers and the equalizer on Soloist's routing;
+        // Free's web player sound never reaches either.
+        assert_eq!(app.visualizers_available(), !free);
+        assert_eq!(app.audio_processing_available(), !free);
+        if free {
+            assert!(!app.visualizer_sounding(now.as_ref()));
+        }
+    });
+}

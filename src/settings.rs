@@ -1840,6 +1840,9 @@ pub struct CachedRootlist {
 pub struct SessionState {
     /// One-time player setup, including for installations upgraded from before Soloist.
     pub soloist_onboarding: SoloistOnboarding,
+    /// Separate Mac output fader. Absent in older sessions means unity gain.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub soloist_output_volume: Option<u8>,
     /// Recent explicit output choices, scoped to the verified Spotify account.
     pub device_history: crate::device_history::DeviceHistory,
     pub last_page: Option<String>,
@@ -1952,6 +1955,20 @@ impl SessionState {
 mod session_tests {
     use super::{CachedRootlist, SessionState, SoloistOnboarding};
     use crate::player::RootlistEntry;
+
+    #[test]
+    fn soloist_output_volume_restores_without_changing_old_sessions() {
+        let old: SessionState = serde_json::from_str("{}").unwrap();
+        assert_eq!(old.soloist_output_volume, None);
+        for volume in [0, 25, 100] {
+            let session = SessionState {
+                soloist_output_volume: Some(volume),
+                ..old.clone()
+            };
+            let saved: SessionState = serde_json::from_str(&session.encode().unwrap()).unwrap();
+            assert_eq!(saved.soloist_output_volume, Some(volume));
+        }
+    }
 
     #[test]
     fn player_setup_migrates_old_sessions_and_resumes_an_interrupted_setup() {
