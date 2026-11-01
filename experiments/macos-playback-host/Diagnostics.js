@@ -159,6 +159,14 @@
         connect.auth = { authorization, clientToken: readHeader('client-token') ?? connect.auth?.clientToken ?? null };
         connect.host = url.host;
       }
+      // The web player's request builder adds these to every spclient call
+      // (REA: setGlobalRequestHeaders([["App-Platform", ...],
+      // ["Spotify-App-Version", ...]])). Some services, color-lyrics among
+      // them, answer 400 without them.
+      const platform = readHeader('app-platform');
+      const version = readHeader('spotify-app-version');
+      if (platform) connect.appPlatform = platform;
+      if (version) connect.appVersion = version;
       // "hobs_" plus the id, cut to 40 characters (REA: er=/^(...{1,40})/),
       // so this is the start of the id. The player's own state reports
       // (PUT .../track-playback/v1/devices/<id>/state) carry the whole id.
@@ -246,6 +254,8 @@
   const headers = () => {
     const h = { authorization: connect.auth.authorization, 'content-type': 'application/json' };
     if (connect.auth.clientToken) h['client-token'] = connect.auth.clientToken;
+    if (connect.appPlatform) h['app-platform'] = connect.appPlatform;
+    if (connect.appVersion) h['spotify-app-version'] = connect.appVersion;
     return h;
   };
   const base = () => `https://${connect.host}/connect-state/v1`;
@@ -533,6 +543,15 @@
     // (REA: GET playlist/v2/user/<username>/rootlist with these decorations).
     rootlist: (username) => (typeof username === 'string' && USERNAME.test(username)
       ? `${PLAYLISTS}/user/${encodeURIComponent(username)}/rootlist?decorate=revision,length,attributes,timestamp,owner,capabilities&bustCache=${Date.now()}`
+      : null),
+    // A song's lyrics, as the lyrics view reads them (REA: GET
+    // color-lyrics/v2/track/<id>/image/<cover> with format=json and
+    // vocalRemoval, where <cover> is the cover's own i.scdn.co URL,
+    // encoded). A Free account may get them capped (capStatus).
+    lyrics: (asked) => (asked
+      && /^[A-Za-z0-9]{22}$/.test(asked.track ?? '')
+      && /^https:\/\/i\.scdn\.co\/image\/[a-f0-9]{40}$/.test(asked.image ?? '')
+      ? `https://spclient.wg.spotify.com/color-lyrics/v2/track/${asked.track}/image/${encodeURIComponent(asked.image)}?format=json&vocalRemoval=false&market=from_token`
       : null),
   };
   window.__spotifastQuery = async (id, query) => {

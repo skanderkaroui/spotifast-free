@@ -4056,6 +4056,7 @@ impl App {
                 duration_ms: now.duration_ms,
             },
             local_file,
+            cover: now.art_url,
         })));
     }
 
