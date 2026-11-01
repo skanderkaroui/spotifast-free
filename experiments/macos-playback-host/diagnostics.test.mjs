@@ -654,6 +654,41 @@ for (const name of fixtureNames) {
   console.log('ok: read-only GETs go only to the web player reads asked');
 }
 
+// A Free account's playlist list with its folders: the page reads the web
+// player's own rootlist for the username asked, with a GET and its sign-in,
+// and refuses anything that is not a username.
+{
+  const out = [];
+  const asked = [];
+  const page = {
+    ...context,
+    document: { ...document, querySelector: (selector) => (selector.includes('user-widget-link') ? {} : null) },
+    window: { webkit: { messageHandlers: { probe: { postMessage: (t) => out.push(JSON.parse(t)) } } },
+      fetch: async (input, init = {}) => {
+        const url = typeof input === 'string' ? input : input.url;
+        if (url.includes('/playlist/v2/')) {
+          asked.push({ url, method: init.method, headers: init.headers });
+          return { ok: true, status: 200, text: async () => '{"contents":{"items":[]}}' };
+        }
+        return { ok: true, status: 200, json: async () => ({}) };
+      } },
+    setInterval: () => {},
+    setTimeout,
+    navigator: {},
+  };
+  runInNewContext(`var window = this.window; window.top = window; ${script}`, page);
+  await page.window.fetch('https://gew1-spclient.spotify.com/melody/v1/time', { headers: { authorization: 'Bearer first' } });
+  await page.window.__spotifastQuery(1, { rootlist: 'owner' });
+  await page.window.__spotifastQuery(2, { rootlist: '../me' });
+  assert.equal(asked.length, 1);
+  assert.match(asked[0].url, /^https:\/\/spclient\.wg\.spotify\.com\/playlist\/v2\/user\/owner\/rootlist\?decorate=revision,length,attributes,timestamp,owner,capabilities&bustCache=\d+$/);
+  assert.equal(asked[0].method, undefined, 'a GET');
+  assert.equal(asked[0].headers.authorization, 'Bearer first');
+  const answers = out.filter((event) => event.event === 'query');
+  assert.deepEqual(answers.map((a) => [a.id, a.status]), [[1, 200], [2, 400]]);
+  console.log('ok: the playlist list is read for the username asked only');
+}
+
 // Spotify's code page (accounts.spotify.com/login/otp) has one box per digit
 // and keeps only the last character put into a box (REA, authn-web chunk 39:
 // the box's onChange takes value.slice(-1); only onPaste fills every box).
