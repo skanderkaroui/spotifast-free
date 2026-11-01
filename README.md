@@ -25,7 +25,8 @@ Everything else comes from Spotifast: a Spotify client written in Rust with
 typically uses 100–250 MB of RAM and starts in well under a second.
 
 - **Premium** plays through [librespot](https://github.com/librespot-org/librespot),
-  exactly as in Spotifast.
+  exactly as in Spotifast, or through Spotify's optional
+  [Soloist](https://spotifast.rocks/soloist/) player.
 - **Free** plays through Spotify's own web player, which Spotifast Free runs
   unchanged in a small background helper and controls from its native
   interface. On macOS for now.
@@ -102,12 +103,37 @@ Spotifast Free remembers your sign-in in the macOS Keychain. A local build
 is signed again on every rebuild, so macOS asks once more after each one;
 choose **Always Allow**.
 
+Since 0.15, setup leads with Spotify's
+[Soloist player](https://spotifast.rocks/soloist/), with guided key setup,
+one-time pairing and automatic renewal of expiring builds. New listeners and
+people updating see this choice once after sign-in on supported platforms.
+**Use the built-in player** keeps librespot, with Spotifast's EQ, visualizers,
+local files and full queue editing. The choice is remembered.
+On Linux with PipeWire, Soloist also supports Spotifast’s EQ and visualizers
+through a private audio route. [Native audio support](https://spotifast.rocks/soloist/#native-audio)
+adds EQ and visualizers on macOS 14.2 or newer, and visualizers on Windows 11,
+including MilkDrop. Windows Soloist playback does not support audible EQ.
+The Mac route keeps Soloist at full volume after redirecting its output,
+then applies Spotifast’s volume after the visualizers, including mute. Phone
+volume changes adjust that output level; Spotify’s indicator returns to 100%.
+Windows visuals follow Soloist’s source volume and stop when it is muted.
+When enabled, Soloist appears as **This computer**; settings show the controls
+that apply to it. Turning it off restores the built-in player's preferences.
+While Soloist starts and its account is verified, the Spotify loading screen shows
+**Verifying Soloist…** and waits to accept playback commands. **Set up Soloist**
+opens setup if pairing needs attention. After downloading, the wizard focuses on
+choosing the named device in Spotify, with the built-in player available as a
+quiet alternative below the card. **Settings → Account → Spotify access**
+connects the separate Spotify session for Made for you, listening activity and
+Spotify lyrics without changing players.
+
 ## Your music, on your desktop
 
 | Feature | What you can do |
 |---|---|
 | **Library and search** | Browse playlists, Liked Songs, albums, artists, and podcasts. Search the catalogue and edit playlists you own. |
 | **Local files** | Premium: play the local files your playlists list from a folder you choose in Settings, at any sample rate. Names show spaces and accents correctly, including in cached playlists. |
+| **Lyrics** | Spotify lyrics when the playback session is signed in, with LRCLIB as fallback. Temporary LRCLIB overloads retry and try search; older cached lyrics remain available during outages. |
 | **Spotify Connect** | Premium: play on this computer or control your other devices, including Google Cast speakers and groups. Cast devices appear as they are discovered; frequently and recently chosen outputs rise to the top. Remote volume keeps your chosen level while Spotify updates. |
 | **Queue** | Add songs to the queue. On Premium, **Play next** puts a song or selection first when playing on this computer. |
 | **Themes** | Choose light, dark, system appearance, or custom colours, with one theme for light mode and one for dark mode that switch with the system. On Omarchy, follow your desktop theme. |

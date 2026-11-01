@@ -45,9 +45,9 @@ Some boundaries come from Spotify or from upstream libraries:
   audio, keys or licences, and no faking the account's plan. Spotifast Free
   sends only the Spotify Connect requests open.spotify.com sends for its
   own buttons.
-- Spotify Lossless is not available through librespot. Spotifast will
-  reconsider it if librespot gains lawful upstream support; proposals that
-  depend on bypassing Spotify's DRM are out of scope.
+- Spotify Lossless is not available through librespot. The optional
+  Soloist integration, Premium only, uses Spotify's own player. Proposals
+  that depend on bypassing Spotify's DRM are out of scope.
 - Spotify tracks must come from Spotify. Substituting audio from YouTube,
   Piped, `yt-dlp`, or another catalogue is out of scope.
 - Spotifast will not embed a browser engine beyond the Free playback helper,
@@ -100,7 +100,7 @@ implementation and regression tests live in the Copilot Triage repository.
    are product features. Keep the UI thread free of network and disk waits.
 2. **Focused.** Prefer a complete, coherent workflow over a collection of
    settings, modes, and speculative features.
-3. **Honest integrations.** Use Spotify's Web API and librespot for what they
+3. **Honest integrations.** Use Spotify's Web API, librespot and Soloist for what they
    support. Do not scrape, impersonate capabilities, bypass technical
    protections, or silently replace one service with another.
 4. **Cross-platform by default.** Linux, macOS, and Windows are supported
