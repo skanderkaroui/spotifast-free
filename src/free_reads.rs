@@ -300,11 +300,19 @@ pub fn saved_albums(body: &Value, offset: u32) -> Result<Page<SavedAlbum>, ApiEr
     ))
 }
 
-/// An artist from their page.
+/// An artist from their page. The overview carries the follower count the
+/// web player's artist page shows (`artistUnion.stats.followers`), which
+/// the shared artist parser leaves out.
 pub fn artist_overview(body: &Value) -> Result<Artist, ApiError> {
-    body.pointer("/data/artistUnion")
+    let data = body.pointer("/data/artistUnion");
+    let mut artist = data
         .and_then(artist)
-        .ok_or_else(|| ApiError::Decode("Spotify sent no artist".into()))
+        .ok_or_else(|| ApiError::Decode("Spotify sent no artist".into()))?;
+    artist.followers = data
+        .and_then(|data| data.pointer("/stats/followers"))
+        .and_then(Value::as_u64)
+        .map(|total| crate::api::models::Followers { total });
+    Ok(artist)
 }
 
 /// An artist's top songs from their page.
@@ -1003,6 +1011,20 @@ mod tests {
             Some(&165_635_846)
         );
     }
+
+    #[test]
+    fn artist_overview_reads_the_follower_count() {
+        let body = json!({"data": {"artistUnion": {
+            "uri": "spotify:artist:4tZwfgrHOc3mvqYlEYSvVi",
+            "profile": {"name": "Daft Punk"},
+            "stats": {"followers": 10_204_311, "monthlyListeners": 31_000_000},
+        }}});
+        let artist = artist_overview(&body).unwrap();
+        assert_eq!(artist.name, "Daft Punk");
+        assert_eq!(artist.followers.map(|f| f.total), Some(10_204_311));
+        let bare = json!({"data": {"artistUnion": {"uri": "spotify:artist:x"}}});
+        assert!(artist_overview(&bare).unwrap().followers.is_none());
+    }
     use crate::web_player::QueryReply;
 
     /// The web player's answers, as recorded from open.spotify.com for a
@@ -1243,6 +1265,10 @@ mod live {
         .unwrap();
         let daft = "spotify:artist:4tZwfgrHOc3mvqYlEYSvVi";
         let artist = artist_overview(&answer(read(artist_query(daft))).unwrap()).unwrap();
+        assert!(
+            artist.followers.as_ref().is_some_and(|f| f.total > 0),
+            "the Free artist page carries a follower count"
+        );
         let top = artist_top_tracks(&answer(read(artist_query(daft))).unwrap()).unwrap();
         let releases =
             discography(&answer(read(discography_query(daft, 0, 20))).unwrap(), 0).unwrap();
