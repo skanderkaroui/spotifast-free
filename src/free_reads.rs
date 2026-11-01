@@ -949,7 +949,7 @@ pub fn play_count_page(
 pub async fn play_counts(
     reader: &crate::web_player::Reader,
     uri: &str,
-) -> Result<std::collections::HashMap<String, u64>, String> {
+) -> Result<crate::session_reads::PageMetadata, String> {
     let read = |query: Value| {
         let pending = reader.query(&query);
         async move { answer(pending.await) }
@@ -961,6 +961,9 @@ pub async fn play_counts(
                 .await
                 .map_err(|error| error.to_string())?;
             play_count_page(&body, &mut counts).map_err(|error| error.to_string())?;
+            if let Some(listeners) = crate::session_reads::monthly_listeners(&body) {
+                counts.insert(uri.to_string(), listeners);
+            }
         }
         Some("album") => {
             let mut offset = 0;
@@ -978,7 +981,11 @@ pub async fn play_counts(
         }
         _ => return Err("Spotify counts plays only for album and artist songs".into()),
     }
-    Ok(counts)
+    // The Free query leaves out the prerelease, so no upcoming album here.
+    Ok(crate::session_reads::PageMetadata {
+        play_counts: counts,
+        upcoming: None,
+    })
 }
 
 /// Whether an album answer is an EP, which the Web API files under singles.
