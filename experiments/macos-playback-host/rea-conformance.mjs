@@ -43,12 +43,16 @@ for (const endpoint of ['play', 'pause', 'resume', 'skip_next', 'skip_prev', 'se
   check(`_sendPlayerCommand("${endpoint}")`, vendor, `_sendPlayerCommand("${endpoint}"`);
 }
 // Command acknowledgement: the response's body.ack_id is awaited, the dealer's
-// cluster message carries ack_id, and the wait gives up after 3400 ms.
+// cluster message carries ack_id, and Spotify's wait gives up after 30 s.
+// `x=3400==n.j?3e4:null` is a bundler chunk guard (3400 is the chunk id),
+// so the timeout is 3e4. Minified names change between builds: match the
+// timeout by the message that names it.
 check('_awaitResponseWithAck awaits body.ack_id', vendor,
   /_awaitResponseWithAck\(\w,\w\)\{[\s\S]{0,300}\.body\)\?void 0:\w\.ack_id/);
 check('_onClusterMessage acknowledges payloads[0].ack_id', vendor,
   /_onClusterMessage\(\w\)\{let \w=\w\.payloads&&\w\.payloads\[0\];if\(!\w\)return;let \w=\w\.ack_id;\w&&this\._tracker\.trackCommandAcknowledged\(\w\)/);
-check('ack timeout 3400 ms', vendor, /\bep=3400\b/);
+check('ack timeout 30 s', vendor,
+  /\b(\w+)=\d+==\w\.j\?3e4:null[\s\S]{0,20000}acknowledgement within \$\{\1\}ms/);
 // _makeEndpoint: `${this._endpoint}/${t}/${e}/from/${o}/to/${n}`.
 check('_makeEndpoint url format .../from/<id>/to/<id>', vendor,
   /_makeEndpoint\(\w,\w,\w\)\{[^}]*`\$\{this\._endpoint\}\/\$\{\w\}\/\$\{\w\}\/from\/\$\{\w\}\/to\/\$\{\w\}`/);
@@ -90,7 +94,7 @@ for (const key of ['disallow_skipping_next_reasons', 'disallow_skipping_prev_rea
 }
 // Connect client _register: observer id "hobs_"+id cut to 40 chars.
 check('_register observer id ("hobs_"+id).replace(er,"$1")', vendor, /\("hobs_"\+this\._localDeviceId\)\.replace\((\w+),"\$1"\)/);
-check('er = /^([a-zA-Z0-9_%:-]{1,40}).*$/', vendor, 'er=/^([a-zA-Z0-9_%:-]{1,40}).*$/');
+check('observer id pattern /^([a-zA-Z0-9_%:-]{1,40}).*$/', vendor, '=/^([a-zA-Z0-9_%:-]{1,40}).*$/');
 check('connect-state/v1/cluster', vendor, /connect-state\\\/v1\\\/cluster\$|\/v1\/cluster`/);
 // Track playback state reports: PUT ${endpoint}/v1/devices/${id}/state.
 check('track-playback state PUT .../v1/devices/<id>/state', vendor,
