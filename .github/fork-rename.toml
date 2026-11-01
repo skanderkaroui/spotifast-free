@@ -1,0 +1,195 @@
+# Spotifast Free's renames of upstream Spotifast, applied to upstream's text
+# when it merges in (.github/scripts/fork-rename.py). Each rule is a literal
+# phrase, replaced only in the files its globs match, longest phrase first.
+#
+# The interface's own words are not here: src/i18n.rs brands every message
+# as it is shown, so upstream's strings and catalogs stay untouched. A rule
+# must never rename a gettext message id: those stay upstream's text, and
+# tests that check the shown message pin it with surrounding code. These
+# rules cover the app's identity outside the interface: bundle and package
+# ids, the desktop entry, installers, window and tray titles, and the tests
+# that pin them.
+#
+# `check` mode fails CI when a rule matches nothing in its files any more
+# (upstream renamed or removed the phrase: update or drop the rule) or when
+# an upstream phrase a rule renames is back in a file it covers.
+
+[[rule]]
+from = "rocks.spotifast.Spotifast.autostart"
+to = "io.github.skanderkaroui.SpotifastFree.autostart"
+files = ["packaging/macos/autostart.plist"]
+
+[[rule]]
+from = "rocks.spotifast.Spotifast"
+to = "io.github.skanderkaroui.SpotifastFree"
+files = ["packaging/macos/autostart.plist", "packaging/macos/bundle.sh", "src/updates.rs"]
+
+[[rule]]
+from = "github.com/crmne/spotifast/releases"
+to = "github.com/skanderkaroui/spotifast-free/releases"
+files = ["packaging/homebrew/spotifast.rb.in"]
+
+[[rule]]
+from = "https://github.com/crmne/spotifast"
+to = "https://github.com/skanderkaroui/spotifast-free"
+files = ["native-packages.yaml"]
+
+[[rule]]
+from = "repository: crmne/spotifast"
+to = "repository: skanderkaroui/spotifast-free"
+files = ["native-packages.yaml"]
+
+[[rule]]
+from = "\"crmne/spotifast\""
+to = "\"skanderkaroui/spotifast-free\""
+files = ["src/updates.rs"]
+
+[[rule]]
+from = "packaging/applications/spotifast.desktop"
+to = "packaging/applications/spotifast-free.desktop"
+files = [".github/workflows/release.yml", "flake.nix", "packaging/arch/*/PKGBUILD.in", "packaging/test-launchers.py"]
+
+[[rule]]
+from = "share/applications/spotifast.desktop"
+to = "share/applications/spotifast-free.desktop"
+files = ["flake.nix", "packaging/arch/*/PKGBUILD.in", "packaging/test-install.sh"]
+
+[[rule]]
+from = "StartupWMClass=spotifast$"
+to = "StartupWMClass=spotifast-free$"
+files = ["packaging/flatpak/*.yml"]
+
+[[rule]]
+from = "\"StartupWMClass=spotifast\""
+to = "\"StartupWMClass=spotifast-free\""
+files = ["packaging/test-install.sh"]
+
+[[rule]]
+from = "Casks/spotifast.rb\""
+to = "Casks/spotifast-free.rb\""
+files = [".github/workflows/packaging.yml"]
+
+[[rule]]
+from = "--cask spotifast/validation/spotifast\n"
+to = "--cask spotifast/validation/spotifast-free\n"
+files = [".github/workflows/packaging.yml"]
+
+[[rule]]
+from = "cask \"spotifast\" do"
+to = "cask \"spotifast-free\" do"
+files = ["packaging/homebrew/spotifast.rb.in"]
+
+[[rule]]
+from = "name \"Spotifast\""
+to = "name \"Spotifast Free\""
+files = ["packaging/homebrew/spotifast.rb.in"]
+
+[[rule]]
+from = "Spotifast.app"
+to = "Spotifast Free.app"
+files = ["packaging/homebrew/spotifast.rb.in", "packaging/macos/dmg.rb"]
+
+[[rule]]
+from = "\"-volname\", \"Spotifast\""
+to = "\"-volname\", \"Spotifast Free\""
+files = ["packaging/macos/dmg.rb"]
+
+[[rule]]
+from = "<string>Spotifast</string>"
+to = "<string>Spotifast Free</string>"
+files = ["packaging/macos/Info.plist"]
+
+[[rule]]
+from = "#define AppName \"Spotifast\""
+to = "#define AppName \"Spotifast Free\""
+files = ["packaging/windows/spotifast.iss", "packaging/windows/test-msi.py"]
+
+[[rule]]
+from = "#define AppIdentity \"Spotifast\""
+to = "#define AppIdentity \"SpotifastFree\""
+files = ["packaging/windows/spotifast.iss", "packaging/windows/test-msi.py"]
+
+[[rule]]
+from = "<?define Identity = \"Spotifast\" ?>"
+to = "<?define Identity = \"SpotifastFree\" ?>"
+files = ["packaging/windows/spotifast.wxs"]
+
+[[rule]]
+from = "name: Spotifast ${{ github.ref_name }}"
+to = "name: Spotifast Free ${{ github.ref_name }}"
+files = [".github/workflows/release.yml"]
+
+[[rule]]
+from = "assertEqual(entry[\"Name\"], \"Spotifast\")"
+to = "assertEqual(entry[\"Name\"], \"Spotifast Free\")"
+files = ["packaging/test-launchers.py"]
+
+[[rule]]
+from = "org.mpris.MediaPlayer2.spotifast\""
+to = "org.mpris.MediaPlayer2.spotifast-free\""
+files = ["src/app.rs"]
+
+[[rule]]
+from = "id: \"spotifast\","
+to = "id: \"spotifast-free\","
+files = ["src/app.rs"]
+
+[[rule]]
+from = "\"Show or hide Spotifast\""
+to = "\"Show or hide Spotifast Free\""
+files = ["src/app.rs"]
+
+[[rule]]
+from = "Some(\"Spotifast is up to date\")"
+to = "Some(\"Spotifast Free is up to date\")"
+files = ["src/app.rs"]
+
+[[rule]]
+from = "\"Spotifast 1.2.3 is available\""
+to = "\"Spotifast Free 1.2.3 is available\""
+files = ["src/app.rs"]
+
+[[rule]]
+from = "\"Signed in to Spotifast\""
+to = "\"Signed in to Spotifast Free\""
+files = ["src/auth.rs"]
+
+[[rule]]
+from = "go back to Spotifast."
+to = "go back to Spotifast Free."
+files = ["src/auth.rs"]
+
+[[rule]]
+from = "Return to Spotifast and try again."
+to = "Return to Spotifast Free and try again."
+files = ["src/auth.rs"]
+
+[[rule]]
+from = ".with_title(\"Spotifast\")"
+to = ".with_title(\"Spotifast Free\")"
+files = ["src/entrypoint.rs"]
+
+[[rule]]
+from = "\"Spotifast on GitHub\""
+to = "\"Spotifast Free on GitHub\""
+files = ["src/mac_menu.rs"]
+
+[[rule]]
+from = "executable_names: &[\"Spotifast\"]"
+to = "executable_names: &[\"Spotifast Free\"]"
+files = ["src/updates.rs"]
+
+[[rule]]
+from = "x64.title, \"Spotifast cannot open its window\")"
+to = "x64.title, \"Spotifast Free cannot open its window\")"
+files = ["src/window.rs"]
+
+[[rule]]
+from = "device_name, \"Spotifast\")"
+to = "device_name, \"Spotifast Free\")"
+files = ["tests/branding.rs"]
+
+[[rule]]
+from = "for name in [\"Spotifast\", "
+to = "for name in [\"Spotifast Free\", "
+files = ["tests/branding.rs"]

@@ -36,6 +36,11 @@ jobs:
       - name: No review evidence in the tree
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/check-review-evidence.py
+      # Every fork rename of upstream's identity still holds, and every rule
+      # still finds its phrase (.github/fork-rename.toml).
+      - name: Fork renames
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/fork-rename.py check
       - name: Policy check regressions
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/test-policy-checks.py

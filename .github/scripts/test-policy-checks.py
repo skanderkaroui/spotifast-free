@@ -18,6 +18,7 @@ evidence = load("check-review-evidence")
 settings = load("check-new-settings")
 media = load("check-review-media")
 ci_scope = load("ci-scope")
+fork_rename = load("fork-rename")
 
 LOCK = """
 version = 4
@@ -275,6 +276,71 @@ class CiScopeTest(unittest.TestCase):
 
     def test_an_unreadable_change_runs_everything(self):
         self.assertEqual(ci_scope.scope("pull_request", None, set()), (True, ci_scope.EVERYTHING))
+
+
+class ForkRenameTests(unittest.TestCase):
+    RULES = [
+        {"from": "packaging/applications/spotifast.desktop",
+         "to": "packaging/applications/spotifast-free.desktop", "files": ["release.yml"]},
+        {"from": "#define AppName \"Spotifast\"", "to": "#define AppName \"Spotifast Free\"",
+         "files": ["*.iss"]},
+    ]
+
+    def rules(self):
+        return sorted(self.RULES, key=lambda rule: len(rule["from"]), reverse=True)
+
+    def test_renames_only_covered_files_and_never_twice(self):
+        text = '#define AppName "Spotifast"\n#define AppName "Spotifast Free"\n'
+        renamed = fork_rename.rename(text, "app.iss", self.rules())
+        self.assertEqual(renamed, '#define AppName "Spotifast Free"\n' * 2)
+        self.assertEqual(fork_rename.rename(text, "other.txt", self.rules()), text)
+
+    def test_a_clash_over_the_name_resolves_and_a_real_one_stays(self):
+        import tempfile
+
+        base = "cp packaging/applications/spotifast.desktop dist/\nstep: a\n"
+        ours = "cp packaging/applications/spotifast-free.desktop dist/\nstep: a\n"
+        # Upstream moved the copy into a new block: only the name differs.
+        theirs = "if linux; then\ncp packaging/applications/spotifast.desktop dist/\nfi\nstep: a\n"
+        with tempfile.TemporaryDirectory() as scratch:
+            paths = {}
+            for name, text in (("base", base), ("ours", ours), ("theirs", theirs)):
+                paths[name] = Path(scratch) / name
+                paths[name].write_text(text)
+            original = fork_rename.rules
+            fork_rename.rules = self.rules
+            try:
+                code = fork_rename.merge_driver(
+                    str(paths["base"]), str(paths["ours"]), str(paths["theirs"]), "release.yml")
+            finally:
+                fork_rename.rules = original
+            merged = paths["ours"].read_text()
+        self.assertEqual(code, 0)
+        self.assertIn("if linux", merged)
+        self.assertIn("spotifast-free.desktop", merged)
+        self.assertNotIn("applications/spotifast.desktop", merged)
+
+        # A change to the same line beyond the name still conflicts.
+        with tempfile.TemporaryDirectory() as scratch:
+            paths = {}
+            real = "cp packaging/applications/spotifast.desktop out/\nstep: a\n"
+            for name, text in (("base", base), ("ours", ours), ("theirs", real)):
+                paths[name] = Path(scratch) / name
+                paths[name].write_text(text)
+            ours_changed = "cp packaging/applications/spotifast-free.desktop build/\nstep: a\n"
+            paths["ours"].write_text(ours_changed)
+            original = fork_rename.rules
+            fork_rename.rules = self.rules
+            try:
+                code = fork_rename.merge_driver(
+                    str(paths["base"]), str(paths["ours"]), str(paths["theirs"]), "release.yml")
+            finally:
+                fork_rename.rules = original
+            self.assertEqual(code, 1)
+            self.assertIn("<<<<<<< fork", paths["ours"].read_text())
+
+    def test_the_repository_rules_hold(self):
+        self.assertEqual(fork_rename.check(), 0)
 
 
 if __name__ == "__main__":
