@@ -520,6 +520,16 @@
       return post('query', { id, status: 0, how: 'network', message: text(error) });
     }
   };
+  // Read-only GETs the web player itself makes, keyed by the field the app
+  // asks with. Each turns the app's value into the exact URL, or refuses it
+  // (null) when it is not a well-formed id. Nothing else is fetched by GET.
+  const USERNAME = /^[A-Za-z0-9._-]{1,64}$/;
+  const getRoutes = {
+    // The account's recently played contexts (REA: recently-played/v3).
+    recentlyPlayed: (recent) => (recent && typeof recent === 'object' && USERNAME.test(recent.username ?? '')
+      ? `https://spclient.wg.spotify.com/recently-played/v3/user/${encodeURIComponent(recent.username)}/recently-played?format=json&limit=${Number(recent.limit) || 50}&filter=default`
+      : null),
+  };
   window.__spotifastQuery = async (id, query) => {
     // A signed-out page has an anonymous token too; a read with it answers
     // an empty profile. Wait for Spotify's own sign-in marker instead.
@@ -535,15 +545,15 @@
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const used = connect.auth.authorization;
       try {
-        const recent = query?.recentlyPlayed;
+        const route = Object.keys(getRoutes).find((key) => query?.[key] !== undefined);
+        const getTarget = route ? getRoutes[route](query[route]) : null;
+        if (route && !getTarget) return post('query', { id, status: 400, body: `refused: not a valid ${route}` });
         const changes = query?.playlistChanges;
         const changesTarget = changes && playlistChangesUrl(changes);
         if (changes && !changesTarget) return post('query', { id, status: 400, body: 'refused: not a playlist change' });
-        const target = recent
-          ? `https://spclient.wg.spotify.com/recently-played/v3/user/${encodeURIComponent(recent.username)}/recently-played?format=json&limit=${Number(recent.limit) || 50}&filter=default`
-          : changesTarget ?? (query?.collection ? COLLECTION : PATHFINDER);
+        const target = getTarget ?? changesTarget ?? (query?.collection ? COLLECTION : PATHFINDER);
         const body = changes ? changes.body : query?.collection ? { ...query.collection } : query;
-        const response = await pageFetch(target, recent
+        const response = await pageFetch(target, getTarget
           ? { headers: { ...headers(), accept: 'application/json' } }
           : { method: 'POST', headers: { ...headers(), accept: 'application/json' }, body: JSON.stringify(body) });
         if (response.status === 401 && attempt === 0) {
