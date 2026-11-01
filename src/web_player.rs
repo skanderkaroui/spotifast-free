@@ -1789,3 +1789,63 @@ mod tests {
         assert_eq!(state, LocalState::default());
     }
 }
+
+#[cfg(all(test, target_os = "macos"))]
+mod live {
+    use std::sync::Mutex;
+
+    static LINES: Mutex<Vec<String>> = Mutex::new(Vec::new());
+
+    struct Capture;
+    impl log::Log for Capture {
+        fn enabled(&self, _: &log::Metadata) -> bool {
+            true
+        }
+        fn log(&self, record: &log::Record) {
+            LINES.lock().unwrap().push(record.args().to_string());
+        }
+        fn flush(&self) {}
+    }
+
+    /// A volume drag on a Free sign-in reaches Spotify: every level sent
+    /// mid-drag is a Connect `volume` command the web player accepts.
+    #[test]
+    #[ignore = "needs the helper signed in to Spotify"]
+    fn a_free_volume_drag_reaches_spotify() {
+        log::set_logger(&Capture).unwrap();
+        log::set_max_level(log::LevelFilter::Info);
+        let mut player = super::WebPlayer::start(
+            std::sync::Arc::new(|_| {}),
+            std::sync::Arc::new(|_| {}),
+            None,
+        )
+        .unwrap();
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        // Answered only once the page is signed in.
+        runtime.block_on(player.query(&crate::free_reads::profile_query()));
+        let levels: [u16; 4] = [20_000, 30_000, 40_000, 50_000];
+        for volume in levels {
+            let sent = player.command(&crate::player::PlayerCommand::Volume(volume));
+            assert!(sent.unwrap().is_ok());
+            std::thread::sleep(std::time::Duration::from_millis(150));
+        }
+        std::thread::sleep(std::time::Duration::from_secs(5));
+        player.shutdown();
+        let acks: Vec<String> = LINES
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|l| l.contains("\"control\"") && l.contains("\"volume\""))
+            .cloned()
+            .collect();
+        eprintln!("{acks:#?}");
+        assert_eq!(acks.len(), levels.len(), "{acks:?}");
+        assert!(
+            acks.iter().all(|a| a.contains("\"handled\":true")),
+            "{acks:?}"
+        );
+    }
+}
