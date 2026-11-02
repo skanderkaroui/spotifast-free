@@ -1151,7 +1151,7 @@ msgstr ""
 
 #: src/app.rs:12490
 msgid "Spotify Free plays on this computer only"
-msgstr ""
+msgstr "Spotify Free відтворює лише на цьому комп’ютері"
 
 #: src/app.rs:12527 src/app.rs:12546
 msgid "Link copied"
@@ -1439,7 +1439,7 @@ msgstr "Добірки для вас, активність прослухову�
 
 #: src/ui/settings.rs:584
 msgid "Spotify Free: plays here with ads"
-msgstr ""
+msgstr "Spotify Free: відтворює тут із рекламою"
 
 #: src/ui/settings.rs:588
 msgid "Spotify Free, local playback needs Premium"
@@ -1466,7 +1466,7 @@ msgstr "Готово"
 
 #: src/ui/settings.rs:692 src/ui/devices.rs:644
 msgid "Spotify Free plays on this computer."
-msgstr ""
+msgstr "Spotify Free відтворює на цьому комп’ютері."
 
 #: src/ui/settings.rs:697
 msgid "This computer is a Spotify Connect device."
@@ -1505,6 +1505,8 @@ msgstr "Не налаштовано"
 msgid ""
 "Premium plays through Spotifast; Spotify Free plays with ads once signed in."
 msgstr ""
+"Premium відтворює через Spotifast; Spotify Free після входу відтворює з "
+"рекламою."
 
 #: src/ui/settings.rs:735
 msgid "Requires Spotify Premium and a one-time browser sign-in."
@@ -3402,7 +3404,7 @@ msgstr "Передзберегти у Spotify"
 
 #: src/ui/prerelease.rs:239
 msgid "Pre-saving needs Spotify Premium"
-msgstr ""
+msgstr "Для передзбереження потрібен Spotify Premium"
 
 #: src/ui/prerelease.rs:303
 msgid "Track list preview"
@@ -3787,7 +3789,7 @@ msgstr "Відкрити велике вікно"
 
 #: src/ui/winamp/playlist.rs:665
 msgid "Spotify Free can't change its queue here"
-msgstr ""
+msgstr "Spotify Free не може змінити тут свою чергу"
 
 #: src/ui/winamp/playlist.rs:679
 msgid "Remove selected"
@@ -4029,271 +4031,3 @@ msgstr ""
 "комп’ютер чи ця віртуальна машина його не надає. Установіть графічний "
 "драйвер або увімкніть GPU-прискорення для віртуальної машини. Відкрити "
 "{url}, щоб дізнатися більше?"
-
-#~ msgid "Winamp skins"
-#~ msgstr "Скіни Winamp"
-
-#~ msgid "Show Winamp in taskbar"
-#~ msgstr "Показувати Winamp на панелі завдань"
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Ctrl+M or click the skin logo to "
-#~ "return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "Використовуйте класичні скіни Winamp .wsz. Натисніть Ctrl+M або клацніть "
-#~ "логотип скіна, щоб повернутися. Перетягніть скін на будь-яке з вікон, щоб "
-#~ "додати його."
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Cmd+Shift+M or click the skin logo "
-#~ "to return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "Використовуйте класичні скіни Winamp .wsz. Натисніть Cmd+Shift+M або "
-#~ "клацніть логотип скіна, щоб повернутися. Перетягніть скін на будь-яке з "
-#~ "вікон, щоб додати його."
-
-#~ msgid "Skin"
-#~ msgstr "Скін"
-
-#~ msgid "Keep the Winamp window above everything else."
-#~ msgstr "Тримати вікно Winamp поверх усіх інших."
-
-#~ msgid "Installed skins"
-#~ msgstr "Установлені скіни"
-
-#~ msgid "Random"
-#~ msgstr "Випадковий"
-
-#~ msgid "Spotify's own player, with lossless support."
-#~ msgstr "Програвач Spotify із підтримкою звуку без втрат."
-
-#~ msgid ""
-#~ "You'll need Spotify Premium, your personal Soloist key and one pairing in "
-#~ "Spotify. Spotifast handles the download and updates."
-#~ msgstr ""
-#~ "Потрібні Spotify Premium, особистий ключ Soloist і одноразове сполучення "
-#~ "в Spotify. Spotifast подбає про завантаження та оновлення."
-
-#~ msgid ""
-#~ "For local files and full queue editing, use the built-in player. You can "
-#~ "switch later in Settings."
-#~ msgstr ""
-#~ "Для локальних файлів і повного редагування черги використовуйте "
-#~ "вбудований програвач. Пізніше його можна змінити в налаштуваннях."
-
-#~ msgid ""
-#~ "Create a Soloist key in Spotify's developer dashboard. This is separate "
-#~ "from your Web API app's Client ID."
-#~ msgstr ""
-#~ "Створіть ключ Soloist на панелі розробника Spotify. Він відрізняється від "
-#~ "Client ID вашого застосунку Web API."
-
-#~ msgid ""
-#~ "Soloist makes its own Spotify connections. Spotifast's proxy settings do "
-#~ "not route its audio traffic."
-#~ msgstr ""
-#~ "Soloist самостійно підключається до Spotify. Налаштування проксі "
-#~ "Spotifast не поширюються на його аудіотрафік."
-
-#~ msgid ""
-#~ "Downloads directly from Spotify and saves your key in the system "
-#~ "credential store. By enabling Soloist, you use Spotify's separate "
-#~ "software under its terms."
-#~ msgstr ""
-#~ "Завантажує безпосередньо зі Spotify та зберігає ключ у системному сховищі "
-#~ "облікових даних. Увімкнувши Soloist, ви використовуєте окрему програму "
-#~ "Spotify за її умовами."
-
-#~ msgid ""
-#~ "Open Spotify on the same network, using the account signed in here. In "
-#~ "the device picker, choose:"
-#~ msgstr ""
-#~ "Відкрийте Spotify у тій самій мережі з обліковим записом, який "
-#~ "використовуєте тут. У списку пристроїв виберіть:"
-
-#~ msgid ""
-#~ "Spotifast will notice when pairing finishes. Future starts reconnect "
-#~ "automatically."
-#~ msgstr ""
-#~ "Spotifast виявить завершення сполучення. Під час наступних запусків "
-#~ "підключення буде автоматичним."
-
-#~ msgid ""
-#~ "If this takes a while, make sure Spotify is signed in to the same account "
-#~ "as Spotifast, then select this device there."
-#~ msgstr ""
-#~ "Якщо це триває довго, переконайтеся, що Spotify та Spotifast "
-#~ "використовують один обліковий запис, і виберіть цей пристрій у Spotify."
-
-#~ msgid ""
-#~ "For EQ, visualizers, local files and queue editing, use the built-in "
-#~ "player. You can switch later in Settings."
-#~ msgstr ""
-#~ "Для еквалайзера, візуалізацій, локальних файлів і редагування черги "
-#~ "використовуйте вбудований програвач. Згодом його можна змінити в "
-#~ "налаштуваннях."
-
-#~ msgid ""
-#~ "Spotify manages audio quality. EQ, visualizers and local files use the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Spotify керує якістю звуку. Еквалайзер, візуалізації та локальні файли "
-#~ "використовують вбудований програвач."
-
-#~ msgid "Confirming your Spotify account…"
-#~ msgstr "Підтвердження облікового запису Spotify…"
-
-#~ msgid "Details"
-#~ msgstr "Докладніше"
-
-#~ msgid ""
-#~ "Spotifast checks daily for a replacement during the last 30 days of each "
-#~ "build. Updates wait until Soloist is inactive."
-#~ msgstr ""
-#~ "В останні 30 днів дії кожної версії Spotifast щодня шукає заміну. "
-#~ "Оновлення очікують, доки Soloist стане неактивним."
-
-#~ msgid ""
-#~ "Soloist uses your system audio output. Turn it off to use the built-in "
-#~ "player's EQ, visualizers, local files and queue editing."
-#~ msgstr ""
-#~ "Soloist використовує системний аудіовихід. Вимкніть його, щоб "
-#~ "користуватися еквалайзером, візуалізаціями, локальними файлами й "
-#~ "редагуванням черги вбудованого програвача."
-
-#~ msgid ""
-#~ "Spotify chooses playback quality. Soloist does not report the delivered "
-#~ "audio format yet."
-#~ msgstr ""
-#~ "Spotify вибирає якість відтворення. Soloist поки не повідомляє формат "
-#~ "отриманого звуку."
-
-#~ msgid ""
-#~ "Audio quality, output, EQ and local-file settings below apply to the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Наведені нижче налаштування якості звуку, виходу, еквалайзера й локальних "
-#~ "файлів стосуються вбудованого програвача."
-
-#~ msgid ""
-#~ "Spotify's own player, with support for lossless audio. Requires Premium, "
-#~ "your personal Soloist key, and one pairing in the Spotify app."
-#~ msgstr ""
-#~ "Власний програвач Spotify з підтримкою звуку без втрат. Потрібні Premium, "
-#~ "особистий ключ Soloist і одноразове сполучення в застосунку Spotify."
-
-#~ msgid ""
-#~ "Soloist plays through your system audio output. Spotifast's EQ, "
-#~ "visualizers, local files, and full queue editing are available with the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Soloist використовує системний аудіовихід. Еквалайзер, візуалізації, "
-#~ "локальні файли та повне редагування черги Spotifast доступні у "
-#~ "вбудованому програвачі."
-
-#~ msgid "Soloist is ready"
-#~ msgstr "Soloist готовий"
-
-#~ msgid ""
-#~ "A fresh build is downloaded. It will be applied when Soloist is inactive "
-#~ "or Spotifast restarts."
-#~ msgstr ""
-#~ "Нову версію завантажено. Її буде застосовано, коли Soloist стане "
-#~ "неактивним або Spotifast перезапуститься."
-
-#~ msgid "Soloist setup, privacy and limitations"
-#~ msgstr "Налаштування, приватність і обмеження Soloist"
-
-#~ msgid ""
-#~ "Use a personal Development Mode app for a separate API quota. The shared "
-#~ "app stays active."
-#~ msgstr ""
-#~ "Використовуйте особистий застосунок у режимі розробки (Development Mode), "
-#~ "щоб мати окрему квоту API. Спільний застосунок залишається активним."
-
-#~ msgid "Remove personal app"
-#~ msgstr "Видалити особистий застосунок"
-
-#~ msgid "Shared access remains signed in."
-#~ msgstr "Вхід через спільний застосунок зберігається."
-
-#~ msgid "Spotify can be slow on the shared app"
-#~ msgstr "Через спільний застосунок Spotify може працювати повільно"
-
-#~ msgid ""
-#~ "Everyone using Spotifast shares one app, and Spotify slows it down when "
-#~ "it's busy. Set up your own personal Spotify app and you won't have to "
-#~ "wait. It's free and takes a few minutes."
-#~ msgstr ""
-#~ "Усі користувачі Spotifast працюють через один спільний застосунок, і "
-#~ "Spotify сповільнює його, коли навантаження високе. Налаштуйте власний "
-#~ "особистий застосунок Spotify, і чекати не доведеться. Це безкоштовно й "
-#~ "займе кілька хвилин."
-
-#~ msgid "Use the shared Spotify app instead"
-#~ msgstr "Використати натомість спільний застосунок Spotify"
-
-#~ msgid ""
-#~ "Set up your own personal Spotify app and you won't have to wait. It's "
-#~ "free and takes a few minutes."
-#~ msgstr ""
-#~ "Налаштуйте власний особистий застосунок Spotify, і чекати не доведеться. "
-#~ "Це безкоштовно й займе кілька хвилин."
-
-#~ msgid ""
-#~ "Spotifast hides to the system tray. Quit from the tray menu or with Cmd+Q."
-#~ msgstr ""
-#~ "Spotifast згортається в системний трей. Вийти можна через меню трею або "
-#~ "за допомогою Cmd+Q."
-
-#~ msgid "Your most-played tracks from the last four weeks."
-#~ msgstr "Треки, які ви слухали найчастіше за останні чотири тижні."
-
-#~ msgid "Spend less time waiting for Spotify"
-#~ msgstr "Менше чекайте на Spotify"
-
-#~ msgid ""
-#~ "Spotifast's default connection shares Spotify's request limit with other "
-#~ "listeners. When it gets busy, loading music and using playback controls "
-#~ "can take longer."
-#~ msgstr ""
-#~ "Типове з’єднання Spotifast ділить ліміт запитів Spotify з іншими "
-#~ "слухачами. Коли навантаження велике, музика може завантажуватися довше, а "
-#~ "елементи керування відтворенням можуть реагувати повільніше."
-
-#~ msgid ""
-#~ "Your Premium account lets you create a free personal Spotify app. Connect "
-#~ "it here to give supported requests your own allowance. Some pages still "
-#~ "use the shared connection."
-#~ msgstr ""
-#~ "Ваш обліковий запис Premium дає змогу створити безкоштовний особистий "
-#~ "застосунок Spotify. Під’єднайте його тут, щоб підтримувані запити "
-#~ "використовували вашу власну квоту. Деякі сторінки однаково використовують "
-#~ "спільне з’єднання."
-
-#~ msgid ""
-#~ "Setup takes a few minutes. You can also find it later in Settings under "
-#~ "Personal Spotify app."
-#~ msgstr ""
-#~ "Налаштування займе кілька хвилин. Його також можна знайти пізніше в "
-#~ "налаштуваннях, у розділі «Особистий застосунок Spotify»."
-
-#~ msgid "Keep shared app"
-#~ msgstr "Залишити спільний застосунок"
-
-#~ msgid ""
-#~ "Play the local files your playlists list from a folder on this computer. "
-#~ "Only 44.1 kHz files play."
-#~ msgstr ""
-#~ "Відтворюйте локальні файли з ваших плейлистів із папки на цьому "
-#~ "комп’ютері. Відтворюються лише файли 44,1 кГц."
-
-#~ msgid "PulseAudio also covers PipeWire. Rodio talks to ALSA directly."
-#~ msgstr ""
-#~ "PulseAudio працює також із PipeWire. Rodio звертається до ALSA напряму."
-
-#~ msgid "Couldn't load this shelf"
-#~ msgstr "Не вдалося завантажити цю добірку"
-
-#~ msgid "Spotify does not let apps remove one queued song."
-#~ msgstr "Spotify не дозволяє застосункам видаляти з черги окрему пісню."

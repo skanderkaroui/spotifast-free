@@ -1132,7 +1132,7 @@ msgstr ""
 
 #: src/app.rs:12490
 msgid "Spotify Free plays on this computer only"
-msgstr ""
+msgstr "Spotify Free はこのコンピューターでのみ再生します"
 
 #: src/app.rs:12527 src/app.rs:12546
 msgid "Link copied"
@@ -1418,7 +1418,7 @@ msgstr "あなたへのおすすめ、リスニングアクティビティ、Spo
 
 #: src/ui/settings.rs:584
 msgid "Spotify Free: plays here with ads"
-msgstr ""
+msgstr "Spotify Free：広告付きでここで再生"
 
 #: src/ui/settings.rs:588
 msgid "Spotify Free, local playback needs Premium"
@@ -1445,7 +1445,7 @@ msgstr "準備完了"
 
 #: src/ui/settings.rs:692 src/ui/devices.rs:644
 msgid "Spotify Free plays on this computer."
-msgstr ""
+msgstr "Spotify Free はこのコンピューターで再生します。"
 
 #: src/ui/settings.rs:697
 msgid "This computer is a Spotify Connect device."
@@ -1484,6 +1484,8 @@ msgstr "未設定"
 msgid ""
 "Premium plays through Spotifast; Spotify Free plays with ads once signed in."
 msgstr ""
+"Premium は Spotifast で再生します。Spotify Free はログイン後に広告付きで再生"
+"します。"
 
 #: src/ui/settings.rs:735
 msgid "Requires Spotify Premium and a one-time browser sign-in."
@@ -3355,7 +3357,7 @@ msgstr "Spotifyで事前保存"
 
 #: src/ui/prerelease.rs:239
 msgid "Pre-saving needs Spotify Premium"
-msgstr ""
+msgstr "事前保存には Spotify Premium が必要です"
 
 #: src/ui/prerelease.rs:303
 msgid "Track list preview"
@@ -3735,7 +3737,7 @@ msgstr "大きいウインドウを開く"
 
 #: src/ui/winamp/playlist.rs:665
 msgid "Spotify Free can't change its queue here"
-msgstr ""
+msgstr "Spotify Free ではここで再生待ちリストを変更できません"
 
 #: src/ui/winamp/playlist.rs:679
 msgid "Remove selected"
@@ -3967,282 +3969,3 @@ msgstr ""
 "この PC または仮想マシンにはありません。グラフィックドライバーをインストール"
 "するか、仮想マシンの GPU アクセラレーションを有効にしてください。詳しくは "
 "{url} を開きますか？"
-
-#~ msgid "Winamp skins"
-#~ msgstr "Winampスキン"
-
-#~ msgid "Show Winamp in taskbar"
-#~ msgstr "タスクバーにWinampを表示"
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Ctrl+M or click the skin logo to "
-#~ "return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "クラシックなWinampの.wszスキンを使います。戻るにはCtrl+Mを押すか、スキンの"
-#~ "ロゴをクリックします。スキンをどちらかのウインドウにドロップすると追加でき"
-#~ "ます。"
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Cmd+Shift+M or click the skin logo "
-#~ "to return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "クラシックなWinampの.wszスキンを使います。戻るにはCmd+Shift+Mを押すか、ス"
-#~ "キンのロゴをクリックします。スキンをどちらかのウインドウにドロップすると追"
-#~ "加できます。"
-
-#~ msgid "Skin"
-#~ msgstr "スキン"
-
-#~ msgid "Keep the Winamp window above everything else."
-#~ msgstr "Winampのウインドウを常にほかのウインドウより手前に表示します。"
-
-#~ msgid "Installed skins"
-#~ msgstr "インストール済みのスキン"
-
-#~ msgid "Random"
-#~ msgstr "ランダム"
-
-#~ msgid "Spotify's own player, with lossless support."
-#~ msgstr "ロスレス音声に対応したSpotify公式プレーヤー。"
-
-#~ msgid ""
-#~ "You'll need Spotify Premium, your personal Soloist key and one pairing in "
-#~ "Spotify. Spotifast handles the download and updates."
-#~ msgstr ""
-#~ "Spotify Premium、個人用のSoloistキー、Spotifyでの初回ペアリングが必要で"
-#~ "す。ダウンロードと更新はSpotifastが行います。"
-
-#~ msgid ""
-#~ "For local files and full queue editing, use the built-in player. You can "
-#~ "switch later in Settings."
-#~ msgstr ""
-#~ "ローカルファイルとキューの全編集機能には内蔵プレーヤーを使用してください。"
-#~ "後で設定から切り替えられます。"
-
-#~ msgid ""
-#~ "Create a Soloist key in Spotify's developer dashboard. This is separate "
-#~ "from your Web API app's Client ID."
-#~ msgstr ""
-#~ "Spotifyの開発者ダッシュボードでSoloistキーを作成してください。Web APIアプ"
-#~ "リのClient IDとは別のものです。"
-
-#~ msgid ""
-#~ "Soloist makes its own Spotify connections. Spotifast's proxy settings do "
-#~ "not route its audio traffic."
-#~ msgstr ""
-#~ "Soloistは独自にSpotifyに接続します。Spotifastのプロキシ設定はSoloistの音声"
-#~ "通信には適用されません。"
-
-#~ msgid ""
-#~ "Downloads directly from Spotify and saves your key in the system "
-#~ "credential store. By enabling Soloist, you use Spotify's separate "
-#~ "software under its terms."
-#~ msgstr ""
-#~ "Spotifyから直接ダウンロードし、キーをシステムの資格情報ストアに保存しま"
-#~ "す。Soloistを有効にすると、Spotifyの別ソフトウェアをその利用規約に従って使"
-#~ "用することになります。"
-
-#~ msgid ""
-#~ "Open Spotify on the same network, using the account signed in here. In "
-#~ "the device picker, choose:"
-#~ msgstr ""
-#~ "同じネットワーク上で、ここにログインしているアカウントを使ってSpotifyを開"
-#~ "いてください。デバイス一覧で次を選択します："
-
-#~ msgid ""
-#~ "Spotifast will notice when pairing finishes. Future starts reconnect "
-#~ "automatically."
-#~ msgstr ""
-#~ "ペアリングの完了はSpotifastが検出します。次回以降の起動時は自動的に再接続"
-#~ "します。"
-
-#~ msgid ""
-#~ "If this takes a while, make sure Spotify is signed in to the same account "
-#~ "as Spotifast, then select this device there."
-#~ msgstr ""
-#~ "時間がかかる場合は、SpotifyがSpotifastと同じアカウントにログインしているこ"
-#~ "とを確認し、Spotifyでこのデバイスを選択してください。"
-
-#~ msgid ""
-#~ "For EQ, visualizers, local files and queue editing, use the built-in "
-#~ "player. You can switch later in Settings."
-#~ msgstr ""
-#~ "EQ、ビジュアライザー、ローカルファイル、キュー編集を使うには内蔵プレーヤー"
-#~ "を選んでください。後から設定で切り替えられます。"
-
-#~ msgid ""
-#~ "Spotify manages audio quality. EQ, visualizers and local files use the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "音質は Spotify が管理します。EQ、ビジュアライザー、ローカルファイルには内"
-#~ "蔵プレーヤーを使用します。"
-
-#~ msgid "Confirming your Spotify account…"
-#~ msgstr "Spotifyアカウントを確認中…"
-
-#~ msgid "Details"
-#~ msgstr "詳細"
-
-#~ msgid ""
-#~ "Spotifast checks daily for a replacement during the last 30 days of each "
-#~ "build. Updates wait until Soloist is inactive."
-#~ msgstr ""
-#~ "各バージョンの有効期限までの最後の30日間、Spotifastは更新版を毎日確認しま"
-#~ "す。更新はSoloistが非アクティブになるまで待機します。"
-
-#~ msgid ""
-#~ "Soloist uses your system audio output. Turn it off to use the built-in "
-#~ "player's EQ, visualizers, local files and queue editing."
-#~ msgstr ""
-#~ "Soloistはシステムの音声出力を使用します。内蔵プレーヤーのイコライザー、ビ"
-#~ "ジュアライザー、ローカルファイル、キュー編集を使うには、Soloistをオフにし"
-#~ "てください。"
-
-#~ msgid ""
-#~ "Spotify chooses playback quality. Soloist does not report the delivered "
-#~ "audio format yet."
-#~ msgstr ""
-#~ "再生品質はSpotifyが選択します。Soloistは実際に受信した音声形式をまだ報告し"
-#~ "ません。"
-
-#~ msgid ""
-#~ "Audio quality, output, EQ and local-file settings below apply to the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "以下の音質、出力、EQ、ローカルファイルの設定は内蔵プレーヤーに適用されま"
-#~ "す。"
-
-#~ msgid ""
-#~ "Spotify's own player, with support for lossless audio. Requires Premium, "
-#~ "your personal Soloist key, and one pairing in the Spotify app."
-#~ msgstr ""
-#~ "ロスレス音声に対応したSpotify公式のプレーヤーです。Premium、個人用の"
-#~ "Soloistキー、Spotifyアプリでの初回ペアリングが必要です。"
-
-#~ msgid ""
-#~ "Soloist plays through your system audio output. Spotifast's EQ, "
-#~ "visualizers, local files, and full queue editing are available with the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Soloistはシステムの音声出力を使用します。SpotifastのEQ、ビジュアライザー、"
-#~ "ローカルファイル、キューの完全な編集機能は内蔵プレーヤーで利用できます。"
-
-#~ msgid "Soloist is ready"
-#~ msgstr "Soloistの準備ができました"
-
-#~ msgid ""
-#~ "A fresh build is downloaded. It will be applied when Soloist is inactive "
-#~ "or Spotifast restarts."
-#~ msgstr ""
-#~ "新しいバージョンをダウンロードしました。Soloistが非アクティブになったと"
-#~ "き、またはSpotifastの再起動時に適用します。"
-
-#~ msgid "Soloist setup, privacy and limitations"
-#~ msgstr "Soloistの設定、プライバシー、制限事項"
-
-#~ msgid ""
-#~ "Use a personal Development Mode app for a separate API quota. The shared "
-#~ "app stays active."
-#~ msgstr ""
-#~ "個人用の開発モードアプリを使うと、専用のAPI割り当てを利用できます。共有ア"
-#~ "プリも引き続き有効です。"
-
-#~ msgid "Remove personal app"
-#~ msgstr "個人用アプリを削除"
-
-#~ msgid "Shared access remains signed in."
-#~ msgstr "共有アクセスはログインしたままになります。"
-
-#~ msgid "Spotify can be slow on the shared app"
-#~ msgstr "共有アプリではSpotifyが遅くなることがあります"
-
-#~ msgid ""
-#~ "Everyone using Spotifast shares one app, and Spotify slows it down when "
-#~ "it's busy. Set up your own personal Spotify app and you won't have to "
-#~ "wait. It's free and takes a few minutes."
-#~ msgstr ""
-#~ "Spotifastの利用者は全員で1つのアプリを共有しており、混み合うとSpotifyがそ"
-#~ "の速度を落とします。自分専用の個人用Spotifyアプリを設定すれば、待たずに済"
-#~ "みます。無料で、数分で終わります。"
-
-#~ msgid "Use the shared Spotify app instead"
-#~ msgstr "代わりに共有Spotifyアプリを使う"
-
-#~ msgid ""
-#~ "Set up your own personal Spotify app and you won't have to wait. It's "
-#~ "free and takes a few minutes."
-#~ msgstr ""
-#~ "自分専用の個人用Spotifyアプリを設定すれば、待たずに済みます。無料で、数分"
-#~ "で終わります。"
-
-#~ msgid ""
-#~ "Spotifast hides to the system tray. Quit from the tray menu or with Cmd+Q."
-#~ msgstr ""
-#~ "Spotifastはシステムトレイに隠れます。トレイメニューまたはCmd+Qで終了できま"
-#~ "す。"
-
-#~ msgid "Your most-played tracks from the last four weeks."
-#~ msgstr "過去4週間でよく再生した曲です。"
-
-#~ msgid "Spend less time waiting for Spotify"
-#~ msgstr "Spotifyの待ち時間を短く"
-
-#~ msgid ""
-#~ "Spotifast's default connection shares Spotify's request limit with other "
-#~ "listeners. When it gets busy, loading music and using playback controls "
-#~ "can take longer."
-#~ msgstr ""
-#~ "Spotifastの標準の接続は、Spotifyのリクエスト上限をほかのリスナーと共有して"
-#~ "います。混雑すると、音楽の読み込みや再生操作に時間がかかることがあります。"
-
-#~ msgid ""
-#~ "Your Premium account lets you create a free personal Spotify app. Connect "
-#~ "it here to give supported requests your own allowance. Some pages still "
-#~ "use the shared connection."
-#~ msgstr ""
-#~ "Premiumアカウントでは、個人用のSpotifyアプリを無料で作成できます。ここで接"
-#~ "続すると、対応するリクエストに専用の割り当てを使えます。一部のページは引き"
-#~ "続き共有の接続を使います。"
-
-#~ msgid ""
-#~ "Setup takes a few minutes. You can also find it later in Settings under "
-#~ "Personal Spotify app."
-#~ msgstr ""
-#~ "設定には数分かかります。あとで設定の「個人用Spotifyアプリ」からも行えま"
-#~ "す。"
-
-#~ msgid "Keep shared app"
-#~ msgstr "共有アプリを使い続ける"
-
-#~ msgid ""
-#~ "Play the local files your playlists list from a folder on this computer. "
-#~ "Only 44.1 kHz files play."
-#~ msgstr ""
-#~ "プレイリストにあるローカルファイルを、このコンピューターのフォルダーから再"
-#~ "生します。再生できるのは 44.1 kHz のファイルだけです。"
-
-#~ msgid "PulseAudio also covers PipeWire. Rodio talks to ALSA directly."
-#~ msgstr ""
-#~ "PulseAudioはPipeWireにも対応しています。RodioはALSAと直接やり取りします。"
-
-#~ msgid "Couldn't load this shelf"
-#~ msgstr "このセクションを読み込めませんでした"
-
-#~ msgid "Spotify does not let apps remove one queued song."
-#~ msgstr ""
-#~ "Spotifyではアプリから再生待ちの曲を1曲だけ削除することはできません。"
-
-#~ msgid "MacBook notch interactive widget"
-#~ msgstr "MacBookノッチ対話型ウィジェット"
-
-#~ msgid "Scroll left"
-#~ msgstr "左へスクロール"
-
-#~ msgid "Scroll right"
-#~ msgstr "右へスクロール"
-
-#~ msgid "Enable lyrics motion"
-#~ msgstr "歌詞の動きを有効にする"
-
-#~ msgid "Reduce lyrics motion"
-#~ msgstr "歌詞の動きを減らす"

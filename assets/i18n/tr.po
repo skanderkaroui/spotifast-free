@@ -1142,7 +1142,7 @@ msgstr ""
 
 #: src/app.rs:12490
 msgid "Spotify Free plays on this computer only"
-msgstr ""
+msgstr "Spotify Free yalnızca bu bilgisayarda çalar"
 
 #: src/app.rs:12527 src/app.rs:12546
 msgid "Link copied"
@@ -1429,7 +1429,7 @@ msgstr "Senin için hazırlandı, dinleme etkinliği ve Spotify şarkı sözleri
 
 #: src/ui/settings.rs:584
 msgid "Spotify Free: plays here with ads"
-msgstr ""
+msgstr "Spotify Free: burada reklamlarla çalar"
 
 #: src/ui/settings.rs:588
 msgid "Spotify Free, local playback needs Premium"
@@ -1456,7 +1456,7 @@ msgstr "Hazır"
 
 #: src/ui/settings.rs:692 src/ui/devices.rs:644
 msgid "Spotify Free plays on this computer."
-msgstr ""
+msgstr "Spotify Free bu bilgisayarda çalar."
 
 #: src/ui/settings.rs:697
 msgid "This computer is a Spotify Connect device."
@@ -1495,6 +1495,8 @@ msgstr "Ayarlanmadı"
 msgid ""
 "Premium plays through Spotifast; Spotify Free plays with ads once signed in."
 msgstr ""
+"Premium, Spotifast üzerinden çalar; Spotify Free giriş yaptıktan sonra "
+"reklamlarla çalar."
 
 #: src/ui/settings.rs:735
 msgid "Requires Spotify Premium and a one-time browser sign-in."
@@ -3380,7 +3382,7 @@ msgstr "Spotify’da önceden kaydet"
 
 #: src/ui/prerelease.rs:239
 msgid "Pre-saving needs Spotify Premium"
-msgstr ""
+msgstr "Önceden kaydetmek için Spotify Premium gerekir"
 
 #: src/ui/prerelease.rs:303
 msgid "Track list preview"
@@ -3761,7 +3763,7 @@ msgstr "Büyük pencereyi aç"
 
 #: src/ui/winamp/playlist.rs:665
 msgid "Spotify Free can't change its queue here"
-msgstr ""
+msgstr "Spotify Free sırasını burada değiştiremez"
 
 #: src/ui/winamp/playlist.rs:679
 msgid "Remove selected"
@@ -3998,272 +4000,3 @@ msgstr ""
 "ihtiyaç duyar ve bu bilgisayar ya da sanal makine bunu sağlamıyor. Grafik "
 "sürücüsünü yükleyin veya sanal makine için GPU hızlandırmayı açın. Daha "
 "fazlasını okumak için {url} açılsın mı?"
-
-#~ msgid "Winamp skins"
-#~ msgstr "Winamp temaları"
-
-#~ msgid "Show Winamp in taskbar"
-#~ msgstr "Winamp'ı görev çubuğunda göster"
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Ctrl+M or click the skin logo to "
-#~ "return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "Klasik Winamp .wsz temalarını kullanın. Geri dönmek için Ctrl+M tuşuna "
-#~ "basın veya tema logosuna tıklayın. Eklemek için herhangi bir pencereye "
-#~ "bir tema sürükleyip bırakın."
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Cmd+Shift+M or click the skin logo "
-#~ "to return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "Klasik Winamp .wsz temalarını kullanın. Geri dönmek için Cmd+Shift+M "
-#~ "tuşuna basın veya tema logosuna tıklayın. Eklemek için herhangi bir "
-#~ "pencereye bir tema sürükleyip bırakın."
-
-#~ msgid "Skin"
-#~ msgstr "Tema"
-
-#~ msgid "Keep the Winamp window above everything else."
-#~ msgstr "Winamp penceresini diğer her şeyin üstünde tutar."
-
-#~ msgid "Installed skins"
-#~ msgstr "Yüklü temalar"
-
-#~ msgid "Random"
-#~ msgstr "Rastgele"
-
-#~ msgid "Spotify's own player, with lossless support."
-#~ msgstr "Kayıpsız ses destekleyen Spotify oynatıcısı."
-
-#~ msgid ""
-#~ "You'll need Spotify Premium, your personal Soloist key and one pairing in "
-#~ "Spotify. Spotifast handles the download and updates."
-#~ msgstr ""
-#~ "Spotify Premium, kişisel Soloist anahtarınız ve Spotify’da bir kez "
-#~ "eşleştirme gerekir. İndirme ve güncellemeleri Spotifast halleder."
-
-#~ msgid ""
-#~ "For local files and full queue editing, use the built-in player. You can "
-#~ "switch later in Settings."
-#~ msgstr ""
-#~ "Yerel dosyalar ve tam kuyruk düzenleme için yerleşik oynatıcıyı kullanın. "
-#~ "Daha sonra Ayarlar’dan değiştirebilirsiniz."
-
-#~ msgid ""
-#~ "Create a Soloist key in Spotify's developer dashboard. This is separate "
-#~ "from your Web API app's Client ID."
-#~ msgstr ""
-#~ "Spotify geliştirici panelinde bir Soloist anahtarı oluşturun. Bu, Web API "
-#~ "uygulamanızın Client ID'sinden farklıdır."
-
-#~ msgid ""
-#~ "Soloist makes its own Spotify connections. Spotifast's proxy settings do "
-#~ "not route its audio traffic."
-#~ msgstr ""
-#~ "Soloist kendi Spotify bağlantılarını kurar. Spotifast'ın proxy ayarları "
-#~ "Soloist'in ses trafiğine uygulanmaz."
-
-#~ msgid ""
-#~ "Downloads directly from Spotify and saves your key in the system "
-#~ "credential store. By enabling Soloist, you use Spotify's separate "
-#~ "software under its terms."
-#~ msgstr ""
-#~ "Doğrudan Spotify'dan indirir ve anahtarınızı sistemin kimlik bilgisi "
-#~ "deposuna kaydeder. Soloist'i etkinleştirerek Spotify'ın ayrı yazılımını "
-#~ "kendi koşulları kapsamında kullanırsınız."
-
-#~ msgid ""
-#~ "Open Spotify on the same network, using the account signed in here. In "
-#~ "the device picker, choose:"
-#~ msgstr ""
-#~ "Aynı ağda, burada oturum açtığınız hesapla Spotify'ı açın. Cihaz "
-#~ "listesinden şunu seçin:"
-
-#~ msgid ""
-#~ "Spotifast will notice when pairing finishes. Future starts reconnect "
-#~ "automatically."
-#~ msgstr ""
-#~ "Spotifast eşleştirme tamamlandığında bunu algılar. Sonraki başlatmalarda "
-#~ "otomatik olarak yeniden bağlanır."
-
-#~ msgid ""
-#~ "If this takes a while, make sure Spotify is signed in to the same account "
-#~ "as Spotifast, then select this device there."
-#~ msgstr ""
-#~ "Uzun sürerse Spotify'ın Spotifast ile aynı hesapta oturum açtığından emin "
-#~ "olun ve bu cihazı Spotify'da seçin."
-
-#~ msgid ""
-#~ "For EQ, visualizers, local files and queue editing, use the built-in "
-#~ "player. You can switch later in Settings."
-#~ msgstr ""
-#~ "EQ, görselleştirmeler, yerel dosyalar ve kuyruk düzenleme için yerleşik "
-#~ "oynatıcıyı kullanın. Daha sonra Ayarlar’dan değiştirebilirsiniz."
-
-#~ msgid ""
-#~ "Spotify manages audio quality. EQ, visualizers and local files use the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Ses kalitesini Spotify yönetir. EQ, görselleştirmeler ve yerel dosyalar "
-#~ "yerleşik oynatıcıyı kullanır."
-
-#~ msgid "Confirming your Spotify account…"
-#~ msgstr "Spotify hesabınız doğrulanıyor…"
-
-#~ msgid "Details"
-#~ msgstr "Ayrıntılar"
-
-#~ msgid ""
-#~ "Spotifast checks daily for a replacement during the last 30 days of each "
-#~ "build. Updates wait until Soloist is inactive."
-#~ msgstr ""
-#~ "Spotifast, her sürümün son 30 gününde her gün yeni sürüm arar. "
-#~ "Güncellemeler Soloist'in etkin olmamasını bekler."
-
-#~ msgid ""
-#~ "Soloist uses your system audio output. Turn it off to use the built-in "
-#~ "player's EQ, visualizers, local files and queue editing."
-#~ msgstr ""
-#~ "Soloist, sistemin ses çıkışını kullanır. Yerleşik oynatıcının "
-#~ "ekolayzırını, görselleştirmelerini, yerel dosyalarını ve kuyruk "
-#~ "düzenlemesini kullanmak için Soloist’i kapatın."
-
-#~ msgid ""
-#~ "Spotify chooses playback quality. Soloist does not report the delivered "
-#~ "audio format yet."
-#~ msgstr ""
-#~ "Oynatma kalitesini Spotify seçer. Soloist henüz alınan ses biçimini "
-#~ "bildirmiyor."
-
-#~ msgid ""
-#~ "Audio quality, output, EQ and local-file settings below apply to the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Aşağıdaki ses kalitesi, çıkış, ekolayzır ve yerel dosya ayarları yerleşik "
-#~ "oynatıcı için geçerlidir."
-
-#~ msgid ""
-#~ "Spotify's own player, with support for lossless audio. Requires Premium, "
-#~ "your personal Soloist key, and one pairing in the Spotify app."
-#~ msgstr ""
-#~ "Spotify'ın kayıpsız sesi destekleyen kendi oynatıcısı. Premium, kişisel "
-#~ "Soloist anahtarınız ve Spotify uygulamasında bir kez eşleştirme "
-#~ "gerektirir."
-
-#~ msgid ""
-#~ "Soloist plays through your system audio output. Spotifast's EQ, "
-#~ "visualizers, local files, and full queue editing are available with the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Soloist sisteminizin ses çıkışını kullanır. Spotifast'ın ekolayzırı, "
-#~ "görselleştirmeleri, yerel dosyaları ve tam kuyruk düzenleme özellikleri "
-#~ "yerleşik oynatıcıyla kullanılabilir."
-
-#~ msgid "Soloist is ready"
-#~ msgstr "Soloist hazır"
-
-#~ msgid ""
-#~ "A fresh build is downloaded. It will be applied when Soloist is inactive "
-#~ "or Spotifast restarts."
-#~ msgstr ""
-#~ "Yeni bir sürüm indirildi. Soloist etkin değilken veya Spotifast yeniden "
-#~ "başlatıldığında uygulanacak."
-
-#~ msgid "Soloist setup, privacy and limitations"
-#~ msgstr "Soloist kurulumu, gizlilik ve sınırlamalar"
-
-#~ msgid ""
-#~ "Use a personal Development Mode app for a separate API quota. The shared "
-#~ "app stays active."
-#~ msgstr ""
-#~ "Ayrı bir API kotası için kişisel bir Geliştirici Modu uygulaması "
-#~ "kullanın. Paylaşılan uygulama etkin kalır."
-
-#~ msgid "Remove personal app"
-#~ msgstr "Kişisel uygulamayı kaldır"
-
-#~ msgid "Shared access remains signed in."
-#~ msgstr "Paylaşılan erişim oturumu açık kalır."
-
-#~ msgid "Spotify can be slow on the shared app"
-#~ msgstr "Spotify paylaşılan uygulamada yavaş olabilir"
-
-#~ msgid ""
-#~ "Everyone using Spotifast shares one app, and Spotify slows it down when "
-#~ "it's busy. Set up your own personal Spotify app and you won't have to "
-#~ "wait. It's free and takes a few minutes."
-#~ msgstr ""
-#~ "Spotifast kullanan herkes tek bir uygulamayı paylaşır ve Spotify yoğun "
-#~ "olduğunda bu uygulamayı yavaşlatır. Kendi kişisel Spotify uygulamanızı "
-#~ "ayarlayın, beklemek zorunda kalmayın. Ücretsizdir ve birkaç dakika sürer."
-
-#~ msgid "Use the shared Spotify app instead"
-#~ msgstr "Bunun yerine paylaşılan Spotify uygulamasını kullan"
-
-#~ msgid ""
-#~ "Set up your own personal Spotify app and you won't have to wait. It's "
-#~ "free and takes a few minutes."
-#~ msgstr ""
-#~ "Kendi kişisel Spotify uygulamanızı ayarlayın, beklemek zorunda kalmayın. "
-#~ "Ücretsizdir ve birkaç dakika sürer."
-
-#~ msgid ""
-#~ "Spotifast hides to the system tray. Quit from the tray menu or with Cmd+Q."
-#~ msgstr ""
-#~ "Spotifast sistem tepsisine gizlenir. Tepsi menüsünden veya Cmd+Q ile "
-#~ "çıkın."
-
-#~ msgid "Your most-played tracks from the last four weeks."
-#~ msgstr "Son dört haftada en çok dinlediğin parçalar."
-
-#~ msgid "Spend less time waiting for Spotify"
-#~ msgstr "Spotify'ı beklerken daha az zaman harcayın"
-
-#~ msgid ""
-#~ "Spotifast's default connection shares Spotify's request limit with other "
-#~ "listeners. When it gets busy, loading music and using playback controls "
-#~ "can take longer."
-#~ msgstr ""
-#~ "Spotifast'in varsayılan bağlantısı, Spotify'ın istek limitini diğer "
-#~ "dinleyicilerle paylaşır. Yoğunlaştığında, müzik yüklemek ve çalma "
-#~ "kontrollerini kullanmak daha uzun sürebilir."
-
-#~ msgid ""
-#~ "Your Premium account lets you create a free personal Spotify app. Connect "
-#~ "it here to give supported requests your own allowance. Some pages still "
-#~ "use the shared connection."
-#~ msgstr ""
-#~ "Premium hesabınız ücretsiz bir kişisel Spotify uygulaması oluşturmanıza "
-#~ "olanak tanır. Desteklenen isteklerinize kendi kotanızı tanımlamak için "
-#~ "buradan bağlayın. Bazı sayfalar paylaşılan bağlantıyı kullanmaya devam "
-#~ "eder."
-
-#~ msgid ""
-#~ "Setup takes a few minutes. You can also find it later in Settings under "
-#~ "Personal Spotify app."
-#~ msgstr ""
-#~ "Kurulum birkaç dakika sürer. Daha sonra Ayarlar'da Kişisel Spotify "
-#~ "uygulaması altında da bulabilirsiniz."
-
-#~ msgid "Keep shared app"
-#~ msgstr "Paylaşılan uygulamada kal"
-
-#~ msgid ""
-#~ "Play the local files your playlists list from a folder on this computer. "
-#~ "Only 44.1 kHz files play."
-#~ msgstr ""
-#~ "Çalma listelerinizdeki yerel dosyaları bu bilgisayardaki bir klasörden "
-#~ "çalın. Yalnızca 44,1 kHz dosyalar çalınır."
-
-#~ msgid "PulseAudio also covers PipeWire. Rodio talks to ALSA directly."
-#~ msgstr ""
-#~ "PulseAudio aynı zamanda PipeWire'ı da kapsar. Rodio doğrudan ALSA ile "
-#~ "iletişim kurar."
-
-#~ msgid "Couldn't load this shelf"
-#~ msgstr "Bu bölüm yüklenemedi"
-
-#~ msgid "Spotify does not let apps remove one queued song."
-#~ msgstr ""
-#~ "Spotify uygulamaların sıradan tek bir şarkıyı kaldırmasına izin vermiyor."

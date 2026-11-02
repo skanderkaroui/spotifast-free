@@ -1127,7 +1127,7 @@ msgstr ""
 
 #: src/app.rs:12490
 msgid "Spotify Free plays on this computer only"
-msgstr ""
+msgstr "Spotify Free는 이 컴퓨터에서만 재생됩니다"
 
 #: src/app.rs:12527 src/app.rs:12546
 msgid "Link copied"
@@ -1406,7 +1406,7 @@ msgstr "나만의 맞춤 콘텐츠, 청취 활동, Spotify 가사."
 
 #: src/ui/settings.rs:584
 msgid "Spotify Free: plays here with ads"
-msgstr ""
+msgstr "Spotify Free: 광고와 함께 여기에서 재생"
 
 #: src/ui/settings.rs:588
 msgid "Spotify Free, local playback needs Premium"
@@ -1433,7 +1433,7 @@ msgstr "준비됨"
 
 #: src/ui/settings.rs:692 src/ui/devices.rs:644
 msgid "Spotify Free plays on this computer."
-msgstr ""
+msgstr "Spotify Free는 이 컴퓨터에서 재생됩니다."
 
 #: src/ui/settings.rs:697
 msgid "This computer is a Spotify Connect device."
@@ -1472,6 +1472,8 @@ msgstr "설정되지 않음"
 msgid ""
 "Premium plays through Spotifast; Spotify Free plays with ads once signed in."
 msgstr ""
+"Premium은 Spotifast로 재생하고, Spotify Free는 로그인 후 광고와 함께 재생합니"
+"다."
 
 #: src/ui/settings.rs:735
 msgid "Requires Spotify Premium and a one-time browser sign-in."
@@ -3322,7 +3324,7 @@ msgstr "Spotify에 사전 저장"
 
 #: src/ui/prerelease.rs:239
 msgid "Pre-saving needs Spotify Premium"
-msgstr ""
+msgstr "사전 저장에는 Spotify Premium이 필요합니다"
 
 #: src/ui/prerelease.rs:303
 msgid "Track list preview"
@@ -3699,7 +3701,7 @@ msgstr "큰 창 열기"
 
 #: src/ui/winamp/playlist.rs:665
 msgid "Spotify Free can't change its queue here"
-msgstr ""
+msgstr "Spotify Free는 여기에서 재생목록을 바꿀 수 없습니다"
 
 #: src/ui/winamp/playlist.rs:679
 msgid "Remove selected"
@@ -3929,255 +3931,3 @@ msgstr ""
 "데, 이 PC 또는 가상 머신에서는 제공되지 않습니다. 그래픽 드라이버를 설치하거"
 "나 가상 머신의 GPU 가속을 켜세요. 자세한 내용을 보려면 {url}을(를) 여시겠습니"
 "까?"
-
-#~ msgid "Winamp skins"
-#~ msgstr "Winamp 스킨"
-
-#~ msgid "Show Winamp in taskbar"
-#~ msgstr "작업 표시줄에 Winamp 표시"
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Ctrl+M or click the skin logo to "
-#~ "return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "클래식 Winamp .wsz 스킨을 사용합니다. 돌아가려면 Ctrl+M을 누르거나 스킨 로"
-#~ "고를 클릭하세요. 창에 스킨을 끌어다 놓으면 추가됩니다."
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Cmd+Shift+M or click the skin logo "
-#~ "to return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "클래식 Winamp .wsz 스킨을 사용합니다. 돌아가려면 Cmd+Shift+M을 누르거나 스"
-#~ "킨 로고를 클릭하세요. 창에 스킨을 끌어다 놓으면 추가됩니다."
-
-#~ msgid "Skin"
-#~ msgstr "스킨"
-
-#~ msgid "Keep the Winamp window above everything else."
-#~ msgstr "Winamp 창을 다른 모든 창 위에 유지합니다."
-
-#~ msgid "Installed skins"
-#~ msgstr "설치된 스킨"
-
-#~ msgid "Random"
-#~ msgstr "무작위"
-
-#~ msgid "Spotify's own player, with lossless support."
-#~ msgstr "무손실 오디오를 지원하는 Spotify 공식 플레이어입니다."
-
-#~ msgid ""
-#~ "You'll need Spotify Premium, your personal Soloist key and one pairing in "
-#~ "Spotify. Spotifast handles the download and updates."
-#~ msgstr ""
-#~ "Spotify Premium, 개인 Soloist 키, Spotify에서 한 번의 페어링이 필요합니"
-#~ "다. 다운로드와 업데이트는 Spotifast가 처리합니다."
-
-#~ msgid ""
-#~ "For local files and full queue editing, use the built-in player. You can "
-#~ "switch later in Settings."
-#~ msgstr ""
-#~ "로컬 파일과 전체 대기열 편집 기능을 사용하려면 내장 플레이어를 선택하세"
-#~ "요. 나중에 설정에서 전환할 수 있습니다."
-
-#~ msgid ""
-#~ "Create a Soloist key in Spotify's developer dashboard. This is separate "
-#~ "from your Web API app's Client ID."
-#~ msgstr ""
-#~ "Spotify 개발자 대시보드에서 Soloist 키를 만드세요. Web API 앱의 Client ID"
-#~ "와는 별개입니다."
-
-#~ msgid ""
-#~ "Soloist makes its own Spotify connections. Spotifast's proxy settings do "
-#~ "not route its audio traffic."
-#~ msgstr ""
-#~ "Soloist는 자체적으로 Spotify에 연결합니다. Spotifast의 프록시 설정은 "
-#~ "Soloist의 오디오 트래픽에 적용되지 않습니다."
-
-#~ msgid ""
-#~ "Downloads directly from Spotify and saves your key in the system "
-#~ "credential store. By enabling Soloist, you use Spotify's separate "
-#~ "software under its terms."
-#~ msgstr ""
-#~ "Spotify에서 직접 다운로드하고 시스템 자격 증명 저장소에 키를 저장합니다. "
-#~ "Soloist를 활성화하면 Spotify의 별도 소프트웨어를 해당 약관에 따라 사용하"
-#~ "게 됩니다."
-
-#~ msgid ""
-#~ "Open Spotify on the same network, using the account signed in here. In "
-#~ "the device picker, choose:"
-#~ msgstr ""
-#~ "같은 네트워크에서 여기에 로그인한 계정으로 Spotify를 여세요. 기기 목록에"
-#~ "서 다음을 선택하세요:"
-
-#~ msgid ""
-#~ "Spotifast will notice when pairing finishes. Future starts reconnect "
-#~ "automatically."
-#~ msgstr ""
-#~ "Spotifast가 페어링 완료를 감지합니다. 이후 시작할 때는 자동으로 다시 연결"
-#~ "합니다."
-
-#~ msgid ""
-#~ "If this takes a while, make sure Spotify is signed in to the same account "
-#~ "as Spotifast, then select this device there."
-#~ msgstr ""
-#~ "오래 걸리면 Spotify가 Spotifast와 같은 계정에 로그인되어 있는지 확인한 후 "
-#~ "Spotify에서 이 기기를 선택하세요."
-
-#~ msgid ""
-#~ "For EQ, visualizers, local files and queue editing, use the built-in "
-#~ "player. You can switch later in Settings."
-#~ msgstr ""
-#~ "EQ, 시각화, 로컬 파일, 대기열 편집을 사용하려면 내장 플레이어를 선택하세"
-#~ "요. 나중에 설정에서 전환할 수 있습니다."
-
-#~ msgid ""
-#~ "Spotify manages audio quality. EQ, visualizers and local files use the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "음질은 Spotify에서 관리합니다. EQ, 시각화 및 로컬 파일은 내장 플레이어를 "
-#~ "사용합니다."
-
-#~ msgid "Confirming your Spotify account…"
-#~ msgstr "Spotify 계정 확인 중…"
-
-#~ msgid "Details"
-#~ msgstr "세부 정보"
-
-#~ msgid ""
-#~ "Spotifast checks daily for a replacement during the last 30 days of each "
-#~ "build. Updates wait until Soloist is inactive."
-#~ msgstr ""
-#~ "각 버전의 만료 전 마지막 30일 동안 Spotifast는 매일 새 버전을 확인합니다. "
-#~ "업데이트는 Soloist가 비활성 상태가 될 때까지 기다립니다."
-
-#~ msgid ""
-#~ "Soloist uses your system audio output. Turn it off to use the built-in "
-#~ "player's EQ, visualizers, local files and queue editing."
-#~ msgstr ""
-#~ "Soloist는 시스템 오디오 출력을 사용합니다. 내장 플레이어의 이퀄라이저, 시"
-#~ "각화, 로컬 파일 및 대기열 편집을 사용하려면 Soloist를 끄세요."
-
-#~ msgid ""
-#~ "Spotify chooses playback quality. Soloist does not report the delivered "
-#~ "audio format yet."
-#~ msgstr ""
-#~ "Spotify가 재생 품질을 선택합니다. Soloist는 실제로 수신한 오디오 형식을 아"
-#~ "직 알려주지 않습니다."
-
-#~ msgid ""
-#~ "Audio quality, output, EQ and local-file settings below apply to the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "아래의 음질, 출력, EQ 및 로컬 파일 설정은 내장 플레이어에 적용됩니다."
-
-#~ msgid ""
-#~ "Spotify's own player, with support for lossless audio. Requires Premium, "
-#~ "your personal Soloist key, and one pairing in the Spotify app."
-#~ msgstr ""
-#~ "무손실 오디오를 지원하는 Spotify의 자체 플레이어입니다. Premium, 개인 "
-#~ "Soloist 키, Spotify 앱에서의 최초 페어링이 필요합니다."
-
-#~ msgid ""
-#~ "Soloist plays through your system audio output. Spotifast's EQ, "
-#~ "visualizers, local files, and full queue editing are available with the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Soloist는 시스템 오디오 출력을 사용합니다. Spotifast의 EQ, 시각화, 로컬 파"
-#~ "일 및 전체 대기열 편집 기능은 내장 플레이어에서 사용할 수 있습니다."
-
-#~ msgid "Soloist is ready"
-#~ msgstr "Soloist가 준비되었습니다"
-
-#~ msgid ""
-#~ "A fresh build is downloaded. It will be applied when Soloist is inactive "
-#~ "or Spotifast restarts."
-#~ msgstr ""
-#~ "새 버전을 다운로드했습니다. Soloist가 비활성 상태가 되거나 Spotifast가 다"
-#~ "시 시작될 때 적용됩니다."
-
-#~ msgid "Soloist setup, privacy and limitations"
-#~ msgstr "Soloist 설정, 개인정보 보호 및 제한 사항"
-
-#~ msgid ""
-#~ "Use a personal Development Mode app for a separate API quota. The shared "
-#~ "app stays active."
-#~ msgstr ""
-#~ "별도의 API 할당량을 위해 개인 개발 모드 앱을 사용합니다. 공유 앱은 계속 활"
-#~ "성 상태로 유지됩니다."
-
-#~ msgid "Remove personal app"
-#~ msgstr "개인 앱 삭제"
-
-#~ msgid "Shared access remains signed in."
-#~ msgstr "공유 앱 접근은 로그인 상태로 유지됩니다."
-
-#~ msgid "Spotify can be slow on the shared app"
-#~ msgstr "공유 앱에서는 Spotify가 느릴 수 있습니다"
-
-#~ msgid ""
-#~ "Everyone using Spotifast shares one app, and Spotify slows it down when "
-#~ "it's busy. Set up your own personal Spotify app and you won't have to "
-#~ "wait. It's free and takes a few minutes."
-#~ msgstr ""
-#~ "Spotifast 사용자는 모두 하나의 앱을 함께 쓰며, 사용량이 많으면 Spotify가 "
-#~ "이 앱의 속도를 늦춥니다. 나만의 개인 Spotify 앱을 설정하면 기다릴 필요가 "
-#~ "없습니다. 무료이며 몇 분이면 됩니다."
-
-#~ msgid "Use the shared Spotify app instead"
-#~ msgstr "대신 공유 Spotify 앱 사용"
-
-#~ msgid ""
-#~ "Set up your own personal Spotify app and you won't have to wait. It's "
-#~ "free and takes a few minutes."
-#~ msgstr ""
-#~ "나만의 개인 Spotify 앱을 설정하면 기다릴 필요가 없습니다. 무료이며 몇 분이"
-#~ "면 됩니다."
-
-#~ msgid ""
-#~ "Spotifast hides to the system tray. Quit from the tray menu or with Cmd+Q."
-#~ msgstr ""
-#~ "Spotifast가 시스템 트레이로 숨겨집니다. 트레이 메뉴나 Cmd+Q로 종료하세요."
-
-#~ msgid "Your most-played tracks from the last four weeks."
-#~ msgstr "지난 4주 동안 가장 많이 재생한 트랙입니다."
-
-#~ msgid "Spend less time waiting for Spotify"
-#~ msgstr "Spotify 대기 시간 줄이기"
-
-#~ msgid ""
-#~ "Spotifast's default connection shares Spotify's request limit with other "
-#~ "listeners. When it gets busy, loading music and using playback controls "
-#~ "can take longer."
-#~ msgstr ""
-#~ "Spotifast의 기본 연결은 Spotify 요청 한도를 다른 사용자와 공유합니다. 요청"
-#~ "이 많을 때는 음악을 불러오거나 재생 컨트롤을 사용하는 데 시간이 더 걸릴 "
-#~ "수 있습니다."
-
-#~ msgid ""
-#~ "Your Premium account lets you create a free personal Spotify app. Connect "
-#~ "it here to give supported requests your own allowance. Some pages still "
-#~ "use the shared connection."
-#~ msgstr ""
-#~ "Premium 계정으로 무료 개인 Spotify 앱을 만들 수 있습니다. 여기에서 연결하"
-#~ "면 지원되는 요청에 나만의 한도가 적용됩니다. 일부 페이지는 계속 공유 연결"
-#~ "을 사용합니다."
-
-#~ msgid ""
-#~ "Setup takes a few minutes. You can also find it later in Settings under "
-#~ "Personal Spotify app."
-#~ msgstr ""
-#~ "설정에는 몇 분 정도 걸립니다. 나중에 설정의 개인 Spotify 앱에서도 찾을 수 "
-#~ "있습니다."
-
-#~ msgid "Keep shared app"
-#~ msgstr "공유 앱 유지"
-
-#~ msgid ""
-#~ "Play the local files your playlists list from a folder on this computer. "
-#~ "Only 44.1 kHz files play."
-#~ msgstr ""
-#~ "플레이리스트에 있는 로컬 파일을 이 컴퓨터의 폴더에서 재생합니다. 44.1kHz "
-#~ "파일만 재생됩니다."
-
-#~ msgid "PulseAudio also covers PipeWire. Rodio talks to ALSA directly."
-#~ msgstr "PulseAudio는 PipeWire도 지원합니다. Rodio는 ALSA와 직접 통신합니다."

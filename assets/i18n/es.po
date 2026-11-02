@@ -1145,7 +1145,7 @@ msgstr ""
 
 #: src/app.rs:12490
 msgid "Spotify Free plays on this computer only"
-msgstr ""
+msgstr "Spotify Free solo se reproduce en esta computadora"
 
 #: src/app.rs:12527 src/app.rs:12546
 msgid "Link copied"
@@ -1433,7 +1433,7 @@ msgstr "Hecho para ti, actividad de escucha y letras de Spotify."
 
 #: src/ui/settings.rs:584
 msgid "Spotify Free: plays here with ads"
-msgstr ""
+msgstr "Spotify Free: se reproduce aquí con anuncios"
 
 #: src/ui/settings.rs:588
 msgid "Spotify Free, local playback needs Premium"
@@ -1460,7 +1460,7 @@ msgstr "Listo"
 
 #: src/ui/settings.rs:692 src/ui/devices.rs:644
 msgid "Spotify Free plays on this computer."
-msgstr ""
+msgstr "Spotify Free se reproduce en esta computadora."
 
 #: src/ui/settings.rs:697
 msgid "This computer is a Spotify Connect device."
@@ -1499,6 +1499,8 @@ msgstr "Sin configurar"
 msgid ""
 "Premium plays through Spotifast; Spotify Free plays with ads once signed in."
 msgstr ""
+"Premium se reproduce a través de Spotifast; Spotify Free se reproduce con "
+"anuncios tras iniciar sesión."
 
 #: src/ui/settings.rs:735
 msgid "Requires Spotify Premium and a one-time browser sign-in."
@@ -3391,7 +3393,7 @@ msgstr "Preguardar en Spotify"
 
 #: src/ui/prerelease.rs:239
 msgid "Pre-saving needs Spotify Premium"
-msgstr ""
+msgstr "Preguardar necesita Spotify Premium"
 
 #: src/ui/prerelease.rs:303
 msgid "Track list preview"
@@ -3773,7 +3775,7 @@ msgstr "Abrir la ventana grande"
 
 #: src/ui/winamp/playlist.rs:665
 msgid "Spotify Free can't change its queue here"
-msgstr ""
+msgstr "Spotify Free no puede cambiar su cola aquí"
 
 #: src/ui/winamp/playlist.rs:679
 msgid "Remove selected"
@@ -4009,285 +4011,3 @@ msgstr ""
 "Spotifast necesita un controlador gráfico con OpenGL 2.0 o posterior, y este "
 "PC o máquina virtual no lo ofrece. Instala el controlador gráfico o activa "
 "la aceleración por GPU de la máquina virtual. ¿Abrir {url} para saber más?"
-
-#~ msgid "Winamp skins"
-#~ msgstr "Skins de Winamp"
-
-#~ msgid "Show Winamp in taskbar"
-#~ msgstr "Mostrar Winamp en la barra de tareas"
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Ctrl+M or click the skin logo to "
-#~ "return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "Usa skins clásicas .wsz de Winamp. Pulsa Ctrl+M o haz clic en el logo de "
-#~ "la skin para volver. Suelta una skin en cualquiera de las ventanas para "
-#~ "añadirla."
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Cmd+Shift+M or click the skin logo "
-#~ "to return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "Usa skins clásicas .wsz de Winamp. Pulsa Cmd+Shift+M o haz clic en el "
-#~ "logo de la skin para volver. Suelta una skin en cualquiera de las "
-#~ "ventanas para añadirla."
-
-#~ msgid "Skin"
-#~ msgstr "Skin"
-
-#~ msgid "Keep the Winamp window above everything else."
-#~ msgstr "Mantener la ventana de Winamp por encima de todo lo demás."
-
-#~ msgid "Installed skins"
-#~ msgstr "Skins instaladas"
-
-#~ msgid "Random"
-#~ msgstr "Aleatorio"
-
-#~ msgid "Spotify's own player, with lossless support."
-#~ msgstr "El reproductor de Spotify, con audio sin pérdida."
-
-#~ msgid ""
-#~ "You'll need Spotify Premium, your personal Soloist key and one pairing in "
-#~ "Spotify. Spotifast handles the download and updates."
-#~ msgstr ""
-#~ "Necesitas Spotify Premium, tu clave personal de Soloist y vincularlo una "
-#~ "vez en Spotify. Spotifast se encarga de la descarga y las actualizaciones."
-
-#~ msgid ""
-#~ "For local files and full queue editing, use the built-in player. You can "
-#~ "switch later in Settings."
-#~ msgstr ""
-#~ "Para archivos locales y la edición completa de la cola, usa el "
-#~ "reproductor integrado. Puedes cambiarlo después en Ajustes."
-
-#~ msgid ""
-#~ "Create a Soloist key in Spotify's developer dashboard. This is separate "
-#~ "from your Web API app's Client ID."
-#~ msgstr ""
-#~ "Crea una clave de Soloist en el panel de desarrolladores de Spotify. Es "
-#~ "distinta del Client ID de tu aplicación Web API."
-
-#~ msgid ""
-#~ "Soloist makes its own Spotify connections. Spotifast's proxy settings do "
-#~ "not route its audio traffic."
-#~ msgstr ""
-#~ "Soloist establece sus propias conexiones con Spotify. Los ajustes de "
-#~ "proxy de Spotifast no se aplican a su tráfico de audio."
-
-#~ msgid ""
-#~ "Downloads directly from Spotify and saves your key in the system "
-#~ "credential store. By enabling Soloist, you use Spotify's separate "
-#~ "software under its terms."
-#~ msgstr ""
-#~ "Se descarga directamente de Spotify y guarda tu clave en el almacén de "
-#~ "credenciales del sistema. Al activar Soloist, usas el software "
-#~ "independiente de Spotify bajo sus condiciones."
-
-#~ msgid ""
-#~ "Open Spotify on the same network, using the account signed in here. In "
-#~ "the device picker, choose:"
-#~ msgstr ""
-#~ "Abre Spotify en la misma red y con la cuenta que usas aquí. En el "
-#~ "selector de dispositivos, elige:"
-
-#~ msgid ""
-#~ "Spotifast will notice when pairing finishes. Future starts reconnect "
-#~ "automatically."
-#~ msgstr ""
-#~ "Spotifast detectará cuándo termina el emparejamiento. Se reconectará "
-#~ "automáticamente en los próximos inicios."
-
-#~ msgid ""
-#~ "If this takes a while, make sure Spotify is signed in to the same account "
-#~ "as Spotifast, then select this device there."
-#~ msgstr ""
-#~ "Si tarda, comprueba que Spotify use la misma cuenta que Spotifast y "
-#~ "selecciona este dispositivo en Spotify."
-
-#~ msgid ""
-#~ "For EQ, visualizers, local files and queue editing, use the built-in "
-#~ "player. You can switch later in Settings."
-#~ msgstr ""
-#~ "Para usar el ecualizador, las visualizaciones, los archivos locales y la "
-#~ "edición de la cola, elige el reproductor integrado. Puedes cambiarlo "
-#~ "después en Ajustes."
-
-#~ msgid ""
-#~ "Spotify manages audio quality. EQ, visualizers and local files use the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Spotify gestiona la calidad de audio. El ecualizador, las visualizaciones "
-#~ "y los archivos locales usan el reproductor integrado."
-
-#~ msgid "Confirming your Spotify account…"
-#~ msgstr "Confirmando tu cuenta de Spotify…"
-
-#~ msgid "Details"
-#~ msgstr "Detalles"
-
-#~ msgid ""
-#~ "Spotifast checks daily for a replacement during the last 30 days of each "
-#~ "build. Updates wait until Soloist is inactive."
-#~ msgstr ""
-#~ "Durante los últimos 30 días de cada versión, Spotifast busca un reemplazo "
-#~ "a diario. Las actualizaciones esperan a que Soloist esté inactivo."
-
-#~ msgid ""
-#~ "Soloist uses your system audio output. Turn it off to use the built-in "
-#~ "player's EQ, visualizers, local files and queue editing."
-#~ msgstr ""
-#~ "Soloist usa la salida de audio del sistema. Desactívalo para usar el "
-#~ "ecualizador, las visualizaciones, los archivos locales y la edición de la "
-#~ "cola del reproductor integrado."
-
-#~ msgid ""
-#~ "Spotify chooses playback quality. Soloist does not report the delivered "
-#~ "audio format yet."
-#~ msgstr ""
-#~ "Spotify elige la calidad de reproducción. Soloist aún no indica el "
-#~ "formato de audio recibido."
-
-#~ msgid ""
-#~ "Audio quality, output, EQ and local-file settings below apply to the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Los ajustes de calidad de audio, salida, ecualizador y archivos locales "
-#~ "de abajo se aplican al reproductor integrado."
-
-#~ msgid ""
-#~ "Spotify's own player, with support for lossless audio. Requires Premium, "
-#~ "your personal Soloist key, and one pairing in the Spotify app."
-#~ msgstr ""
-#~ "El reproductor de Spotify, compatible con audio sin pérdida. Requiere "
-#~ "Premium, tu clave personal de Soloist y un emparejamiento en la "
-#~ "aplicación de Spotify."
-
-#~ msgid ""
-#~ "Soloist plays through your system audio output. Spotifast's EQ, "
-#~ "visualizers, local files, and full queue editing are available with the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Soloist usa la salida de audio del sistema. El ecualizador, los "
-#~ "visualizadores, los archivos locales y la edición completa de la cola de "
-#~ "Spotifast están disponibles con el reproductor integrado."
-
-#~ msgid "Soloist is ready"
-#~ msgstr "Soloist está listo"
-
-#~ msgid ""
-#~ "A fresh build is downloaded. It will be applied when Soloist is inactive "
-#~ "or Spotifast restarts."
-#~ msgstr ""
-#~ "Se ha descargado una nueva versión. Se aplicará cuando Soloist esté "
-#~ "inactivo o Spotifast se reinicie."
-
-#~ msgid "Soloist setup, privacy and limitations"
-#~ msgstr "Configuración, privacidad y limitaciones de Soloist"
-
-#~ msgid ""
-#~ "Use a personal Development Mode app for a separate API quota. The shared "
-#~ "app stays active."
-#~ msgstr ""
-#~ "Usa una app propia en modo desarrollo para tener tu propia cuota de API. "
-#~ "La app compartida sigue activa."
-
-#~ msgid "Remove personal app"
-#~ msgstr "Quitar la app personal"
-
-#~ msgid "Shared access remains signed in."
-#~ msgstr "El acceso compartido sigue con la sesión iniciada."
-
-#~ msgid "Spotify can be slow on the shared app"
-#~ msgstr "Spotify puede ir lento con la app compartida"
-
-#~ msgid ""
-#~ "Everyone using Spotifast shares one app, and Spotify slows it down when "
-#~ "it's busy. Set up your own personal Spotify app and you won't have to "
-#~ "wait. It's free and takes a few minutes."
-#~ msgstr ""
-#~ "Todos los que usan Spotifast comparten una app, y Spotify la frena cuando "
-#~ "está saturado. Configura tu propia app personal de Spotify y no tendrás "
-#~ "que esperar. Es gratis y lleva unos minutos."
-
-#~ msgid "Use the shared Spotify app instead"
-#~ msgstr "Usar la app compartida de Spotify"
-
-#~ msgid ""
-#~ "Set up your own personal Spotify app and you won't have to wait. It's "
-#~ "free and takes a few minutes."
-#~ msgstr ""
-#~ "Configura tu propia app personal de Spotify y no tendrás que esperar. Es "
-#~ "gratis y lleva unos minutos."
-
-#~ msgid ""
-#~ "Spotifast hides to the system tray. Quit from the tray menu or with Cmd+Q."
-#~ msgstr ""
-#~ "Spotifast se oculta en la bandeja del sistema. Sal desde el menú de la "
-#~ "bandeja o con Cmd+Q."
-
-#~ msgid "Your most-played tracks from the last four weeks."
-#~ msgstr "Lo que más escuchaste en las últimas cuatro semanas."
-
-#~ msgid "Spend less time waiting for Spotify"
-#~ msgstr "Espera menos a Spotify"
-
-#~ msgid ""
-#~ "Spotifast's default connection shares Spotify's request limit with other "
-#~ "listeners. When it gets busy, loading music and using playback controls "
-#~ "can take longer."
-#~ msgstr ""
-#~ "La conexión predeterminada de Spotifast comparte el límite de peticiones "
-#~ "de Spotify con otros oyentes. Cuando está saturada, cargar música y usar "
-#~ "los controles de reproducción puede tardar más."
-
-#~ msgid ""
-#~ "Your Premium account lets you create a free personal Spotify app. Connect "
-#~ "it here to give supported requests your own allowance. Some pages still "
-#~ "use the shared connection."
-#~ msgstr ""
-#~ "Tu cuenta Premium te permite crear una app personal de Spotify gratis. "
-#~ "Conéctala aquí para que las peticiones compatibles usen tu propia cuota. "
-#~ "Algunas páginas siguen usando la conexión compartida."
-
-#~ msgid ""
-#~ "Setup takes a few minutes. You can also find it later in Settings under "
-#~ "Personal Spotify app."
-#~ msgstr ""
-#~ "La configuración lleva unos minutos. También puedes encontrarla más tarde "
-#~ "en Ajustes, en App personal de Spotify."
-
-#~ msgid "Keep shared app"
-#~ msgstr "Seguir con la app compartida"
-
-#~ msgid ""
-#~ "Play the local files your playlists list from a folder on this computer. "
-#~ "Only 44.1 kHz files play."
-#~ msgstr ""
-#~ "Reproduce los archivos locales de tus playlists desde una carpeta de este "
-#~ "ordenador. Solo se reproducen archivos de 44,1 kHz."
-
-#~ msgid "PulseAudio also covers PipeWire. Rodio talks to ALSA directly."
-#~ msgstr ""
-#~ "PulseAudio también cubre PipeWire. Rodio habla con ALSA directamente."
-
-#~ msgid "Couldn't load this shelf"
-#~ msgstr "No se pudo cargar esta sección"
-
-#~ msgid "Spotify does not let apps remove one queued song."
-#~ msgstr "Spotify no permite a las apps quitar una sola canción de la cola."
-
-#~ msgid "MacBook notch interactive widget"
-#~ msgstr "Widget interactivo de la muesca del MacBook"
-
-#~ msgid "Scroll left"
-#~ msgstr "Desplazar a la izquierda"
-
-#~ msgid "Scroll right"
-#~ msgstr "Desplazar a la derecha"
-
-#~ msgid "Enable lyrics motion"
-#~ msgstr "Activar movimiento de la letra"
-
-#~ msgid "Reduce lyrics motion"
-#~ msgstr "Reducir movimiento de la letra"

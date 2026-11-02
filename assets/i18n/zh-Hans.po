@@ -1115,7 +1115,7 @@ msgstr "Spotify 不允许应用删除歌单简介，因此简介已保留"
 
 #: src/app.rs:12490
 msgid "Spotify Free plays on this computer only"
-msgstr ""
+msgstr "Spotify Free 只在这台电脑上播放"
 
 #: src/app.rs:12527 src/app.rs:12546
 msgid "Link copied"
@@ -1387,7 +1387,7 @@ msgstr "为你打造、收听动态和 Spotify 歌词。"
 
 #: src/ui/settings.rs:584
 msgid "Spotify Free: plays here with ads"
-msgstr ""
+msgstr "Spotify Free：在此播放，含广告"
 
 #: src/ui/settings.rs:588
 msgid "Spotify Free, local playback needs Premium"
@@ -1414,7 +1414,7 @@ msgstr "就绪"
 
 #: src/ui/settings.rs:692 src/ui/devices.rs:644
 msgid "Spotify Free plays on this computer."
-msgstr ""
+msgstr "Spotify Free 在这台电脑上播放。"
 
 #: src/ui/settings.rs:697
 msgid "This computer is a Spotify Connect device."
@@ -1452,7 +1452,7 @@ msgstr "未设置"
 #: src/ui/settings.rs:730
 msgid ""
 "Premium plays through Spotifast; Spotify Free plays with ads once signed in."
-msgstr ""
+msgstr "Premium 通过 Spotifast 播放；Spotify Free 登录后会带广告播放。"
 
 #: src/ui/settings.rs:735
 msgid "Requires Spotify Premium and a one-time browser sign-in."
@@ -3258,7 +3258,7 @@ msgstr "在 Spotify 预保存"
 
 #: src/ui/prerelease.rs:239
 msgid "Pre-saving needs Spotify Premium"
-msgstr ""
+msgstr "预保存需要 Spotify Premium"
 
 #: src/ui/prerelease.rs:303
 msgid "Track list preview"
@@ -3634,7 +3634,7 @@ msgstr "打开大窗口"
 
 #: src/ui/winamp/playlist.rs:665
 msgid "Spotify Free can't change its queue here"
-msgstr ""
+msgstr "Spotify Free 无法在这里更改队列"
 
 #: src/ui/winamp/playlist.rs:679
 msgid "Remove selected"
@@ -3863,255 +3863,3 @@ msgstr ""
 "Spotifast 需要支持 OpenGL 2.0 或更高版本的显卡驱动程序，而这台电脑或虚拟机没"
 "有提供。请安装显卡驱动程序，或为虚拟机开启 GPU 加速。要打开 {url} 了解更多"
 "吗？"
-
-#~ msgid "Winamp skins"
-#~ msgstr "Winamp 皮肤"
-
-#~ msgid "Show Winamp in taskbar"
-#~ msgstr "在任务栏中显示 Winamp"
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Ctrl+M or click the skin logo to "
-#~ "return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "使用经典的 Winamp .wsz 皮肤。按 Ctrl+M 或点击皮肤标志即可返回。将皮肤拖放"
-#~ "到任一窗口即可添加。"
-
-#~ msgid ""
-#~ "Use classic Winamp .wsz skins. Press Cmd+Shift+M or click the skin logo "
-#~ "to return. Drop a skin on either window to add it."
-#~ msgstr ""
-#~ "使用经典的 Winamp .wsz 皮肤。按 Cmd+Shift+M 或点击皮肤标志即可返回。将皮肤"
-#~ "拖放到任一窗口即可添加。"
-
-#~ msgid "Skin"
-#~ msgstr "皮肤"
-
-#~ msgid "Keep the Winamp window above everything else."
-#~ msgstr "让 Winamp 窗口始终位于其他窗口之上。"
-
-#~ msgid "Installed skins"
-#~ msgstr "已安装的皮肤"
-
-#~ msgid "Random"
-#~ msgstr "随机"
-
-#~ msgid "Spotify's own player, with lossless support."
-#~ msgstr "Spotify 官方播放器，支持无损音频。"
-
-#~ msgid ""
-#~ "You'll need Spotify Premium, your personal Soloist key and one pairing in "
-#~ "Spotify. Spotifast handles the download and updates."
-#~ msgstr ""
-#~ "需要 Spotify Premium、你的个人 Soloist 密钥，以及在 Spotify 中完成一次配"
-#~ "对。Spotifast 会负责下载和更新。"
-
-#~ msgid ""
-#~ "For local files and full queue editing, use the built-in player. You can "
-#~ "switch later in Settings."
-#~ msgstr ""
-#~ "如需播放本地文件和完整的队列编辑功能，请使用内置播放器。稍后可在设置中切"
-#~ "换。"
-
-#~ msgid ""
-#~ "Create a Soloist key in Spotify's developer dashboard. This is separate "
-#~ "from your Web API app's Client ID."
-#~ msgstr ""
-#~ "在 Spotify 开发者控制台中创建 Soloist 密钥。它与你的 Web API 应用的 "
-#~ "Client ID 不同。"
-
-#~ msgid ""
-#~ "Soloist makes its own Spotify connections. Spotifast's proxy settings do "
-#~ "not route its audio traffic."
-#~ msgstr ""
-#~ "Soloist 自行连接 Spotify。Spotifast 的代理设置不适用于 Soloist 的音频流"
-#~ "量。"
-
-#~ msgid ""
-#~ "Downloads directly from Spotify and saves your key in the system "
-#~ "credential store. By enabling Soloist, you use Spotify's separate "
-#~ "software under its terms."
-#~ msgstr ""
-#~ "直接从 Spotify 下载，并将密钥保存在系统凭据存储中。启用 Soloist 即表示你使"
-#~ "用 Spotify 的独立软件，并遵守其条款。"
-
-#~ msgid ""
-#~ "Open Spotify on the same network, using the account signed in here. In "
-#~ "the device picker, choose:"
-#~ msgstr "在同一网络上打开 Spotify，使用此处登录的账号。在设备列表中选择："
-
-#~ msgid ""
-#~ "Spotifast will notice when pairing finishes. Future starts reconnect "
-#~ "automatically."
-#~ msgstr "Spotifast 会检测到配对完成。以后启动时会自动重新连接。"
-
-#~ msgid ""
-#~ "If this takes a while, make sure Spotify is signed in to the same account "
-#~ "as Spotifast, then select this device there."
-#~ msgstr ""
-#~ "如果等待较久，请确认 Spotify 与 Spotifast 登录的是同一个账号，然后在 "
-#~ "Spotify 中选择此设备。"
-
-#~ msgid ""
-#~ "For EQ, visualizers, local files and queue editing, use the built-in "
-#~ "player. You can switch later in Settings."
-#~ msgstr ""
-#~ "如需使用均衡器、可视化、本地文件和队列编辑，请选择内置播放器。之后可以在设"
-#~ "置中切换。"
-
-#~ msgid ""
-#~ "Spotify manages audio quality. EQ, visualizers and local files use the "
-#~ "built-in player."
-#~ msgstr "音质由 Spotify 管理。均衡器、可视化和本地文件使用内置播放器。"
-
-#~ msgid "Confirming your Spotify account…"
-#~ msgstr "正在确认你的 Spotify 账号…"
-
-#~ msgid "Details"
-#~ msgstr "详细信息"
-
-#~ msgid ""
-#~ "Spotifast checks daily for a replacement during the last 30 days of each "
-#~ "build. Updates wait until Soloist is inactive."
-#~ msgstr ""
-#~ "在每个版本到期前的最后 30 天内，Spotifast 每天检查是否有替代版本。更新会等"
-#~ "待 Soloist 进入非活动状态。"
-
-#~ msgid ""
-#~ "Soloist uses your system audio output. Turn it off to use the built-in "
-#~ "player's EQ, visualizers, local files and queue editing."
-#~ msgstr ""
-#~ "Soloist 使用系统音频输出。关闭它即可使用内置播放器的均衡器、可视化效果、本"
-#~ "地文件和队列编辑功能。"
-
-#~ msgid ""
-#~ "Spotify chooses playback quality. Soloist does not report the delivered "
-#~ "audio format yet."
-#~ msgstr "Spotify 决定播放音质。Soloist 尚未报告实际接收的音频格式。"
-
-#~ msgid ""
-#~ "Audio quality, output, EQ and local-file settings below apply to the "
-#~ "built-in player."
-#~ msgstr "下方的音质、输出、均衡器和本地文件设置适用于内置播放器。"
-
-#~ msgid ""
-#~ "Spotify's own player, with support for lossless audio. Requires Premium, "
-#~ "your personal Soloist key, and one pairing in the Spotify app."
-#~ msgstr ""
-#~ "Spotify 自己的播放器，支持无损音频。需要 Premium、你的个人 Soloist 密钥，"
-#~ "以及在 Spotify 应用中进行一次配对。"
-
-#~ msgid ""
-#~ "Soloist plays through your system audio output. Spotifast's EQ, "
-#~ "visualizers, local files, and full queue editing are available with the "
-#~ "built-in player."
-#~ msgstr ""
-#~ "Soloist 使用系统音频输出。Spotifast 的均衡器、可视化、本地文件和完整队列编"
-#~ "辑功能可通过内置播放器使用。"
-
-#~ msgid "Soloist is ready"
-#~ msgstr "Soloist 已就绪"
-
-#~ msgid ""
-#~ "A fresh build is downloaded. It will be applied when Soloist is inactive "
-#~ "or Spotifast restarts."
-#~ msgstr ""
-#~ "新版本已下载。Soloist 处于非活动状态或 Spotifast 重新启动时将应用更新。"
-
-#~ msgid "Soloist setup, privacy and limitations"
-#~ msgstr "Soloist 设置、隐私和限制"
-
-#~ msgid ""
-#~ "Use a personal Development Mode app for a separate API quota. The shared "
-#~ "app stays active."
-#~ msgstr "使用个人开发模式应用可获得独立的 API 配额。共享应用仍保持可用。"
-
-#~ msgid "Remove personal app"
-#~ msgstr "移除个人应用"
-
-#~ msgid "Shared access remains signed in."
-#~ msgstr "共享访问将保持登录状态。"
-
-#~ msgid "Spotify can be slow on the shared app"
-#~ msgstr "使用共享应用时 Spotify 可能会很慢"
-
-#~ msgid ""
-#~ "Everyone using Spotifast shares one app, and Spotify slows it down when "
-#~ "it's busy. Set up your own personal Spotify app and you won't have to "
-#~ "wait. It's free and takes a few minutes."
-#~ msgstr ""
-#~ "所有 Spotifast 用户共用一个应用，Spotify 在繁忙时会限制它的速度。设置你自"
-#~ "己的个人 Spotify 应用，就不用再等了。它是免费的，只需几分钟。"
-
-#~ msgid "Use the shared Spotify app instead"
-#~ msgstr "改用共享 Spotify 应用"
-
-#~ msgid ""
-#~ "Set up your own personal Spotify app and you won't have to wait. It's "
-#~ "free and takes a few minutes."
-#~ msgstr ""
-#~ "设置你自己的个人 Spotify 应用，就不用再等了。它是免费的，只需几分钟。"
-
-#~ msgid ""
-#~ "Spotifast hides to the system tray. Quit from the tray menu or with Cmd+Q."
-#~ msgstr "Spotifast 会隐藏到系统托盘。可通过托盘菜单或 Cmd+Q 退出。"
-
-#~ msgid "Your most-played tracks from the last four weeks."
-#~ msgstr "过去四周你播放最多的歌曲。"
-
-#~ msgid "Spend less time waiting for Spotify"
-#~ msgstr "减少等待 Spotify 的时间"
-
-#~ msgid ""
-#~ "Spotifast's default connection shares Spotify's request limit with other "
-#~ "listeners. When it gets busy, loading music and using playback controls "
-#~ "can take longer."
-#~ msgstr ""
-#~ "Spotifast 的默认连接与其他听众共享 Spotify 的请求限额。繁忙时，加载音乐和"
-#~ "使用播放控制可能需要更长时间。"
-
-#~ msgid ""
-#~ "Your Premium account lets you create a free personal Spotify app. Connect "
-#~ "it here to give supported requests your own allowance. Some pages still "
-#~ "use the shared connection."
-#~ msgstr ""
-#~ "你的 Premium 账户可以免费创建个人 Spotify 应用。在此连接后，支持的请求将使"
-#~ "用你自己的配额。部分页面仍会使用共享连接。"
-
-#~ msgid ""
-#~ "Setup takes a few minutes. You can also find it later in Settings under "
-#~ "Personal Spotify app."
-#~ msgstr "设置只需几分钟。之后也可以在“设置”的“个人 Spotify 应用”中找到。"
-
-#~ msgid "Keep shared app"
-#~ msgstr "继续使用共享应用"
-
-#~ msgid ""
-#~ "Play the local files your playlists list from a folder on this computer. "
-#~ "Only 44.1 kHz files play."
-#~ msgstr ""
-#~ "从这台电脑上的文件夹播放播放列表中的本地文件。只能播放 44.1 kHz 的文件。"
-
-#~ msgid "PulseAudio also covers PipeWire. Rodio talks to ALSA directly."
-#~ msgstr "PulseAudio 也支持 PipeWire。Rodio 直接与 ALSA 通信。"
-
-#~ msgid "Couldn't load this shelf"
-#~ msgstr "无法加载此栏目"
-
-#~ msgid "Spotify does not let apps remove one queued song."
-#~ msgstr "Spotify 不允许应用移除播放队列中的单首歌曲。"
-
-#~ msgid "MacBook notch interactive widget"
-#~ msgstr "MacBook刘海交互式小组件"
-
-#~ msgid "Scroll left"
-#~ msgstr "向左滚动"
-
-#~ msgid "Scroll right"
-#~ msgstr "向右滚动"
-
-#~ msgid "Enable lyrics motion"
-#~ msgstr "启用歌词动画"
-
-#~ msgid "Reduce lyrics motion"
-#~ msgstr "减少歌词动画"
