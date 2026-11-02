@@ -501,6 +501,10 @@ pub struct App {
     /// the window is mapped, so the creation-time level does not stick; a level
     /// pushed on the first frames after mapping does.
     winamp_level_reassert: u8,
+    /// The page on screen and how far down it was, for the next window.
+    pub page_scroll: Option<(String, f32)>,
+    /// What a new window takes up from `page_scroll` on its first frame.
+    pub restore_scroll: Option<(String, f32)>,
     pub devices: Vec<Device>,
     /// Receivers seen on the local network. Spotify lists a receiver only
     /// once it has an account, so these are the ones it cannot see yet.
@@ -807,6 +811,9 @@ pub struct App {
     pub resume_context: Option<String>,
     pub resume_track: Option<String>,
     pub resume_position_ms: u32,
+    /// The song and position a resume asked its context to start at, until
+    /// the player reports what it started.
+    resume_load: Option<(String, u32)>,
     /// Manually queued songs restored with the remembered track.
     pub resume_queue: Vec<String>,
     /// Manually queued songs from this session, oldest first.
@@ -845,6 +852,9 @@ pub struct App {
     /// A Spotify link handed over from outside, waiting for the account
     /// to be signed in and, for a song, for its album to be known.
     pending_link: Option<String>,
+    /// The song a link opened its album for, as the link named it and as
+    /// Spotify plays it, until that page's list has picked its row.
+    linked_song: Option<(Page, [String; 2])>,
     prerelease_request: Option<u64>,
     prerelease_serial: u64,
     /// The songs behind the links last copied from a track table, so a
@@ -1224,6 +1234,8 @@ impl App {
             session_dirty: false,
             last_session_save: Instant::now(),
             winamp_level_reassert: 0,
+            page_scroll: None,
+            restore_scroll: None,
             devices: Vec::new(),
             receivers: Vec::new(),
             device_history: session.device_history.clone(),
@@ -1403,6 +1415,7 @@ impl App {
             resume_context: session.last_context.clone(),
             resume_track: session.last_track.clone(),
             resume_position_ms: session.last_position_ms,
+            resume_load: None,
             resume_queue: session.last_added_queue.clone(),
             manual_queue: Vec::new(),
             pending_queue_adds: Vec::new(),
@@ -1420,6 +1433,7 @@ impl App {
             rootlist_wanted: false,
             editable_by_grant: std::collections::BTreeSet::new(),
             pending_link: None,
+            linked_song: None,
             prerelease_request: None,
             prerelease_serial: 0,
             copied_songs: Vec::new(),
@@ -1480,6 +1494,8 @@ impl App {
         // A window is here, so a hidden start's wait for a panel is over.
         self.tray_wait = None;
         self.winamp_level_reassert = 0;
+        // egui's memory went with the last window, the scroll position with it.
+        self.restore_scroll = self.page_scroll.clone();
         // A new window starts titled "Spotifast"; name the playing song
         // again rather than trust what the replaced window was told.
         self.window_title.clear();
@@ -1935,11 +1951,24 @@ impl App {
                         crate::link::canonical_context_uri(&context.uri) != assumed.uri
                     })
             });
-            if held || (!contradicted && self.believed_playing()) {
+            if held || self.remote_lags_local() || (!contradicted && self.believed_playing()) {
                 return (!assumed.uri.is_empty()).then(|| assumed.uri.clone());
             }
         }
         remote
+    }
+
+    /// Whether the last poll names another song than this computer plays. It
+    /// describes the past, however late it arrived, and its context with it:
+    /// a playlist left for an album must not light up again (#1121).
+    fn remote_lags_local(&self) -> bool {
+        let Some(track) = self.local.track.as_ref().filter(|_| self.local.is_active()) else {
+            return false;
+        };
+        self.remote
+            .as_ref()
+            .and_then(|snapshot| snapshot.state.item.as_ref())
+            .is_some_and(|item| item.uri() != track.uri)
     }
 
     /// Track shown as current, including a recent unconfirmed play request.
@@ -1955,8 +1984,22 @@ impl App {
     /// Whether a row holding `uri` may show as the current song. A song
     /// started from a row marks that row alone in its own list; other copies
     /// of the song there are ordinary rows. Anywhere else, and once the
-    /// remembered row no longer holds the song, every copy shows it.
+    /// remembered row no longer holds the song, every copy shows it, except
+    /// in a playlist other than the one playing: the song is not playing
+    /// from there (#1106).
     pub fn row_is_played_copy(&self, context: &RowContext, index: usize, uri: &str) -> bool {
+        if let RowContext::Context { uri: list_uri, .. }
+        | RowContext::View {
+            context_uri: list_uri,
+            ..
+        } = context
+            && list_uri.starts_with("spotify:playlist:")
+            && self
+                .playing_context_uri()
+                .is_some_and(|playing| playing != *list_uri)
+        {
+            return false;
+        }
         let Some(played) = self.played_row.as_ref().filter(|played| played.uri == uri) else {
             return true;
         };
@@ -4061,6 +4104,19 @@ impl App {
         let Some(now) = self.now_playing_live() else {
             return;
         };
+        // A context no longer holding the resumed song, as a playlist does
+        // not hold the recommendation that followed it, starts at its first
+        // song instead. Replace that with the song itself, before the saved
+        // queue or the saved song learn of the detour (#856).
+        if now.local
+            && let Some((uri, position_ms)) = self.resume_load.take()
+            && now.uri != uri
+        {
+            let mut request = PlayRequest::tracks(vec![uri]);
+            request.position_ms = position_ms;
+            self.play_request(request, false);
+            return;
+        }
         let same_uri = self.last_now_playing_uri.as_deref() == Some(now.uri.as_str());
         let new_occurrence =
             now.local && self.last_now_playing_sequence != self.local.track_sequence;
@@ -4443,7 +4499,11 @@ impl App {
             if typed.elapsed() >= SEARCH_DEBOUNCE {
                 self.search.typed_at = None;
                 let query = self.search.query.trim().to_string();
-                self.run_typed_search(query);
+                // A pasted link waits for Enter rather than being searched
+                // for as words.
+                if crate::link::parse(&query).is_none() {
+                    self.run_typed_search(query);
+                }
             } else {
                 ctx.request_repaint_after(SEARCH_DEBOUNCE - typed.elapsed());
             }
@@ -6624,6 +6684,7 @@ impl App {
     /// rows as a fresh list instead used to take seconds, threw the
     /// context away, and left Spotify's copy of the queue to reappear.
     fn play_queue_item(&mut self, index: usize, uri: String) {
+        self.resume_load = None;
         if self.resume_only() {
             // Nothing is playing anywhere, so there is no live queue to
             // consume: play the shown rows as a plain list.
@@ -9271,6 +9332,7 @@ impl App {
 
     pub fn open(&mut self, page: Page) {
         self.pending_link = None;
+        self.linked_song = None;
         self.prerelease_request = None;
         self.touch_page(&page);
         if *self.page() == page {
@@ -9298,13 +9360,19 @@ impl App {
     }
 
     #[cfg(test)]
+    pub(crate) fn link_song_for_test(&mut self, page: Page, uris: [String; 2]) {
+        self.linked_song = Some((page, uris));
+    }
+
+    #[cfg(test)]
     pub(crate) fn pending_spotify_link(&self) -> Option<&str> {
         self.pending_link.as_deref()
     }
 
     /// Opens the page behind the pending link once the account is signed
     /// in. A song and an episode have no page of their own here, so the
-    /// album's and the podcast's open, once Spotify has said which.
+    /// album's and the podcast's open, once Spotify has said which, with a
+    /// song's row picked on its album.
     fn open_pending_link(&mut self) {
         let Some(uri) = self.pending_link.clone() else {
             return;
@@ -9344,7 +9412,11 @@ impl App {
                         .map(|album| album.id.clone())
                         .filter(|id| !id.is_empty());
                     match album {
-                        Some(album) => self.open(Page::Album(album)),
+                        Some(album) => {
+                            let page = Page::Album(album);
+                            self.open(page.clone());
+                            self.linked_song = Some((page, [uri, track.uri]));
+                        }
                         None => self.toast_error(gettext(
                             self.locale,
                             "This song's album is not on Spotify",
@@ -9861,6 +9933,7 @@ impl App {
         self.supersede_play_search();
         // A play from a row names its row again after this.
         self.played_row = None;
+        self.resume_load = None;
         self.start_play(request, shuffle_first);
     }
 
@@ -10346,8 +10419,19 @@ impl App {
             None => PlayRequest::tracks(vec![track]),
         };
         request.position_ms = self.resume_position_ms;
-        self.play_request(request, false);
+        self.play_resumed(request);
         true
+    }
+
+    /// Plays a song at its old place, watching that its context can start it.
+    fn play_resumed(&mut self, request: PlayRequest) {
+        let expected = request
+            .context_uri
+            .as_ref()
+            .and(request.offset_uri.clone())
+            .map(|uri| (uri, request.position_ms));
+        self.play_request(request, false);
+        self.resume_load = expected;
     }
 
     fn toggle_play(&mut self) {
@@ -10365,14 +10449,25 @@ impl App {
                         .map(|item| item.uri().to_string());
                     let position = remote.state.progress_ms.unwrap_or(0);
                     if let Some(uri) = uri {
-                        let mut request = match &remote.state.context {
-                            Some(context) if !context.uri.is_empty() => {
-                                PlayRequest::context(context.uri.clone()).starting_at_uri(uri)
-                            }
-                            _ => PlayRequest::tracks(vec![uri]),
+                        // Spotify's last state can lose the context of the
+                        // song this computer remembers playing from one.
+                        let context = remote
+                            .state
+                            .context
+                            .as_ref()
+                            .map(|context| context.uri.clone())
+                            .filter(|context| !context.is_empty())
+                            .or_else(|| {
+                                self.resume_context
+                                    .clone()
+                                    .filter(|_| self.resume_track.as_ref() == Some(&uri))
+                            });
+                        let mut request = match context {
+                            Some(context) => PlayRequest::context(context).starting_at_uri(uri),
+                            None => PlayRequest::tracks(vec![uri]),
                         };
                         request.position_ms = position;
-                        self.play_request(request, false);
+                        self.play_resumed(request);
                         return;
                     }
                     if !self.resume_last() {
@@ -10775,6 +10870,7 @@ impl App {
                 // Connect transfers the active device's full playback state.
                 // A Web API snapshot may be stale and cannot recreate its queue.
                 self.queue_start_pending = Some(Target::Local);
+                self.resume_load = None;
                 self.local_transfer_sequence = Some(self.local.track_sequence);
                 self.local_list = None;
                 self.resume_queue.clear();
@@ -11835,6 +11931,7 @@ impl App {
             Action::Back => {
                 if self.can_go_back() {
                     self.pending_link = None;
+                    self.linked_song = None;
                     self.prerelease_request = None;
                     self.history_index -= 1;
                     let page = self.page().clone();
@@ -11847,6 +11944,7 @@ impl App {
             Action::Forward => {
                 if self.can_go_forward() {
                     self.pending_link = None;
+                    self.linked_song = None;
                     self.prerelease_request = None;
                     self.history_index += 1;
                     let page = self.page().clone();
@@ -12015,6 +12113,7 @@ impl App {
             Action::ToggleShuffle | Action::SetShuffle(_) if !self.capabilities().shuffle => {}
             Action::CycleRepeat | Action::SetRepeat(_) if !self.capabilities().repeat => {}
             Action::Next => {
+                self.resume_load = None;
                 // Move the queue head to the playing row immediately. Do not
                 // pop when there is no active playback target.
                 let target = self.target();
@@ -12045,6 +12144,7 @@ impl App {
                 }
             }
             Action::Previous => {
+                self.resume_load = None;
                 // Next names its expected destination so the row moves before
                 // the engine does. Previous has no forward queue row to name;
                 // discard that expectation or a quick Next, Previous leaves
@@ -12568,6 +12668,11 @@ impl App {
                 let typed = query == self.search.query;
                 self.search.query = query.clone();
                 self.search.typed_at = None;
+                // A link pasted into the field opens what it points at.
+                if typed && let Some(uri) = crate::link::parse(&query) {
+                    self.actions.push(Action::OpenLink(uri));
+                    return;
+                }
                 self.open(Page::Search);
                 if typed {
                     self.submit_typed_search(query.trim().to_string());
@@ -13620,6 +13725,19 @@ impl App {
         ));
     }
 
+    /// The song `page`'s list should pick for the link that opened it.
+    pub fn linked_song(&self, page: &Page) -> Option<&[String; 2]> {
+        self.linked_song
+            .as_ref()
+            .filter(|(owner, _)| owner == page)
+            .map(|(_, uris)| uris)
+    }
+
+    /// The linked song is picked, or is not on the page after all.
+    pub fn finish_linked_song(&mut self) {
+        self.linked_song = None;
+    }
+
     /// Clears the current row selection.
     pub fn clear_picked_rows(&mut self) {
         self.selection = None;
@@ -14183,7 +14301,12 @@ impl App {
         self.session_dirty = false;
         self.last_session_save = Instant::now();
         if let Some(now) = self.now_playing().filter(|now| is_real_item(&now.uri)) {
-            self.resume_context = self.playing_context_uri();
+            // A paused song from a sorted view has no context to report, but
+            // its playlist is still what it plays from (#1013).
+            let same_song = self.resume_track.as_deref() == Some(now.uri.as_str());
+            self.resume_context = self
+                .playing_context_uri()
+                .or_else(|| self.resume_context.clone().filter(|_| same_song));
             self.resume_track = Some(now.uri.clone());
             self.resume_position_ms = now.position_ms;
         }
@@ -14757,7 +14880,7 @@ fn cover_error(locale: Locale, error: &crate::api::client::ApiError) -> String {
         .into_owned(),
         Some(403) => gettext(
             locale,
-            "Spotify refused this cover. Check that you own the playlist, then sign in again to grant image upload permission. If using a personal app, reconnect it in Settings too.",
+            "Spotify refused this cover. Check that you own the playlist, then sign in again to grant image upload permission. If you use your own Client ID, authorize it again in Settings too.",
         )
         .into_owned(),
         Some(413) => {
@@ -14983,6 +15106,39 @@ mod tests {
     /// runs out of room (#624), and the widths the listener chose come back
     /// once the window widens. With the Queue open, the window's minimum
     /// grows to the panels' least widths and the page's.
+    #[test]
+    fn a_new_window_opens_settings_where_the_last_one_was() {
+        let draw = |ctx: &egui::Context, app: &mut App| {
+            let input = egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::vec2(1000.0, 500.0),
+                )),
+                ..Default::default()
+            };
+            let mut output = ctx.run_ui(input, |ui| app.frame_ui(ui));
+            output.textures_delta.clear();
+        };
+        let mut app = test_app("scroll-survives-the-window");
+        let ctx = egui::Context::default();
+        app.attach(&ctx);
+        crate::demo::populate(&mut app);
+        app.apply(Action::Open(Page::Settings), &ctx);
+        app.page_scroll = Some((Page::Settings.encode(), 300.0));
+        app.restore_scroll = app.page_scroll.clone();
+        for _ in 0..3 {
+            draw(&ctx, &mut app);
+        }
+        assert_eq!(app.page_scroll.as_ref().map(|at| at.1), Some(300.0));
+
+        let ctx = egui::Context::default();
+        app.attach(&ctx);
+        for _ in 0..3 {
+            draw(&ctx, &mut app);
+        }
+        assert_eq!(app.page_scroll.as_ref().map(|at| at.1), Some(300.0));
+    }
+
     #[test]
     fn side_panels_give_the_top_bar_its_room_and_keep_their_widths() {
         fn draw(ctx: &egui::Context, app: &mut App, width: f32) -> Vec<egui::ViewportCommand> {
@@ -15493,6 +15649,41 @@ mod tests {
         assert_eq!(page_offset, 0.0, "the enclosing page must stay put");
     }
 
+    /// A song playing from one playlist is an ordinary row in another that
+    /// also holds it (#1106). Outside playlists, and while nothing says where
+    /// the song plays from, every copy still shows it.
+    #[test]
+    fn the_playing_song_marks_only_the_playlist_it_plays_from() {
+        let mut app = headless_app();
+        let song = "spotify:track:both";
+        let playlist = |id: &str| RowContext::Context {
+            uri: format!("spotify:playlist:{id}"),
+            editable_playlist: None,
+        };
+        let view = RowContext::View {
+            uris: Arc::from([song.to_string()]),
+            context_uri: "spotify:playlist:other".into(),
+            editable_playlist: None,
+        };
+        let album = RowContext::Context {
+            uri: "spotify:album:same".into(),
+            editable_playlist: None,
+        };
+        assert!(app.row_is_played_copy(&playlist("other"), 3, song));
+
+        app.assumed_context = Some(AssumedContext {
+            uri: "spotify:playlist:source".into(),
+            shuffle: None,
+            at: Instant::now(),
+        });
+
+        assert!(app.row_is_played_copy(&playlist("source"), 0, song));
+        assert!(!app.row_is_played_copy(&playlist("other"), 3, song));
+        assert!(!app.row_is_played_copy(&view, 0, song));
+        assert!(app.row_is_played_copy(&album, 0, song));
+        assert!(app.row_is_played_copy(&RowContext::Uris(Arc::from([])), 0, song));
+    }
+
     /// A song started outside a playlist must turn off the playlist's
     /// sidebar light at once, even while Spotify still reports the old
     /// context from before the click.
@@ -15567,6 +15758,279 @@ mod tests {
         assert_eq!(
             app.playing_context_uri().as_deref(),
             Some("spotify:playlist:phone")
+        );
+    }
+
+    /// #1069: an artist's compilations have a category of their own, which
+    /// asks Spotify for exactly those releases.
+    #[test]
+    fn compilations_load_under_their_own_discography_category() {
+        let mut app = headless_app();
+        let ctx = egui::Context::default();
+        app.artist_pages
+            .insert("art".into(), crate::model::ArtistPage::default());
+        app.apply(
+            Action::SetDiscographyFilter {
+                artist_id: "art".into(),
+                filter: DiscographyFilter::Compilations,
+            },
+            &ctx,
+        );
+        let page = &app.artist_pages["art"];
+        assert_eq!(page.filter, DiscographyFilter::Compilations);
+        assert!(page.albums["compilation"].loading);
+        assert!(DiscographyFilter::ALL.contains(&DiscographyFilter::Compilations));
+    }
+
+    /// #856: a resumed song its context no longer holds plays by itself at
+    /// its saved place, with the saved queue after it, instead of the
+    /// context's first song at that position.
+    #[test]
+    fn a_resumed_song_outside_its_context_plays_on_its_own() {
+        let local = |uri: &str| LocalState {
+            connected: true,
+            playback: Playback::Playing,
+            track: Some(crate::player::LocalTrack {
+                uri: uri.into(),
+                duration_ms: 240_000,
+                ..Default::default()
+            }),
+            track_sequence: 1,
+            ..Default::default()
+        };
+        // #given an app restarted on a recommendation after a playlist
+        let mut app = headless_app();
+        app.local_ready = true;
+        app.local = LocalState {
+            connected: true,
+            ..Default::default()
+        };
+        app.resume_context = Some("spotify:playlist:finished".into());
+        app.resume_track = Some("spotify:track:recommended".into());
+        app.resume_position_ms = 83_456;
+        app.resume_queue = vec!["spotify:track:queued".into()];
+
+        // #when Play falls back to the playlist's first song
+        app.toggle_play();
+        app.handle_local(local("spotify:track:first"));
+
+        // #then the song alone loads at its saved place
+        let loads: Vec<_> = app
+            .backend
+            .take_player_commands()
+            .into_iter()
+            .filter_map(|command| match command {
+                PlayerCommand::Load(spec) => Some(spec),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(loads.len(), 2, "the context, then the song");
+        assert_eq!(
+            loads[0].offset_uri.as_deref(),
+            Some("spotify:track:recommended")
+        );
+        assert_eq!(
+            loads[1].context_uri.as_deref(),
+            Some("spotify:track:recommended")
+        );
+        assert_eq!(loads[1].position_ms, 83_456);
+        assert_eq!(app.playing_context_uri(), None);
+        assert_eq!(
+            app.resume_track.as_deref(),
+            Some("spotify:track:recommended")
+        );
+        assert_eq!(app.resume_queue, ["spotify:track:queued"]);
+
+        // #and the saved queue follows the song once it starts
+        app.handle_local(local("spotify:track:recommended"));
+        assert_eq!(app.manual_queue, ["spotify:track:queued"]);
+        assert!(app.backend.take_player_commands().is_empty());
+    }
+
+    /// Next, pressed while a resume loads, is not a detour to undo.
+    #[test]
+    fn next_during_a_resume_keeps_the_song_it_moves_to() {
+        let mut app = headless_app();
+        let ctx = egui::Context::default();
+        app.local_ready = true;
+        app.local = LocalState {
+            connected: true,
+            ..Default::default()
+        };
+        app.resume_context = Some("spotify:playlist:pl1".into());
+        app.resume_track = Some("spotify:track:saved".into());
+        app.toggle_play();
+        app.backend.take_player_commands();
+        app.local.playback = Playback::Loading;
+        app.local.track = Some(crate::player::LocalTrack {
+            uri: "spotify:track:saved".into(),
+            ..Default::default()
+        });
+        app.apply(Action::Next, &ctx);
+        app.handle_local(LocalState {
+            connected: true,
+            playback: Playback::Playing,
+            track: Some(crate::player::LocalTrack {
+                uri: "spotify:track:after".into(),
+                ..Default::default()
+            }),
+            track_sequence: 2,
+            ..Default::default()
+        });
+        assert!(
+            !app.backend
+                .take_player_commands()
+                .iter()
+                .any(|command| matches!(command, PlayerCommand::Load(_)))
+        );
+    }
+
+    /// #1013: closing keeps the playlist a song plays from when nothing
+    /// reports it any more, and Play picks that playlist up again even when
+    /// Spotify's last state has the song without it.
+    #[test]
+    fn the_playing_playlist_survives_a_restart_without_a_reported_context() {
+        // #given a paused song from a sorted playlist, long after the click
+        let mut app = headless_app();
+        app.local = LocalState {
+            connected: true,
+            playback: Playback::Paused,
+            track: Some(crate::player::LocalTrack {
+                uri: "spotify:track:song".into(),
+                duration_ms: 240_000,
+                ..Default::default()
+            }),
+            position_ms: 5_000,
+            ..Default::default()
+        };
+        app.resume_context = Some("spotify:playlist:kept".into());
+        app.resume_track = Some("spotify:track:song".into());
+        app.assumed_context = Some(AssumedContext {
+            uri: "spotify:playlist:kept".into(),
+            shuffle: None,
+            at: Instant::now() - ASSUMED_CONTEXT_HOLD - Duration::from_secs(1),
+        });
+
+        // #when the session is saved
+        app.save_session();
+
+        // #then the playlist is kept
+        assert_eq!(app.resume_context.as_deref(), Some("spotify:playlist:kept"));
+
+        // #when a restart shows Spotify's last state of that song, context lost
+        app.local = LocalState {
+            connected: true,
+            ..Default::default()
+        };
+        app.assumed_context = None;
+        app.local_ready = true;
+        app.local_device_id = Some("this-computer".into());
+        app.remote = Some(RemoteSnapshot {
+            state: PlaybackState {
+                device: Some(Device {
+                    id: Some("this-computer".into()),
+                    ..Default::default()
+                }),
+                item: Some(PlayableItem::Track(Track {
+                    uri: "spotify:track:song".into(),
+                    ..Default::default()
+                })),
+                progress_ms: Some(5_000),
+                ..Default::default()
+            },
+            received_at: Instant::now(),
+        });
+        app.backend.take_player_commands();
+        app.toggle_play();
+
+        // #then Play starts the playlist at that song
+        let load = app
+            .backend
+            .take_player_commands()
+            .into_iter()
+            .find_map(|command| match command {
+                PlayerCommand::Load(spec) => Some(spec),
+                _ => None,
+            })
+            .expect("Play loads the song");
+        assert_eq!(load.context_uri.as_deref(), Some("spotify:playlist:kept"));
+        assert_eq!(load.offset_uri.as_deref(), Some("spotify:track:song"));
+        assert_eq!(load.position_ms, 5_000);
+
+        // A song played on its own stays on its own.
+        let mut app = headless_app();
+        app.local = LocalState {
+            connected: true,
+            playback: Playback::Paused,
+            track: Some(crate::player::LocalTrack {
+                uri: "spotify:track:other".into(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        app.resume_context = Some("spotify:playlist:kept".into());
+        app.resume_track = Some("spotify:track:song".into());
+        app.save_session();
+        assert_eq!(app.resume_context, None);
+    }
+
+    /// #1121: a poll that arrives after the click but still names the song
+    /// from before it keeps its old context to itself, playing or paused.
+    /// Once a poll names the playing song, Spotify's context stands.
+    #[test]
+    fn a_lagging_poll_does_not_light_the_playlist_left_behind() {
+        // #given a song from an album, started after a playlist's song
+        let mut app = headless_app();
+        app.local = LocalState {
+            connected: true,
+            playback: Playback::Playing,
+            track: Some(crate::player::LocalTrack {
+                uri: "spotify:track:album-song".into(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        app.assumed_context = Some(AssumedContext {
+            uri: "spotify:album:here".into(),
+            shuffle: None,
+            at: Instant::now() - ASSUMED_CONTEXT_HOLD - Duration::from_secs(1),
+        });
+        let poll = |song: &str| RemoteSnapshot {
+            state: PlaybackState {
+                context: Some(crate::api::models::Context {
+                    uri: "spotify:playlist:left".into(),
+                    ..Default::default()
+                }),
+                item: Some(PlayableItem::Track(Track {
+                    uri: song.into(),
+                    ..Default::default()
+                })),
+                is_playing: true,
+                ..Default::default()
+            },
+            received_at: Instant::now(),
+        };
+
+        // #when a late poll still tells the story from before the click
+        app.remote = Some(poll("spotify:track:playlist-song"));
+
+        // #then the album stays lit, and pausing changes nothing
+        assert_eq!(
+            app.playing_context_uri().as_deref(),
+            Some("spotify:album:here")
+        );
+        app.local.playback = Playback::Paused;
+        assert_eq!(
+            app.playing_context_uri().as_deref(),
+            Some("spotify:album:here")
+        );
+
+        // #when a poll names the playing song, its context is believed
+        app.local.playback = Playback::Playing;
+        app.remote = Some(poll("spotify:track:album-song"));
+        assert_eq!(
+            app.playing_context_uri().as_deref(),
+            Some("spotify:playlist:left")
         );
     }
 
@@ -21605,6 +22069,49 @@ mod tests {
         app.search.query = query.into();
         app.actions.push(Action::Search(query.into()));
         app.apply_actions(&egui::Context::default());
+    }
+
+    /// Enter on a Spotify link opens its page instead of searching for the
+    /// link's text, and the pause before Enter does not search for it either
+    /// (#1027).
+    #[test]
+    fn a_link_in_the_search_field_opens_its_page() {
+        let mut app = test_app("search-link");
+        app.user = Some(User {
+            id: "me".into(),
+            ..User::default()
+        });
+        app.settings.search_history = vec!["older".into()];
+        let link = "https://open.spotify.com/album/06fgi8E0RLEyzgh2c9IYbp?si=shared";
+
+        // #when the link is pasted and the debounce passes
+        app.search.query = link.into();
+        app.search.typed_at = Some(Instant::now() - SEARCH_DEBOUNCE);
+        app.tick(&egui::Context::default());
+
+        // #then it is not searched for
+        assert_eq!(app.search.committed, "");
+
+        // #when Enter is pressed
+        submit_search(&mut app, link);
+
+        // #then the album opens and the link is not a recent search
+        assert_eq!(*app.page(), Page::Album("06fgi8E0RLEyzgh2c9IYbp".into()));
+        assert_eq!(app.search.committed, "");
+        assert_eq!(app.search.typed_at, None);
+        assert_eq!(app.settings.search_history, ["older"]);
+    }
+
+    /// Text that only looks like a link is still a search.
+    #[test]
+    fn words_after_a_link_are_searched_for() {
+        let mut app = test_app("search-link-words");
+        let query = "https://open.spotify.com/album/06fgi8E0RLEyzgh2c9IYbp is great";
+
+        submit_search(&mut app, query);
+
+        assert_eq!(*app.page(), Page::Search);
+        assert_eq!(app.search.committed, query);
     }
 
     #[test]
@@ -33834,9 +34341,13 @@ mod tests {
             .push(Action::OpenLink("spotify:track:t1".into()));
         app.apply_actions(&ctx);
 
-        // #then its album's page opens
+        // #then its album's page opens, waiting to pick the song
         assert_eq!(*app.page(), Page::Album("al1".into()));
         assert_eq!(app.pending_link, None);
+        assert!(
+            app.linked_song(app.page())
+                .is_some_and(|uris| uris.contains(&"spotify:track:t1".to_string()))
+        );
 
         // #when a song still unknown is linked
         app.actions

@@ -92,7 +92,7 @@ it runs alongside upstream Spotifast without sharing anything.
 
 ## Start listening
 
-1. **Premium:** make your own free Spotify app, as the sign-in screen
+1. **Premium:** register Spotifast with Spotify, as the sign-in screen
    shows: in the [Spotify developer dashboard](https://developer.spotify.com/dashboard),
    create an app with the redirect URI `http://127.0.0.1:8989/login` and
    **Web API** ticked, paste its Client ID into Spotifast Free and choose

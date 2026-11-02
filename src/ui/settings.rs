@@ -506,41 +506,44 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
     let sign_out = gettext(locale, "Sign out");
     let account_rows = [
         RowText::new(
-            gettext(locale, "Personal Spotify app"),
+            gettext(locale, "Spotify registration"),
             if app.shared_grant && !in_use {
                 gettext(
                     locale,
-                    "You're still signed in through the shared app Spotifast used before, which Spotify can stop accepting at any time. Set up your own app to keep listening.",
+                    "You're still on the shared sign-in Spotifast used before, which Spotify can stop accepting at any time. Register Spotifast to keep listening.",
                 )
             } else {
                 gettext(
                     locale,
-                    "Spotifast signs in through your own free Spotify app.",
+                    "Spotifast connects with the Client ID you registered with Spotify.",
                 )
             },
         ),
         RowText::new(
-            gettext(locale, "Create an app"),
+            gettext(locale, "Register Spotifast"),
             gettext(
                 locale,
-                "Create one for free in Spotify's developer dashboard.",
+                "It takes about two minutes in Spotify's developer dashboard.",
             ),
         )
         .when(!in_use),
         RowText::new(
-            gettext(locale, "Personal app ready"),
+            gettext(locale, "Spotifast registered"),
             if app.shared_grant {
                 gettext(
                     locale,
-                    "Supported requests use your app. Other requests use the shared app.",
+                    "Supported requests use your Client ID. Other requests use the shared sign-in.",
                 )
             } else {
-                gettext(locale, "Spotifast uses your app for Spotify's Web API.")
+                gettext(
+                    locale,
+                    "Spotifast uses your Client ID for Spotify's Web API.",
+                )
             },
         )
         .when(in_use),
         RowText::new(
-            gettext(locale, "Authorize your personal app"),
+            gettext(locale, "Authorize your Client ID"),
             gettext(
                 locale,
                 "Spotify opens in your browser to verify the account.",
@@ -1945,7 +1948,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                     } else {
                         current
                     };
-                    if let Some(picked) = widgets::chips(ui, &palette, &options, current) {
+                    if let Some(picked) = widgets::wrapped_chips(ui, &palette, &options, current) {
                         app.actions.push(Action::SetSkin(
                             picked
                                 .checked_sub(1)
@@ -1985,7 +1988,9 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                         let current = showing
                             .filter(|index| choices[*index].kind == SkinKind::WindowsMediaPlayer)
                             .unwrap_or(usize::MAX);
-                        if let Some(picked) = widgets::chips(ui, &palette, &options, current) {
+                        if let Some(picked) =
+                            widgets::wrapped_chips(ui, &palette, &options, current)
+                        {
                             app.actions
                                 .push(Action::SetSkin(Some(choices[picked].name.clone())));
                         }
@@ -2324,7 +2329,7 @@ pub fn show(app: &mut App, ui: &mut egui::Ui) {
                 .unwrap_or(usize::MAX);
             let eq_extra_visible = equalizer_rows[1].matches(&needle, &equalizer);
             if eq_extra_visible {
-                if let Some(picked) = widgets::chips(ui, &palette, &names, current) {
+                if let Some(picked) = widgets::wrapped_chips(ui, &palette, &names, current) {
                     app.actions.push(match picked.checked_sub(built_in) {
                         Some(user) => Action::ApplyUserEqPreset(user_presets[user].name.clone()),
                         None => Action::ApplyEqPreset(picked),

@@ -193,3 +193,14 @@ files = ["tests/branding.rs"]
 from = "for name in [\"Spotifast\", "
 to = "for name in [\"Spotifast Free\", "
 files = ["tests/branding.rs"]
+
+# Demo tests read the interface as shown, after src/i18n.rs brands it.
+[[rule]]
+from = "\"Register Spotifast\""
+to = "\"Register Spotifast Free\""
+files = ["src/demo.rs"]
+
+[[rule]]
+from = "\"Spotifast registered\""
+to = "\"Spotifast Free registered\""
+files = ["src/demo.rs"]
