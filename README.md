@@ -43,11 +43,13 @@ open.spotify.com in macOS's built-in WebKit and sends it the same Spotify
 Connect requests the web player sends for its own buttons. Spotify plays
 every song and every ad itself, with its own DRM and restrictions.
 
-| On Free | |
+| What | On a Free account |
 |---|---|
-| **Works** | Play a playlist, album, song, list of songs or Liked Songs; next, previous, seek, shuffle, repeat, volume, add to queue, and Spotify's radio |
+| **Plays** | A playlist, album, song, list of songs or Liked Songs; next, previous, seek, shuffle, repeat, volume (it follows the slider as you drag), add to queue, and Spotify's radio |
+| **Shows** | Play counts on artist and album pages, artist followers and monthly listeners, Spotify's own lyrics (LRCLIB as fallback), playlist folders, EPs labelled as EPs, who added each song to a shared playlist, and audiobooks apart from podcasts |
+| **Edits** | Create, rename and describe playlists, add, move and remove songs, change a cover, save albums, shows and episodes, follow playlists |
 | **Ads** | Played by Spotify and shown as the playing item; skip and seek are held while one plays, as on Spotify |
-| **Hidden** | Other devices and Cast, queue editing and Play next, local files, the equalizer, visualizers and MilkDrop, playback engine settings, pre-save. Spotify plays the audio inside WebKit, so Spotifast Free cannot hear or route it |
+| **Hidden** | Other devices and Cast, queue editing and Play next, local files, Soloist, the equalizer, visualizers and MilkDrop, playback engine settings, upcoming releases and pre-save. Spotify plays the audio inside WebKit, so Spotifast Free cannot hear or route it |
 | **Not yet** | Free playback on Windows and Linux. Those builds play Premium only, like Spotifast |
 
 The helper keeps its own Spotify sign-in, separate from your browsers. It
@@ -58,9 +60,14 @@ and [helper](experiments/macos-playback-host/README.md).
 
 ## Install
 
-There are no prebuilt downloads of Spotifast Free yet. The Homebrew, AUR
-and download-page builds are upstream Spotifast, which plays Premium only.
-Build Spotifast Free.app from source on macOS 14 or later with Rust and the
+Download Spotifast Free from the
+[latest release](https://github.com/skanderkaroui/spotifast-free/releases/latest):
+a Mac `.dmg`, Windows `.msi`, and Linux `.tar.gz` and AppImage. The Mac app
+is not notarized yet; the first time, right-click it in Applications and
+choose **Open**. The Homebrew, AUR and download-page builds are upstream
+Spotifast, which plays Premium only.
+
+Or build Spotifast Free.app from source on macOS 14 or later with Rust and the
 Xcode command-line tools:
 
 ```sh
