@@ -1848,4 +1848,39 @@ mod live {
             "{acks:?}"
         );
     }
+
+    /// A Free play reaches Spotify and its page starts the song.
+    #[test]
+    #[ignore = "needs the helper signed in to Spotify"]
+    fn a_free_play_starts_the_song() {
+        let _ = log::set_logger(&Capture);
+        log::set_max_level(log::LevelFilter::Info);
+        let mut player = super::WebPlayer::start(
+            std::sync::Arc::new(|_| {}),
+            std::sync::Arc::new(|_| {}),
+            None,
+        )
+        .unwrap();
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        runtime.block_on(player.query(&crate::free_reads::profile_query()));
+        let load = crate::player::PlayerCommand::Load(crate::player::LoadSpec {
+            uris: vec!["spotify:track:4cOdK2wGLETKBW3PvgPWqT".into()],
+            play: true,
+            ..Default::default()
+        });
+        assert!(player.command(&load).unwrap().is_ok());
+        std::thread::sleep(std::time::Duration::from_secs(20));
+        let _ = player.command(&crate::player::PlayerCommand::Toggle);
+        std::thread::sleep(std::time::Duration::from_secs(2));
+        player.shutdown();
+        let lines = LINES.lock().unwrap().clone();
+        eprintln!("{lines:#?}");
+        assert!(
+            lines.iter().any(|l| l.contains("\"playing\"")),
+            "the page never played"
+        );
+    }
 }
