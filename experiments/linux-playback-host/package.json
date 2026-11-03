@@ -1,0 +1,11 @@
+{
+  "name": "spotifast-free-playback-helper",
+  "version": "0.17.0",
+  "private": true,
+  "description": "Spotifast Free's Linux playback helper: Spotify's web player in castLabs Electron.",
+  "main": "main.js",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "https://github.com/castlabs/electron-releases#v44.9.3+wvcus"
+  }
+}
