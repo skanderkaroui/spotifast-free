@@ -4415,6 +4415,14 @@ impl Worker {
                 self.emit(Event::Playback(LocalPlayback::Ready {
                     device_id: crate::web_player::DEVICE_ID.into(),
                 }));
+                // Plays wait for local playback to say it is connected, and
+                // the helper only reports changes: say so now, or a helper
+                // started at sign-in leaves every play held.
+                self.emit(Event::Local(Box::new(LocalState {
+                    connected: true,
+                    volume: u16::MAX,
+                    ..LocalState::default()
+                })));
                 true
             }
             Err(error) => {
@@ -10033,6 +10041,28 @@ mod authorization_tests {
             .unwrap();
         worker.on_account_checked(None);
         assert_eq!(worker.premium, Some(false));
+    }
+
+    /// A helper started for a Free sign-in says local playback is connected,
+    /// since the app holds plays until it is; the helper itself only reports
+    /// changes, so without this every play waited forever.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_started_helper_reports_local_playback_connected() {
+        let (runtime, mut worker, events) = worker("helper-connected");
+        let _entered = runtime.enter();
+        // Safety: set before the helper is looked up, in this test only.
+        unsafe { std::env::set_var("SPOTIFAST_PLAYBACK_HELPER", "/bin/cat") };
+        assert!(worker.ensure_web_player());
+        assert!(
+            events
+                .try_iter()
+                .any(|event| matches!(event, Event::Local(state) if state.connected)),
+            "the app is told local playback is connected"
+        );
+        if let Some(mut player) = worker.web_player.take() {
+            player.shutdown();
+        }
     }
 
     /// A Free plan that turns out Premium withdraws the helper from the app,
