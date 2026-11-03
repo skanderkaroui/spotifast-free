@@ -2272,6 +2272,13 @@ impl Worker {
                         self.stop_soloist().await;
                         continue;
                     }
+                    // A rate-limited sign-in can still be unverified here.
+                    // Saying so beats a button that seems to do nothing (#1137).
+                    if enabled && self.api.account().is_none() {
+                        self.emit(Event::Soloist(crate::soloist::Update::Status(
+                            crate::soloist::Status::Failed(crate::soloist::Failure::NotSignedIn),
+                        )));
+                    }
                     if enabled && let Some(account) = self.api.account() {
                         let commands = self.commands.clone();
                         let generation = self.soloist_generation;
@@ -7355,10 +7362,19 @@ async fn spotify_lyrics(
     cache_dir: &std::path::Path,
 ) -> Option<crate::lyrics::Lyrics> {
     let id = uri.strip_prefix("spotify:track:")?;
-    let path = cache_dir.join(format!("spotify-{id}.json"));
+    // Answers from before the request named the cover are kept only for what
+    // they found: nearly all their "none"s were the request's doing.
+    let path = cache_dir.join(format!("spotify-v2-{id}.json"));
+    let before = cache_dir.join(format!("spotify-{id}.json"));
     if let Some(cached) = crate::lyrics::cached(&path) {
         return cached;
     }
+    if let Some(Some(found)) = crate::lyrics::cached(&before) {
+        return Some(found);
+    }
+    let found_before = || {
+        crate::lyrics::previously_found(&path).or_else(|| crate::lyrics::previously_found(&before))
+    };
     // A Free sign-in reads them through its web player's page.
     if let Some(read) = free {
         return match read.await {
@@ -7379,12 +7395,12 @@ async fn spotify_lyrics(
             // An outage keeps what was found before, as below.
             Err(error) => {
                 log::debug!("spotify lyrics unavailable through the web player: {error}");
-                crate::lyrics::previously_found(&path)
+                found_before()
             }
         };
     }
     let Some(engine) = engine else {
-        return crate::lyrics::previously_found(&path);
+        return found_before();
     };
     match engine.lyrics_json(uri).await {
         Ok(json) => {
@@ -7394,7 +7410,7 @@ async fn spotify_lyrics(
         }
         Err(error) => {
             log::debug!("spotify lyrics unavailable: {error:#}");
-            crate::lyrics::previously_found(&path)
+            found_before()
         }
     }
 }
@@ -11264,10 +11280,10 @@ mod tests {
         ]}});
         let found = spotify_lyrics(None, read(Ok(whole.clone())), "spotify:track:one", &root).await;
         assert_eq!(found.as_ref().map(|lyrics| lyrics.lines.len()), Some(1));
-        assert!(crate::lyrics::cached(&root.join("spotify-one.json")).is_some());
+        assert!(crate::lyrics::cached(&root.join("spotify-v2-one.json")).is_some());
 
         // Stale cache, then an outage: the old lyrics stay.
-        let path = root.join("spotify-two.json");
+        let path = root.join("spotify-v2-two.json");
         crate::lyrics::store(&path, &crate::lyrics::from_spotify(&whole));
         let stale = std::time::SystemTime::now() - Duration::from_secs(60 * 60 * 24 * 60);
         std::fs::File::options()
@@ -11293,7 +11309,46 @@ mod tests {
                 .await
                 .is_none()
         );
-        assert!(crate::lyrics::cached(&root.join("spotify-three.json")).is_none());
+        assert!(crate::lyrics::cached(&root.join("spotify-v2-three.json")).is_none());
+    }
+
+    /// Old "none"s stop counting, old finds keep working, and a new "none"
+    /// asks again after a week.
+    #[tokio::test]
+    async fn spotify_lyrics_answers_are_versioned_and_a_none_is_short_lived() {
+        let root = std::env::temp_dir().join(format!(
+            "spotifast-spotify-lyrics-v2-{}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&root).unwrap();
+        let found = crate::lyrics::from_text("[00:01.00] A test line");
+
+        crate::lyrics::store(&root.join("spotify-kept.json"), &found);
+        assert_eq!(
+            spotify_lyrics(None, None, "spotify:track:kept", &root).await,
+            found
+        );
+
+        let old_none = root.join("spotify-gone.json");
+        crate::lyrics::store(&old_none, &None);
+        assert_eq!(crate::lyrics::cached(&old_none), Some(None), "as it was");
+        assert!(
+            spotify_lyrics(None, None, "spotify:track:gone", &root)
+                .await
+                .is_none()
+        );
+
+        let none = root.join("spotify-v2-none.json");
+        crate::lyrics::store(&none, &None);
+        assert_eq!(crate::lyrics::cached(&none), Some(None), "fresh");
+        let eight_days = std::time::SystemTime::now() - Duration::from_secs(60 * 60 * 24 * 8);
+        std::fs::File::options()
+            .write(true)
+            .open(&none)
+            .unwrap()
+            .set_times(std::fs::FileTimes::new().set_modified(eight_days))
+            .unwrap();
+        assert_eq!(crate::lyrics::cached(&none), None, "and gone in a week");
         std::fs::remove_dir_all(root).unwrap();
     }
 

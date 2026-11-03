@@ -18,7 +18,7 @@ pub(super) const WINAMP_SHORTCUT: &str = platform_shortcut("Ctrl+M", "Cmd+Shift+
 pub(super) const MILKDROP_SHORTCUT: &str = platform_shortcut("Ctrl+Shift+K", "Cmd+Shift+K");
 
 pub fn handle(app: &mut App, ctx: &egui::Context) {
-    if app.show_soloist_onboarding() || app.soloist_waiting() {
+    if app.soloist_view() != crate::app::SoloistView::App {
         // Setup owns navigation, but the window must still close and quit.
         // Consume shifted variants first so Cmd+Shift+Q never becomes Quit.
         ctx.input_mut(|input| {
@@ -152,8 +152,20 @@ pub fn handle(app: &mut App, ctx: &egui::Context) {
             key(
                 Modifiers::NONE,
                 Key::F,
-                Action::SetLyricsFullscreen(app.lyrics_fullscreen.is_none()),
+                if app.milkdrop_framed() {
+                    Action::MilkdropFullscreen
+                } else {
+                    Action::SetLyricsFullscreen(app.lyrics_fullscreen.is_none())
+                },
             );
+            #[cfg(feature = "milkdrop")]
+            if app.lyrics_fullscreen.is_some() {
+                key(Modifiers::NONE, Key::V, Action::ToggleLyricsMilkdrop);
+                if app.milkdrop_behind_lyrics() {
+                    key(Modifiers::NONE, Key::N, Action::MilkdropEffect(1));
+                    key(Modifiers::NONE, Key::P, Action::MilkdropEffect(-1));
+                }
+            }
         }
     });
     if !editing_text
@@ -223,9 +235,16 @@ pub fn shortcuts_for(
     visualizers: bool,
 ) -> Vec<(Cow<'static, str>, Cow<'static, str>)> {
     let mut all = shortcuts(locale);
-    if !visualizers && let Some(start) = all.iter().position(|(keys, _)| keys == MILKDROP_SHORTCUT)
-    {
-        all.drain(start..(start + MILKDROP_ROWS).min(all.len()));
+    if !visualizers {
+        if let Some(start) = all.iter().position(|(keys, _)| keys == MILKDROP_SHORTCUT) {
+            all.drain(start..(start + MILKDROP_ROWS).min(all.len()));
+        }
+        // Full screen lyrics' MilkDrop keys, matched in the shown language.
+        let behind = [
+            gettext(locale, "Full screen lyrics: MilkDrop behind the words"),
+            gettext(locale, "Full screen lyrics: next or previous preset"),
+        ];
+        all.retain(|(_, what)| !behind.contains(what));
     }
     all
 }
@@ -315,6 +334,16 @@ pub fn shortcuts(locale: Locale) -> Vec<(Cow<'static, str>, Cow<'static, str>)> 
         (keys("Q"), gettext(locale, "Show the queue")),
         (keys("L"), gettext(locale, "Show the lyrics")),
         (keys("F"), gettext(locale, "Full screen lyrics")),
+        #[cfg(feature = "milkdrop")]
+        (
+            keys("V"),
+            gettext(locale, "Full screen lyrics: MilkDrop behind the words"),
+        ),
+        #[cfg(feature = "milkdrop")]
+        (
+            keys("N  /  P"),
+            gettext(locale, "Full screen lyrics: next or previous preset"),
+        ),
         (keys("Esc"), gettext(locale, "Lyrics: leave full screen")),
         (
             keys("Shift+↑  /  Shift+↓"),
@@ -664,19 +693,16 @@ mod tests {
         }
     }
 
-    /// Without visualizers the six MilkDrop rows go, and only those.
+    /// Without visualizers the MilkDrop rows go, and only those.
     #[test]
     fn milkdrop_shortcuts_are_left_out_without_visualizers() {
         let all = shortcuts_for(Locale::English, true);
         let free = shortcuts_for(Locale::English, false);
-        assert_eq!(all.len(), free.len() + MILKDROP_ROWS);
+        let gone: Vec<_> = all.iter().filter(|row| !free.contains(row)).collect();
+        assert_eq!(all.len(), free.len() + gone.len());
         assert!(free.iter().all(|(_, what)| !what.contains("MilkDrop")));
-        assert_eq!(
-            all.iter()
-                .filter(|(_, what)| what.contains("MilkDrop"))
-                .count(),
-            MILKDROP_ROWS
-        );
+        // The mini player's MilkDrop rows, and full screen lyrics' two.
+        assert_eq!(gone.len(), MILKDROP_ROWS + 2, "{gone:?}");
     }
 
     #[test]

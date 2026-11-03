@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Spotifast\n"
 "Report-Msgid-Bugs-To: https://github.com/crmne/spotifast/issues/new?"
 "template=translation.yml\n"
-"POT-Creation-Date: 2026-11-02 19:27+0100\n"
+"POT-Creation-Date: 2026-11-03 10:26+0100\n"
 "PO-Revision-Date: 2026-09-09 13:30+0000\n"
 "Last-Translator: Spotifast contributors\n"
 "Language-Team: Traditional Chinese\n"
@@ -28,13 +28,13 @@ msgstr "暫停 {name}"
 msgid "Play {name}"
 msgstr "播放 {name}"
 
-#: src/ui/sidebar.rs:302 src/app.rs:3907 src/app.rs:25035
+#: src/ui/sidebar.rs:302 src/app.rs:4164 src/app.rs:26213
 #: src/ui/collection.rs:2326 src/ui/collection.rs:2555
 msgid "Playlist"
 msgstr "播放清單"
 
-#: src/ui/sidebar.rs:312 src/ui/friends.rs:304 src/app.rs:3881 src/app.rs:25040
-#: src/ui/collection.rs:2548 src/ui/home.rs:93 src/ui/keys.rs:377
+#: src/ui/sidebar.rs:312 src/ui/friends.rs:304 src/app.rs:4138 src/app.rs:26218
+#: src/ui/collection.rs:2548 src/ui/home.rs:93 src/ui/keys.rs:399
 #: src/ui/winamp/playlist.rs:653
 msgid "Liked Songs"
 msgstr "已按讚的歌曲"
@@ -74,12 +74,12 @@ msgstr "資料夾"
 msgid "Playlist • {owner}"
 msgstr "播放清單 • {owner}"
 
-#: src/ui/sidebar.rs:1045 src/i18n.rs:458 src/i18n.rs:461 src/ui/keys.rs:373
+#: src/ui/sidebar.rs:1045 src/i18n.rs:458 src/i18n.rs:461 src/ui/keys.rs:395
 #: src/ui/topbar.rs:257
 msgid "Home"
 msgstr "首頁"
 
-#: src/ui/sidebar.rs:1056 src/app.rs:8915 src/ui/keys.rs:356
+#: src/ui/sidebar.rs:1056 src/app.rs:9656 src/ui/keys.rs:378
 msgid "Search"
 msgstr "搜尋"
 
@@ -111,7 +111,7 @@ msgstr "搜尋音樂庫"
 msgid "Library"
 msgstr "音樂庫"
 
-#: src/ui/sidebar.rs:1172 src/app.rs:8889 src/model.rs:807 src/ui/search.rs:668
+#: src/ui/sidebar.rs:1172 src/app.rs:9630 src/model.rs:807 src/ui/search.rs:668
 msgid "Playlists"
 msgstr "播放清單"
 
@@ -139,7 +139,7 @@ msgstr "由你建立"
 msgid "Search in Your Library"
 msgstr "在音樂庫中搜尋"
 
-#: src/ui/sidebar.rs:1320 src/ui/widgets.rs:1215 src/app.rs:3942
+#: src/ui/sidebar.rs:1320 src/ui/widgets.rs:1215 src/app.rs:4199
 #: src/ui/artist.rs:267 src/ui/artist.rs:462 src/ui/home.rs:791
 #: src/ui/library.rs:101 src/ui/search.rs:159 src/ui/search.rs:491
 #: src/ui/winamp/playlist.rs:754
@@ -182,12 +182,12 @@ msgstr "釘選到頂端"
 msgid "Update Spotifast"
 msgstr "更新 Spotifast"
 
-#: src/i18n.rs:147 src/ui/settings.rs:1344
+#: src/i18n.rs:147 src/ui/settings.rs:1363
 msgid ""
 "Draw Spotifast's own title bar and window buttons instead of the desktop's."
 msgstr "使用 Spotifast 自己的標題列和視窗按鈕，而不是桌面環境提供的。"
 
-#: src/i18n.rs:155 src/ui/lyrics.rs:146 src/ui/lyrics.rs:163
+#: src/i18n.rs:155 src/ui/lyrics.rs:149 src/ui/lyrics.rs:166
 #: src/ui/artist.rs:328 src/ui/artist.rs:356 src/ui/collection.rs:785
 #: src/ui/collection.rs:1903 src/ui/collection.rs:2039
 #: src/ui/collection.rs:2065 src/ui/collection.rs:2129
@@ -197,7 +197,7 @@ msgstr "使用 Spotifast 自己的標題列和視窗按鈕，而不是桌面環�
 msgid "Spotifast will reconnect automatically when your connection returns."
 msgstr "連線恢復後，Spotifast 將自動重新連線。"
 
-#: src/i18n.rs:167 src/app.rs:1655
+#: src/i18n.rs:167 src/app.rs:1769
 msgid "Couldn't change how Spotifast starts with your computer."
 msgstr "無法變更 Spotifast 隨電腦啟動的方式。"
 
@@ -245,11 +245,11 @@ msgstr "{name}，資料夾，已展開"
 msgid "Click to change the visualizer"
 msgstr "點按以切換視覺效果"
 
-#: src/ui/player_bar.rs:440 src/ui/lyrics.rs:131 src/ui/lyrics.rs:677
+#: src/ui/player_bar.rs:440 src/ui/lyrics.rs:134 src/ui/lyrics.rs:808
 msgid "Nothing playing"
 msgstr "未在播放"
 
-#: src/ui/player_bar.rs:446 src/app.rs:10491
+#: src/ui/player_bar.rs:446 src/app.rs:11237
 msgid "Pick a song, album, or playlist"
 msgstr "選擇歌曲、專輯或播放清單"
 
@@ -276,8 +276,8 @@ msgstr "隨機播放"
 msgid "Previous"
 msgstr "上一首"
 
-#: src/ui/player_bar.rs:796 src/ui/lyrics.rs:462 src/ui/widgets.rs:2867
-#: src/ui/widgets.rs:2941 src/ui/widgets.rs:2969 src/app.rs:14527
+#: src/ui/player_bar.rs:796 src/ui/lyrics.rs:475 src/ui/widgets.rs:2867
+#: src/ui/widgets.rs:2941 src/ui/widgets.rs:2969 src/app.rs:15396
 #: src/ui/collection.rs:997
 msgid "Loading…"
 msgstr "載入中…"
@@ -306,36 +306,44 @@ msgstr "關閉重複播放"
 msgid "Playback position (%)"
 msgstr "播放進度 (%)"
 
-#: src/ui/player_bar.rs:975
+#: src/ui/player_bar.rs:986 src/ui/lyrics.rs:740
+msgid "Leave full screen (Esc)"
+msgstr "退出全螢幕 (Esc)"
+
+#: src/ui/player_bar.rs:988 src/ui/lyrics.rs:93 src/ui/keys.rs:329
+msgid "Full screen lyrics"
+msgstr "全螢幕歌詞"
+
+#: src/ui/player_bar.rs:999
 msgid "Volume (%)"
 msgstr "音量 (%)"
 
-#: src/ui/player_bar.rs:1007
+#: src/ui/player_bar.rs:1031
 msgid "Unmute"
 msgstr "取消靜音"
 
-#: src/ui/player_bar.rs:1009
+#: src/ui/player_bar.rs:1033
 msgid "Mute"
 msgstr "靜音"
 
-#: src/ui/player_bar.rs:1025
+#: src/ui/player_bar.rs:1049
 msgid "This device's volume can't be changed from Spotifast"
 msgstr "無法從 Spotifast 變更此裝置的音量"
 
-#: src/ui/player_bar.rs:1045 src/ui/devices.rs:414
+#: src/ui/player_bar.rs:1069 src/ui/devices.rs:414
 msgid "Connect to a device"
 msgstr "連接至裝置"
 
-#: src/ui/player_bar.rs:1064 src/ui/queue.rs:23 src/ui/queue.rs:79
+#: src/ui/player_bar.rs:1088 src/ui/queue.rs:23 src/ui/queue.rs:79
 #: src/ui/queue.rs:228
 msgid "Queue"
 msgstr "待播清單"
 
-#: src/ui/player_bar.rs:1092 src/ui/lyrics.rs:67 src/ui/lyrics.rs:600
+#: src/ui/player_bar.rs:1116 src/ui/lyrics.rs:70 src/ui/lyrics.rs:729
 msgid "Lyrics"
 msgstr "歌詞"
 
-#: src/ui/player_bar.rs:1112 src/ui/friends.rs:53
+#: src/ui/player_bar.rs:1136 src/ui/friends.rs:53
 msgid "Listening activity"
 msgstr "收聽動態"
 
@@ -343,8 +351,8 @@ msgstr "收聽動態"
 msgid "Recent"
 msgstr "最近播放"
 
-#: src/ui/queue.rs:92 src/ui/queue.rs:241 src/ui/lyrics.rs:78
-#: src/ui/friends.rs:65 src/ui/mod.rs:671 src/window.rs:35
+#: src/ui/queue.rs:92 src/ui/queue.rs:241 src/ui/lyrics.rs:81
+#: src/ui/friends.rs:65 src/ui/mod.rs:684 src/window.rs:35
 msgid "Close"
 msgstr "關閉"
 
@@ -399,20 +407,16 @@ msgstr "播放過的歌曲會顯示在這裡。"
 msgid "Load more"
 msgstr "載入更多"
 
-#: src/ui/lyrics.rs:90 src/ui/keys.rs:317
-msgid "Full screen lyrics"
-msgstr "全螢幕歌詞"
-
-#: src/ui/lyrics.rs:102 src/ui/lyrics.rs:623
+#: src/ui/lyrics.rs:105 src/ui/lyrics.rs:752
 msgctxt "lyrics"
 msgid "Follow"
 msgstr "跟隨"
 
-#: src/ui/lyrics.rs:132 src/ui/lyrics.rs:678
+#: src/ui/lyrics.rs:135 src/ui/lyrics.rs:809
 msgid "Play a song to see its lyrics."
 msgstr "播放歌曲以查看歌詞。"
 
-#: src/ui/lyrics.rs:143 src/ui/lyrics.rs:160 src/ui/artist.rs:325
+#: src/ui/lyrics.rs:146 src/ui/lyrics.rs:163 src/ui/artist.rs:325
 #: src/ui/artist.rs:353 src/ui/collection.rs:782 src/ui/collection.rs:1900
 #: src/ui/collection.rs:2036 src/ui/collection.rs:2062
 #: src/ui/collection.rs:2126 src/ui/collection.rs:2243
@@ -423,35 +427,32 @@ msgid "You're offline"
 msgstr "目前處於離線狀態"
 
 #. Translators: Keep {error} unchanged. It is the original failure detail.
-#: src/ui/lyrics.rs:171 src/ui/lyrics.rs:455 src/ui/lyrics.rs:691
+#: src/ui/lyrics.rs:174 src/ui/lyrics.rs:468 src/ui/lyrics.rs:822
 #, rust-format
 msgid "Couldn't fetch the lyrics: {error}"
 msgstr "無法取得歌詞：{error}"
 
-#: src/ui/lyrics.rs:177 src/ui/lyrics.rs:482 src/ui/lyrics.rs:697
-#: src/ui/settings.rs:416 src/ui/settings.rs:724
+#: src/ui/lyrics.rs:180 src/ui/lyrics.rs:495 src/ui/lyrics.rs:828
+#: src/ui/settings.rs:432 src/ui/settings.rs:743 src/ui/soloist.rs:476
+#: src/ui/soloist.rs:695 src/ui/soloist.rs:738 src/ui/soloist.rs:953
 msgid "Try again"
 msgstr "再試一次"
 
-#: src/ui/lyrics.rs:188 src/ui/lyrics.rs:448 src/ui/lyrics.rs:708
+#: src/ui/lyrics.rs:191 src/ui/lyrics.rs:461 src/ui/lyrics.rs:839
 msgid "No lyrics"
 msgstr "暫無歌詞"
 
-#: src/ui/lyrics.rs:189 src/ui/lyrics.rs:449 src/ui/lyrics.rs:709
+#: src/ui/lyrics.rs:192 src/ui/lyrics.rs:462 src/ui/lyrics.rs:840
 msgid "No lyrics found for this track."
 msgstr "未找到這首歌的歌詞。"
 
-#: src/ui/lyrics.rs:198 src/ui/lyrics.rs:444 src/ui/lyrics.rs:718
+#: src/ui/lyrics.rs:201 src/ui/lyrics.rs:457 src/ui/lyrics.rs:849
 msgid "Instrumental"
 msgstr "純音樂"
 
-#: src/ui/lyrics.rs:199 src/ui/lyrics.rs:445 src/ui/lyrics.rs:719
+#: src/ui/lyrics.rs:202 src/ui/lyrics.rs:458 src/ui/lyrics.rs:850
 msgid "No timed lyrics for this track."
 msgstr "這首歌沒有同步歌詞。"
-
-#: src/ui/lyrics.rs:611
-msgid "Leave full screen (Esc)"
-msgstr "退出全螢幕 (Esc)"
 
 #: src/ui/friends.rs:99
 msgid "Connect Spotify to see listening activity."
@@ -482,7 +483,7 @@ msgstr "接著播放"
 msgid "Add to queue"
 msgstr "加入待播清單"
 
-#: src/ui/widgets.rs:767 src/ui/widgets.rs:1088 src/ui/keys.rs:331
+#: src/ui/widgets.rs:767 src/ui/widgets.rs:1088 src/ui/keys.rs:353
 msgid "Remove from this playlist"
 msgstr "從這個播放清單中移除"
 
@@ -666,7 +667,7 @@ msgstr "播放次數"
 msgid "Sort by duration"
 msgstr "依長度排序"
 
-#: src/ui/widgets.rs:2980 src/app.rs:14742 src/app.rs:14756
+#: src/ui/widgets.rs:2980 src/app.rs:15611 src/app.rs:15625
 msgid "Network connection error. Check your connection."
 msgstr "網路連線錯誤。請檢查連線。"
 
@@ -674,7 +675,7 @@ msgstr "網路連線錯誤。請檢查連線。"
 msgid "Cut"
 msgstr "剪下"
 
-#: src/ui/widgets.rs:3307 src/ui/login.rs:569
+#: src/ui/widgets.rs:3307 src/ui/login.rs:564
 msgid "Copy"
 msgstr "複製"
 
@@ -696,94 +697,91 @@ msgstr "清除"
 msgid "Built with love by {name}"
 msgstr "由 {name} 用心打造"
 
-#: src/ui/widgets.rs:3626
+#: src/ui/widgets.rs:3641
 msgid "Host"
 msgstr "主機"
 
-#: src/ui/widgets.rs:3643
+#: src/ui/widgets.rs:3658
 msgid "Port"
 msgstr "連接埠"
 
-#: src/ui/widgets.rs:3661
+#: src/ui/widgets.rs:3676
 msgid "Username"
 msgstr "使用者名稱"
 
-#: src/ui/widgets.rs:3672
+#: src/ui/widgets.rs:3687
 msgid "Password"
 msgstr "密碼"
 
-#: src/ui/widgets.rs:3690
+#: src/ui/widgets.rs:3705
 msgid ""
 "Proxy login applies to Web requests. Local playback uses this proxy only "
 "without a login."
 msgstr ""
 "Proxy 登入資訊僅套用於 Web 要求。本機播放只會在不需登入時使用這個 Proxy。"
 
-#: src/ui/widgets.rs:3694
+#: src/ui/widgets.rs:3709
 msgid ""
 "Spotify hostnames are resolved by the proxy. Local playback connects "
 "directly."
 msgstr "Spotify 主機名稱由 Proxy 解析。本機播放會直接連線。"
 
-#: src/app.rs:1099
+#: src/app.rs:1178
 msgid "Restoring proxy settings"
 msgstr "正在還原 Proxy 設定"
 
-#: src/app.rs:1927 src/ui/soloist.rs:204 src/ui/soloist.rs:380
+#: src/app.rs:2082 src/ui/soloist.rs:851
 msgid "Starting Soloist…"
 msgstr "正在啟動 Soloist…"
 
-#: src/app.rs:1928 src/ui/soloist.rs:384
+#: src/app.rs:2083
 msgid "Downloading Soloist from Spotify…"
 msgstr "正在從 Spotify 下載 Soloist…"
 
-#: src/app.rs:1929 src/ui/soloist.rs:406
+#: src/app.rs:2084 src/ui/soloist.rs:652 src/ui/soloist.rs:850
 msgid "Verifying Soloist…"
 msgstr "正在驗證 Soloist…"
 
-#: src/app.rs:1930 src/ui/soloist.rs:388
-msgid "3. Pair once in Spotify"
-msgstr "3. 在 Spotify 中配對一次"
-
-#: src/app.rs:1931
-msgid "Soloist needs attention"
-msgstr "Soloist 需要處理"
+#: src/app.rs:2086 src/ui/settings.rs:429 src/ui/settings.rs:729
+#: src/ui/login.rs:273
+msgid "Connecting to Spotify…"
+msgstr "正在連線至 Spotify…"
 
 #. Translators: {size} includes its unit, such as 12.5 MB.
-#: src/app.rs:2768
+#: src/app.rs:2925
 #, rust-format
 msgid "Cleared {size} of audio"
 msgstr "已清除 {size} 的音訊快取"
 
 #. Translators: Files in the audio cache that Spotifast did not put there, such as .DS_Store. They were not deleted.
-#: src/app.rs:2778
+#: src/app.rs:2935
 #, rust-format
 msgid "{count} unrecognized file was left in place."
 msgid_plural "{count} unrecognized files were left in place."
 msgstr[0] "有 {count} 個無法辨識的檔案保留在原處。"
 
-#: src/app.rs:2791
+#: src/app.rs:2948
 msgid "Playback is reconnecting. Try again once it is ready."
 msgstr "播放正在重新連線。請在就緒後再試一次。"
 
-#: src/app.rs:2796
+#: src/app.rs:2953
 msgid "The audio cache folder is a symbolic link."
 msgstr "音訊快取資料夾是符號連結。"
 
 #. Translators: {error} describes a filesystem or playback error.
-#: src/app.rs:2803
+#: src/app.rs:2960
 #, rust-format
 msgid "Couldn't clear audio cache: {error}"
 msgstr "無法清除音訊快取：{error}"
 
 #. Translators: {name} is the name of a speaker or other playback device.
-#: src/app.rs:2867
+#: src/app.rs:3024
 #, rust-format
 msgid "{name} is ready"
 msgstr "{name} 已就緒"
 
 #. Translators: {error} is a sentence saying why the proxy password could not be stored.
-#: src/app.rs:2904
+#: src/app.rs:3061
 #, rust-format
 msgid ""
 "{error} The original settings file is kept intact; changed preferences are "
@@ -791,442 +789,442 @@ msgid ""
 msgstr "{error}原始設定檔保持不變，變更的偏好設定尚未儲存。"
 
 #. Translators: {version} is a version number such as 1.4.0.
-#: src/app.rs:3061
+#: src/app.rs:3218
 #, rust-format
 msgid "Spotifast {version} is available"
 msgstr "Spotifast {version} 現已推出"
 
-#: src/app.rs:3078
+#: src/app.rs:3235
 msgid "Spotifast is up to date"
 msgstr "Spotifast 已是最新版本"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:3086
+#: src/app.rs:3243
 #, rust-format
 msgid "Couldn't check for updates: {error}"
 msgstr "無法檢查更新：{error}"
 
-#: src/app.rs:3146
+#: src/app.rs:3317
 msgid ""
 "Soloist could not download its renewal. It will retry tomorrow; the current "
 "build is still installed."
 msgstr "Soloist 無法下載新版本。明天會重試，目前版本仍保留安裝。"
 
-#: src/app.rs:3308
+#: src/app.rs:3565
 #, rust-format
 msgid "Spotify connection: {error}"
 msgstr "Spotify 連線：{error}"
 
-#: src/app.rs:3310
+#: src/app.rs:3567
 #, rust-format
 msgid "Local playback: {error}"
 msgstr "本機播放：{error}"
 
-#: src/app.rs:3318
+#: src/app.rs:3575
 msgid "Opening your browser to connect Spotify"
 msgstr "正在開啟瀏覽器以連接 Spotify"
 
-#: src/app.rs:3320
+#: src/app.rs:3577
 msgid "Opening your browser to set up local playback"
 msgstr "正在開啟瀏覽器以設定本機播放"
 
-#: src/app.rs:3720
+#: src/app.rs:3977
 msgid "Spotify audio disconnected. Reconnecting local playback"
 msgstr "Spotify 音訊已中斷，正在重新連線本機播放"
 
-#: src/app.rs:3889 src/app/radio.rs:199 src/ui/radio.rs:35 src/ui/radio.rs:77
+#: src/app.rs:4146 src/app/radio.rs:199 src/ui/radio.rs:35 src/ui/radio.rs:77
 msgid "Radio"
 msgstr "電台"
 
-#: src/app.rs:3923 src/api/models.rs:299 src/ui/artist.rs:379
+#: src/app.rs:4180 src/api/models.rs:299 src/ui/artist.rs:379
 #: src/ui/prerelease.rs:78
 msgid "Album"
 msgstr "專輯"
 
-#: src/app.rs:3961 src/ui/show.rs:189
+#: src/app.rs:4218 src/ui/show.rs:189
 msgid "Podcast"
 msgstr "Podcast"
 
 #. Translators: {count} is the number of visualizer presets added.
-#: src/app.rs:4562
+#: src/app.rs:4871
 #, rust-format
 msgid "Added {count} MilkDrop preset"
 msgid_plural "Added {count} MilkDrop presets"
 msgstr[0] "已新增 {count} 個 MilkDrop 預設集"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:4578
+#: src/app.rs:4887
 #, rust-format
 msgid "Couldn't fetch presets: {error}"
 msgstr "無法取得預設集：{error}"
 
+#: src/app.rs:4980
+msgid "Downloading MilkDrop preset packs"
+msgstr "正在下載 MilkDrop 預設集套件"
+
 #. Translators: {folder} is a folder path and {error} is an error message.
-#: src/app.rs:4711
+#: src/app.rs:5171
 #, rust-format
 msgid "Couldn't open {folder}: {error}"
 msgstr "無法開啟 {folder}：{error}"
 
 #. Translators: {skin} is the name of a Winamp skin.
-#: src/app.rs:4727
+#: src/app.rs:5456
 #, rust-format
 msgid "Added {skin} skin"
 msgstr "已新增面板「{skin}」"
 
-#: src/app.rs:4828
+#: src/app.rs:5557
 msgid "Proxy applied. Restarting local playback."
 msgstr "已套用 Proxy，正在重新啟動本機播放。"
 
-#: src/app.rs:4830
+#: src/app.rs:5559
 msgid "Proxy settings applied"
 msgstr "已套用 Proxy 設定"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:4837
+#: src/app.rs:5566
 #, rust-format
 msgid ""
 "Proxy could not be applied: {error}. Previous connection settings are still "
 "in use."
 msgstr "無法套用 Proxy：{error}。仍在使用先前的連線設定。"
 
-#: src/app.rs:6423
+#: src/app.rs:7164
 msgid ""
 "Spotify hasn't confirmed your playlist changes yet. Try refreshing again."
 msgstr "Spotify 尚未確認你的播放清單變更，請再重新整理一次。"
 
-#: src/app.rs:6913
+#: src/app.rs:7654
 msgid "Queue cleared"
 msgstr "已清除待播清單"
 
 #. Translators: Keep {date} unchanged. It is a date in YYYY-MM-DD form.
-#: src/app.rs:6943 src/app.rs:25025
+#: src/app.rs:7684 src/app.rs:26203
 #, rust-format
 msgid "Queue {date}"
 msgstr "待播清單 {date}"
 
-#: src/app.rs:7579 src/ui/login.rs:185
+#: src/app.rs:8320 src/ui/login.rs:185
 msgid "Your Spotify sign-in expired. Please sign in again."
 msgstr "你的 Spotify 登入已過期，請重新登入。"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:7586
+#: src/app.rs:8327
 #, rust-format
 msgid "Couldn't load your profile: {error}"
 msgstr "無法載入你的個人檔案：{error}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:7648
+#: src/app.rs:8389
 #, rust-format
 msgid "Couldn't list devices: {error}"
 msgstr "無法列出裝置：{error}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8133
+#: src/app.rs:8874
 #, rust-format
 msgid "Couldn't load more playlists: {error}"
 msgstr "無法載入更多播放清單：{error}"
 
 #. Translators: {name} is a playlist name.
-#: src/app.rs:8381
+#: src/app.rs:9122
 #, rust-format
 msgid "Created {name}"
 msgstr "已建立 {name}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8407
+#: src/app.rs:9148
 #, rust-format
 msgid "Couldn't create the playlist: {error}"
 msgstr "無法建立播放清單：{error}"
 
-#: src/app.rs:8461
+#: src/app.rs:9202
 msgid "Playlist cover updated"
 msgstr "已更新播放清單封面"
 
-#: src/app.rs:8470
+#: src/app.rs:9211
 msgid "Playlist updated"
 msgstr "已更新播放清單"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8480 src/app.rs:8599
+#: src/app.rs:9221 src/app.rs:9340
 #, rust-format
 msgid "Couldn't update the playlist: {error}"
 msgstr "無法更新播放清單：{error}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8555
+#: src/app.rs:9296
 #, rust-format
 msgid "Playlist change failed: {error}"
 msgstr "播放清單變更失敗：{error}"
 
-#: src/app.rs:8583
+#: src/app.rs:9324
 msgid "Added to Your Library"
 msgstr "已加入你的音樂庫"
 
-#: src/app.rs:8585 src/app.rs:8793
+#: src/app.rs:9326 src/app.rs:9534
 msgid "Removed from Your Library"
 msgstr "已從你的音樂庫中移除"
 
-#: src/app.rs:8786
+#: src/app.rs:9527
 msgid "Added to Liked Songs"
 msgstr "已加入已按讚的歌曲"
 
-#: src/app.rs:8788
+#: src/app.rs:9529
 msgid "Removed from Liked Songs"
 msgstr "已從已按讚的歌曲中移除"
 
-#: src/app.rs:8790
+#: src/app.rs:9531
 msgid "Following artist"
 msgstr "已追蹤藝人"
 
-#: src/app.rs:8791
+#: src/app.rs:9532
 msgid "Unfollowed artist"
 msgstr "已取消追蹤藝人"
 
-#: src/app.rs:8792
+#: src/app.rs:9533
 msgid "Saved to Your Library"
 msgstr "已儲存至你的音樂庫"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:8807
+#: src/app.rs:9548
 #, rust-format
 msgid "Couldn't update your library: {error}"
 msgstr "無法更新你的音樂庫：{error}"
 
 #. Translators: {query} is the words someone searched for.
-#: src/app.rs:8859
+#: src/app.rs:9600
 #, rust-format
 msgid "Nothing on Spotify matches “{query}”"
 msgstr "Spotify 上沒有與「{query}」相符的內容"
 
 #. Translators: {query} is the words someone searched for; {error} is an error message.
-#: src/app.rs:8867
+#: src/app.rs:9608
 #, rust-format
 msgid "Couldn't search for “{query}”: {error}"
 msgstr "無法搜尋「{query}」：{error}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:9148
+#: src/app.rs:9889
 #, rust-format
 msgid "Cannot open this song: {error}"
 msgstr "無法開啟這首歌曲：{error}"
 
-#: src/app.rs:9162
+#: src/app.rs:9903
 msgid "This episode's podcast is not on Spotify"
 msgstr "這個單集所屬的 Podcast 不在 Spotify 上"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:9167
+#: src/app.rs:9908
 #, rust-format
 msgid "Cannot open this episode: {error}"
 msgstr "無法開啟這個單集：{error}"
 
-#: src/app.rs:9220
+#: src/app.rs:9961
 msgid "Choose a device from the devices menu first."
 msgstr "請先從裝置選單中選擇裝置。"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:9244
+#: src/app.rs:9985
 #, rust-format
 msgid "Couldn't switch device: {error}"
 msgstr "無法切換裝置：{error}"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:9255 src/app.rs:9279
+#: src/app.rs:9996 src/app.rs:10020
 #, rust-format
 msgid "Couldn't add to queue: {error}"
 msgstr "無法加入待播清單：{error}"
 
-#: src/app.rs:9422
+#: src/app.rs:10163
 msgid "This song's album is not on Spotify"
 msgstr "這首歌曲所屬的專輯不在 Spotify 上"
 
-#: src/app.rs:9439
+#: src/app.rs:10180
 msgid "Spotifast cannot open this kind of Spotify link"
 msgstr "Spotifast 無法開啟這類 Spotify 連結"
 
-#: src/app.rs:9687
+#: src/app.rs:10428
 msgid "Nothing is playing. Pick something first"
 msgstr "目前沒有播放任何內容，請先選擇要播放的內容"
 
-#: src/app.rs:10090
+#: src/app.rs:10836
 msgid "Choose a device, or enable playback on this computer"
 msgstr "請選擇裝置，或在這台電腦上啟用播放"
 
-#: src/app.rs:10474 src/app.rs:10479
+#: src/app.rs:11220 src/app.rs:11225
 msgid "Pick something to play"
 msgstr "選擇要播放的內容"
 
 #. Translators: {name} is an album name.
-#: src/app.rs:10953
+#: src/app.rs:11711
 #, rust-format
 msgid "Loading {name} to queue…"
 msgstr "正在將 {name} 載入待播清單…"
 
-#: src/app.rs:10972
+#: src/app.rs:11730
 msgid "Playback device changed. Add the album to queue again"
 msgstr "播放裝置已變更，請重新將專輯加入待播清單"
 
-#: src/app.rs:10981 src/app.rs:10999 src/app.rs:11008
+#: src/app.rs:11739 src/app.rs:11757 src/app.rs:11766
 msgid "Couldn't load the album's songs in order. Try again"
 msgstr "無法依順序載入專輯中的歌曲，請再試一次"
 
 #. Translators: {name} is an album name and {error} is an error message.
-#: src/app.rs:10988
+#: src/app.rs:11746
 #, rust-format
 msgid "Couldn't add {name} to queue: {error}"
 msgstr "無法將 {name} 加入待播清單：{error}"
 
-#: src/app.rs:11046
+#: src/app.rs:11804
 msgid "This album has no playable songs to queue"
 msgstr "這張專輯沒有可加入待播清單的歌曲"
 
 #. Translators: {count} is a number of songs and {name} is an album name.
-#: src/app.rs:11055
+#: src/app.rs:11813
 #, rust-format
 msgid "{count} song from {name} added to queue"
 msgid_plural "{count} songs from {name} added to queue"
 msgstr[0] "已將 {name} 中的 {count} 首歌曲加入待播清單"
 
 #. Translators: {count} is a number of songs.
-#: src/app.rs:11103
+#: src/app.rs:11861
 #, rust-format
 msgid "{count} song added to queue"
 msgid_plural "{count} songs added to queue"
 msgstr[0] "已將 {count} 首歌曲加入待播清單"
 
 #. Translators: {name} is a song, episode, album, or playlist name.
-#: src/app.rs:11143
+#: src/app.rs:11901
 #, rust-format
 msgid "{name} added to queue"
 msgstr "已將 {name} 加入待播清單"
 
-#: src/app.rs:11695
+#: src/app.rs:12453
 msgid "The clipboard has no Spotify song links"
 msgstr "剪貼簿中沒有 Spotify 歌曲連結"
 
 #. Translators: {count} is the number of pasted links that failed.
-#: src/app.rs:11776
+#: src/app.rs:12534
 #, rust-format
 msgid "{count} pasted link could not be added"
 msgid_plural "{count} pasted links could not be added"
 msgstr[0] "有 {count} 個貼上的連結無法加入"
 
-#: src/app.rs:12559
+#: src/app.rs:13339
 msgid "Spotify doesn't let apps remove a playlist description, so it was kept"
 msgstr "Spotify 不允許應用程式移除播放清單說明，因此說明已保留"
 
-#: src/app.rs:12590
+#: src/app.rs:13370
 msgid "Spotify Free plays on this computer only"
 msgstr "Spotify Free 只在這台電腦上播放"
 
-#: src/app.rs:12627 src/app.rs:12646
+#: src/app.rs:13407 src/app.rs:13426
 msgid "Link copied"
 msgstr "已複製連結"
 
 #. Translators: shown on the Copy button for a moment after it copied.
-#: src/app.rs:12633 src/ui/login.rs:567
+#: src/app.rs:13413 src/ui/login.rs:562
 msgid "Copied"
 msgstr "已複製"
 
 #. Translators: {count} is a number of song links, always more than one.
-#: src/app.rs:12650
+#: src/app.rs:13430
 #, rust-format
 msgid "{count} link copied"
 msgid_plural "{count} links copied"
 msgstr[0] "已複製 {count} 個連結"
 
-#: src/app.rs:12956
+#: src/app.rs:13739
 msgid ""
 "Spotify doesn't let apps reorder your playlists, so this order is saved on "
 "this computer"
 msgstr ""
 "Spotify 不允許應用程式重新排列你的播放清單，因此這個順序會儲存在這台電腦上"
 
-#: src/app.rs:13104
+#: src/app.rs:13912
 msgid "Restarting local playback"
 msgstr "正在重新啟動本機播放"
 
-#: src/app.rs:13142
+#: src/app.rs:13950
 msgid "Local playback needs Spotify Premium"
 msgstr "本機播放需要 Spotify Premium"
 
-#: src/app.rs:13195
+#: src/app.rs:14003
 msgid "Play history cleared"
 msgstr "已清除播放紀錄"
 
 #. Translators: {size} is a size in megabytes, such as 12.5.
-#: src/app.rs:13214
+#: src/app.rs:14022
 #, rust-format
 msgid "Cleared {size} MB of artwork"
 msgstr "已清除 {size} MB 的封面圖片"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:13220
+#: src/app.rs:14028
 #, rust-format
 msgid "Couldn't clear artwork: {error}"
 msgstr "無法清除封面圖片：{error}"
 
-#: src/app.rs:13452
-msgid "Downloading MilkDrop preset packs"
-msgstr "正在下載 MilkDrop 預設集套件"
-
 #. Translators: {name} is the name of a visualizer preset pack.
-#: src/app.rs:13486
+#: src/app.rs:14341
 #, rust-format
 msgid "Downloading {name} presets"
 msgstr "正在下載 {name} 預設集"
 
-#: src/app.rs:14676
+#: src/app.rs:15545
 msgid "Couldn't start playback"
 msgstr "無法開始播放"
 
-#: src/app.rs:14677
+#: src/app.rs:15546
 msgid "Couldn't pause"
 msgstr "無法暫停"
 
-#: src/app.rs:14678
+#: src/app.rs:15547
 msgid "Couldn't skip"
 msgstr "無法跳過"
 
-#: src/app.rs:14679
+#: src/app.rs:15548
 msgid "Couldn't go back"
 msgstr "無法返回"
 
-#: src/app.rs:14680
+#: src/app.rs:15549
 msgid "Couldn't seek"
 msgstr "無法調整播放位置"
 
-#: src/app.rs:14681
+#: src/app.rs:15550
 msgid "Couldn't change the volume"
 msgstr "無法調整音量"
 
-#: src/app.rs:14682
+#: src/app.rs:15551
 msgid "Couldn't change shuffle"
 msgstr "無法切換隨機播放"
 
-#: src/app.rs:14683
+#: src/app.rs:15552
 msgid "Couldn't change repeat"
 msgstr "無法切換重複播放"
 
-#: src/app.rs:14726 src/ui/mod.rs:438
+#: src/app.rs:15595 src/ui/mod.rs:442
 msgid "Spotify won't let this computer play this song right now."
 msgstr "Spotify 現在不讓這台電腦播放這首歌。"
 
-#: src/app.rs:14733
+#: src/app.rs:15602
 msgid ""
 "No audio output device was found. Connect or enable one, then press play "
 "again."
 msgstr "找不到音訊輸出裝置。請連接或啟用一個裝置，然後再按一次播放。"
 
-#: src/app.rs:14747
+#: src/app.rs:15616
 msgid ""
 "Spotify doesn't make this playlist's songs available to third-party apps."
 msgstr "Spotify 不提供這個播放清單的歌曲給第三方應用程式。"
 
-#: src/app.rs:14878
+#: src/app.rs:15747
 msgid "Spotify sign-in expired. Sign in again, then retry the cover upload."
 msgstr "Spotify 登入已過期。請重新登入，然後再次嘗試上傳封面。"
 
-#: src/app.rs:14883
+#: src/app.rs:15752
 msgid ""
 "Spotify refused this cover. Check that you own the playlist, then sign in "
 "again to grant image upload permission. If you use your own Client ID, "
@@ -1235,110 +1233,106 @@ msgstr ""
 "Spotify 拒絕了這張封面。請確認你是播放清單的擁有者，然後重新登入以授予上傳圖"
 "片的權限。如果使用你自己的 Client ID，也請在設定中重新授權。"
 
-#: src/app.rs:14887
+#: src/app.rs:15756
 msgid "Spotify rejected the image size. Choose a smaller image."
 msgstr "Spotify 拒絕了這個圖片大小，請選擇較小的圖片。"
 
 #. Translators: {error} is an error message.
-#: src/app.rs:14890
+#: src/app.rs:15759
 #, rust-format
 msgid "Couldn't upload the cover: {error}. Try again."
 msgstr "無法上傳封面：{error}。請再試一次。"
 
 #. Translators: Keep {track} unchanged. It is the name of the song,
 #. playlist, album, or artist the radio is based on, not translated.
-#: src/app.rs:25045 src/app/radio.rs:38
+#: src/app.rs:26223 src/app/radio.rs:38
 #, rust-format
 msgid "{track} Radio"
 msgstr "{track} 電台"
 
-#: src/ui/settings.rs:83
+#: src/ui/settings.rs:86
 msgid "Preset name"
 msgstr "預設名稱"
 
 #. Translators: a search keyword for saving equalizer presets.
-#: src/ui/settings.rs:98 src/ui/settings.rs:2286
+#: src/ui/settings.rs:101 src/ui/settings.rs:2332
 msgid "Save preset"
 msgstr "儲存預設"
 
 #. Translators: {name} is the name of an equalizer preset the user saved.
-#: src/ui/settings.rs:115
+#: src/ui/settings.rs:118
 #, rust-format
 msgid "Delete “{name}”"
 msgstr "刪除「{name}」"
 
-#: src/ui/settings.rs:380
+#: src/ui/settings.rs:396
 msgid ""
 "Play the local files your playlists list from a folder on this computer."
 msgstr "從這台電腦上的資料夾播放播放清單中的本機檔案。"
 
 #. Translators: {count} is a number of songs, {folder} a folder on this computer.
-#: src/ui/settings.rs:389
+#: src/ui/settings.rs:405
 #, rust-format
 msgid "{count} song in {folder}"
 msgid_plural "{count} songs in {folder}"
 msgstr[0] "{folder} 中有 {count} 首歌曲"
 
 #. Translators: {folder} is a folder on this computer.
-#: src/ui/settings.rs:396
+#: src/ui/settings.rs:412
 #, rust-format
 msgid "Looking for songs in {folder}…"
 msgstr "正在 {folder} 中尋找歌曲…"
 
-#: src/ui/settings.rs:407
+#: src/ui/settings.rs:423
 msgid "Connected"
 msgstr "已連接"
 
-#: src/ui/settings.rs:409 src/ui/settings.rs:705
+#: src/ui/settings.rs:425 src/ui/settings.rs:724
 msgid "Finish authorizing in your browser."
 msgstr "請在瀏覽器中完成授權。"
 
-#: src/ui/settings.rs:413 src/ui/settings.rs:710 src/ui/login.rs:273
-msgid "Connecting to Spotify…"
-msgstr "正在連線至 Spotify…"
-
-#: src/ui/settings.rs:414
+#: src/ui/settings.rs:430
 msgid "Waiting for network…"
 msgstr "正在等待網路…"
 
-#: src/ui/settings.rs:415 src/ui/settings.rs:678
+#: src/ui/settings.rs:431 src/ui/settings.rs:700
 msgid "Authorize"
 msgstr "授權"
 
-#: src/ui/settings.rs:451 src/ui/keys.rs:409 src/ui/topbar.rs:496
+#: src/ui/settings.rs:467 src/ui/keys.rs:431 src/ui/topbar.rs:496
 #: src/ui/topbar.rs:556
 msgid "Settings"
 msgstr "設定"
 
-#: src/ui/settings.rs:465
+#: src/ui/settings.rs:485
 msgid "Search settings"
 msgstr "搜尋設定"
 
-#: src/ui/settings.rs:481
+#: src/ui/settings.rs:501
 msgid "Spotify Soloist"
 msgstr "Spotify Soloist"
 
-#: src/ui/settings.rs:486
+#: src/ui/settings.rs:506
 msgid "Playback lossless setup key download updates"
 msgstr "播放 無損 設定 金鑰 下載 更新"
 
-#: src/ui/settings.rs:493
+#: src/ui/settings.rs:523
 msgid "Open folder"
 msgstr "開啟資料夾"
 
-#: src/ui/settings.rs:505 src/ui/topbar.rs:415
+#: src/ui/settings.rs:535 src/ui/topbar.rs:415
 msgid "Account"
 msgstr "帳戶"
 
-#: src/ui/settings.rs:506 src/ui/topbar.rs:514
+#: src/ui/settings.rs:536 src/ui/topbar.rs:514
 msgid "Sign out"
 msgstr "登出"
 
-#: src/ui/settings.rs:509
+#: src/ui/settings.rs:539
 msgid "Spotify registration"
 msgstr "Spotify 註冊"
 
-#: src/ui/settings.rs:513
+#: src/ui/settings.rs:543
 msgid ""
 "You're still on the shared sign-in Spotifast used before, which Spotify can "
 "stop accepting at any time. Register Spotifast to keep listening."
@@ -1346,260 +1340,252 @@ msgstr ""
 "你仍在使用 Spotifast 以前使用的共用登入，Spotify 隨時可能停止接受它。請註冊 "
 "Spotifast 以繼續收聽。"
 
-#: src/ui/settings.rs:518
+#: src/ui/settings.rs:548
 msgid "Spotifast connects with the Client ID you registered with Spotify."
 msgstr "Spotifast 使用你在 Spotify 註冊的 Client ID 連線。"
 
-#: src/ui/settings.rs:523 src/ui/dialogs.rs:50 src/ui/login.rs:470
-#: src/ui/mod.rs:413
+#: src/ui/settings.rs:553 src/ui/dialogs.rs:50 src/ui/login.rs:465
+#: src/ui/mod.rs:417
 msgid "Register Spotifast"
 msgstr "註冊 Spotifast"
 
-#: src/ui/settings.rs:526
+#: src/ui/settings.rs:556
 msgid "It takes about two minutes in Spotify's developer dashboard."
 msgstr "在 Spotify 開發人員資訊主頁中大約需要兩分鐘。"
 
-#: src/ui/settings.rs:531
+#: src/ui/settings.rs:561
 msgid "Spotifast registered"
 msgstr "Spotifast 已註冊"
 
-#: src/ui/settings.rs:535
+#: src/ui/settings.rs:565
 msgid ""
 "Supported requests use your Client ID. Other requests use the shared sign-in."
 msgstr "受支援的請求使用你的 Client ID。其他請求使用共用登入。"
 
-#: src/ui/settings.rs:540
+#: src/ui/settings.rs:570
 msgid "Spotifast uses your Client ID for Spotify's Web API."
 msgstr "Spotifast 將你的 Client ID 用於 Spotify 的 Web API。"
 
-#: src/ui/settings.rs:546
+#: src/ui/settings.rs:576
 msgid "Authorize your Client ID"
 msgstr "授權你的 Client ID"
 
-#: src/ui/settings.rs:549
+#: src/ui/settings.rs:579
 msgid "Spotify opens in your browser to verify the account."
 msgstr "Spotify 會在瀏覽器中開啟以驗證帳戶。"
 
-#: src/ui/settings.rs:555
-msgid "Spotify access"
-msgstr "Spotify 存取權限"
-
-#: src/ui/settings.rs:558
-msgid "Made for you, listening activity and Spotify lyrics."
-msgstr "專為你打造、聆聽動態和 Spotify 歌詞。"
-
-#: src/ui/settings.rs:587
+#: src/ui/settings.rs:609
 msgid "Spotify Free: plays here with ads"
 msgstr "Spotify Free：在這裡播放，含廣告"
 
-#: src/ui/settings.rs:591
+#: src/ui/settings.rs:613
 msgid "Spotify Free, local playback needs Premium"
 msgstr "Spotify Free，本機播放需要 Premium"
 
 #. Translators: {username} is the Spotify account's user name.
-#: src/ui/settings.rs:605
+#: src/ui/settings.rs:627
 #, rust-format
 msgid "Connected as {username}"
 msgstr "已以 {username} 身分連線"
 
-#: src/ui/settings.rs:638 src/ui/login.rs:400
+#: src/ui/settings.rs:660 src/ui/login.rs:395
 msgid "Client ID"
 msgstr "Client ID"
 
-#: src/ui/settings.rs:666
+#: src/ui/settings.rs:688
 msgid "Setup guide"
 msgstr "設定指南"
 
-#: src/ui/settings.rs:694 src/ui/settings.rs:699
+#: src/ui/settings.rs:713 src/ui/settings.rs:718
 msgctxt "playback status"
 msgid "Ready"
 msgstr "就緒"
 
-#: src/ui/settings.rs:695 src/ui/devices.rs:644
+#: src/ui/settings.rs:714 src/ui/devices.rs:644
 msgid "Spotify Free plays on this computer."
 msgstr "Spotify Free 在這台電腦上播放。"
 
-#: src/ui/settings.rs:700
+#: src/ui/settings.rs:719
 msgid "This computer is a Spotify Connect device."
 msgstr "這台電腦是 Spotify Connect 裝置。"
 
-#: src/ui/settings.rs:704
+#: src/ui/settings.rs:723
 msgctxt "playback status"
 msgid "Setting up"
 msgstr "正在設定"
 
-#: src/ui/settings.rs:709
+#: src/ui/settings.rs:728
 msgctxt "playback status"
 msgid "Connecting"
 msgstr "正在連線"
 
-#: src/ui/settings.rs:714
+#: src/ui/settings.rs:733
 msgctxt "playback status"
 msgid "Waiting for network"
 msgstr "等待網路"
 
-#: src/ui/settings.rs:717
+#: src/ui/settings.rs:736
 msgid "Waiting for network connectivity to resume playback."
 msgstr "正在等待網路連線以繼續播放。"
 
-#: src/ui/settings.rs:722
+#: src/ui/settings.rs:741
 msgctxt "playback status"
 msgid "Unavailable"
 msgstr "無法使用"
 
-#: src/ui/settings.rs:727
+#: src/ui/settings.rs:746
 msgctxt "playback status"
 msgid "Not set up"
 msgstr "尚未設定"
 
-#: src/ui/settings.rs:733
+#: src/ui/settings.rs:752
 msgid ""
 "Premium plays through Spotifast; Spotify Free plays with ads once signed in."
 msgstr "Premium 透過 Spotifast 播放；Spotify Free 登入後會帶廣告播放。"
 
-#: src/ui/settings.rs:738
+#: src/ui/settings.rs:757
 msgid "Requires Spotify Premium and a one-time browser sign-in."
 msgstr "需要 Spotify Premium，以及在瀏覽器中登入一次。"
 
-#: src/ui/settings.rs:741
+#: src/ui/settings.rs:760
 msgid "Enable playback here"
 msgstr "在這裡啟用播放"
 
-#: src/ui/settings.rs:748
+#: src/ui/settings.rs:767
 msgid "Playback on this computer"
 msgstr "在這台電腦上播放"
 
-#: src/ui/settings.rs:750
+#: src/ui/settings.rs:769
 msgid "Application"
 msgstr "應用程式"
 
-#: src/ui/settings.rs:752
+#: src/ui/settings.rs:771
 msgid "Normalize volume"
 msgstr "音量標準化"
 
-#: src/ui/settings.rs:753
+#: src/ui/settings.rs:772
 msgid "Autoplay"
 msgstr "自動播放"
 
-#: src/ui/settings.rs:754
+#: src/ui/settings.rs:773
 msgid "Gapless playback"
 msgstr "無間斷播放"
 
-#: src/ui/settings.rs:755
+#: src/ui/settings.rs:774
 msgid "Keep music playing when the window closes"
 msgstr "關閉視窗後繼續播放音樂"
 
-#: src/ui/settings.rs:756
+#: src/ui/settings.rs:775
 msgid "Automatic update checks"
 msgstr "自動檢查更新"
 
-#: src/ui/settings.rs:757
+#: src/ui/settings.rs:776
 msgid "Audio cache"
 msgstr "音訊快取"
 
-#: src/ui/settings.rs:758
+#: src/ui/settings.rs:777
 msgid "Apply and restart playback"
 msgstr "套用並重新啟動播放"
 
-#: src/ui/settings.rs:759
+#: src/ui/settings.rs:778
 msgid "Restart local playback to apply these settings."
 msgstr "重新啟動本機播放以套用這些設定。"
 
-#: src/ui/settings.rs:760
+#: src/ui/settings.rs:779
 msgid "Download updates automatically"
 msgstr "自動下載更新"
 
-#: src/ui/settings.rs:761
+#: src/ui/settings.rs:780
 msgid "Show in Dock"
 msgstr "在 Dock 中顯示"
 
-#: src/ui/settings.rs:762
+#: src/ui/settings.rs:781
 msgid "Start with your computer"
 msgstr "隨電腦啟動"
 
 #. Translators: {status} is a playback state such as Ready or Not set up.
-#: src/ui/settings.rs:776
+#: src/ui/settings.rs:795
 #, rust-format
 msgid "Status: {status}"
 msgstr "狀態：{status}"
 
-#: src/ui/settings.rs:780
+#: src/ui/settings.rs:799
 msgid "Device name"
 msgstr "裝置名稱"
 
-#: src/ui/settings.rs:781
+#: src/ui/settings.rs:800
 msgid "How this computer appears in Spotify Connect."
 msgstr "這台電腦在 Spotify Connect 中顯示的名稱。"
 
-#: src/ui/settings.rs:784
+#: src/ui/settings.rs:803 src/ui/soloist.rs:818
 msgid "Audio quality"
 msgstr "音訊品質"
 
-#: src/ui/settings.rs:785
+#: src/ui/settings.rs:804
 msgid "Higher bitrates use more data and cache space."
 msgstr "位元率越高，會使用越多數據流量和快取空間。"
 
-#: src/ui/settings.rs:789
+#: src/ui/settings.rs:808
 msgid "Keep loud and quiet tracks at a similar level."
 msgstr "讓大聲和小聲的歌曲維持相近的音量。"
 
-#: src/ui/settings.rs:793
+#: src/ui/settings.rs:812
 msgid "Keep playing similar songs when your music ends."
 msgstr "你的音樂播完後，繼續播放類似的歌曲。"
 
-#: src/ui/settings.rs:797
+#: src/ui/settings.rs:816
 msgid "Play tracks without silence between them."
 msgstr "歌曲之間不插入靜音。"
 
-#: src/ui/settings.rs:804
+#: src/ui/settings.rs:823
 msgid ""
 "Spotifast hides to the system tray. Quit from the tray menu or with Ctrl+Q."
 msgstr "Spotifast 會隱藏到系統匣。可從系統匣選單或按 Ctrl+Q 結束。"
 
-#: src/ui/settings.rs:809
+#: src/ui/settings.rs:828
 msgid ""
 "Spotifast hides to the menu bar. Quit from its menu-bar icon or with Cmd+Q."
 msgstr "Spotifast 會隱藏到選單列。可從選單列圖像或按 Cmd+Q 結束。"
 
-#: src/ui/settings.rs:816
+#: src/ui/settings.rs:835
 msgid "Checks GitHub once a day. No personal data is sent."
 msgstr "每天檢查一次 GitHub，不會傳送任何個人資料。"
 
-#: src/ui/settings.rs:819
+#: src/ui/settings.rs:838
 msgid "Output buffer"
 msgstr "輸出緩衝區"
 
-#: src/ui/settings.rs:822
+#: src/ui/settings.rs:841
 msgid ""
 "More buffering can prevent clicks on busy computers. Less buffering makes "
 "controls respond sooner."
 msgstr "加大緩衝區可避免忙碌的電腦出現爆音，縮小緩衝區則能讓控制項更快回應。"
 
-#: src/ui/settings.rs:828
+#: src/ui/settings.rs:847
 msgid "Save downloaded audio for later playback."
 msgstr "儲存已下載的音訊，以便稍後播放。"
 
-#: src/ui/settings.rs:831
+#: src/ui/settings.rs:850
 msgid "Playback settings applied"
 msgstr "已套用播放設定"
 
-#: src/ui/settings.rs:836
+#: src/ui/settings.rs:855
 msgid "Downloads in the background. You choose when to restart."
 msgstr "在背景下載，由你決定何時重新啟動。"
 
-#: src/ui/settings.rs:840 src/ui/settings.rs:1094
+#: src/ui/settings.rs:859 src/ui/settings.rs:1113
 msgid "MacBook notch widget"
 msgstr "MacBook瀏海小工具"
 
-#: src/ui/settings.rs:843
+#: src/ui/settings.rs:862
 msgid "Show interactive Now Playing widget when hovering over the notch."
 msgstr "懸停於瀏海區域時顯示互動式「正在播放」小工具。"
 
-#: src/ui/settings.rs:847
+#: src/ui/settings.rs:866
 msgid "Local files"
 msgstr "本機檔案"
 
-#: src/ui/settings.rs:852
+#: src/ui/settings.rs:871
 msgid ""
 "When off, Spotifast lives in the menu bar and leaves Cmd+Tab. Open it from "
 "its menu-bar icon."
@@ -1607,160 +1593,160 @@ msgstr ""
 "關閉後，Spotifast 只會留在選單列，也不會出現在 Cmd+Tab 中。請從選單列圖像打開"
 "它。"
 
-#: src/ui/settings.rs:858
+#: src/ui/settings.rs:877
 msgid "Tray icon"
 msgstr "系統匣圖示"
 
-#: src/ui/settings.rs:859
+#: src/ui/settings.rs:878
 msgid "White or black can match your panel or taskbar."
 msgstr "白色或黑色可與面板或工作列搭配。"
 
-#: src/ui/settings.rs:887
+#: src/ui/settings.rs:906
 msgid "Reconnect"
 msgstr "重新連線"
 
-#: src/ui/settings.rs:919
+#: src/ui/settings.rs:938
 msgid "Normal · 96 kbps"
 msgstr "標準 · 96 kbps"
 
-#: src/ui/settings.rs:920
+#: src/ui/settings.rs:939
 msgid "High · 160 kbps"
 msgstr "高 · 160 kbps"
 
-#: src/ui/settings.rs:921
+#: src/ui/settings.rs:940
 msgid "Very high · 320 kbps"
 msgstr "極高 · 320 kbps"
 
-#: src/ui/settings.rs:1026
+#: src/ui/settings.rs:1045
 msgctxt "tray icon"
 msgid "Colour"
 msgstr "彩色"
 
-#: src/ui/settings.rs:1027
+#: src/ui/settings.rs:1046
 msgctxt "tray icon"
 msgid "White"
 msgstr "白色"
 
-#: src/ui/settings.rs:1028
+#: src/ui/settings.rs:1047
 msgctxt "tray icon"
 msgid "Black"
 msgstr "黑色"
 
-#: src/ui/settings.rs:1143
+#: src/ui/settings.rs:1162
 msgid "Choose folder"
 msgstr "選擇資料夾"
 
-#: src/ui/settings.rs:1144 src/ui/dialogs.rs:96
+#: src/ui/settings.rs:1163 src/ui/dialogs.rs:96
 msgid "Remove"
 msgstr "移除"
 
-#: src/ui/settings.rs:1234
+#: src/ui/settings.rs:1253
 msgid "Playback settings applied."
 msgstr "已套用播放設定。"
 
-#: src/ui/settings.rs:1241
+#: src/ui/settings.rs:1260
 msgid "Appearance"
 msgstr "外觀"
 
-#: src/ui/settings.rs:1242
+#: src/ui/settings.rs:1261
 msgid "Theme"
 msgstr "主題"
 
-#: src/ui/settings.rs:1243
+#: src/ui/settings.rs:1262
 msgid "How to make a theme"
 msgstr "如何製作主題"
 
-#: src/ui/settings.rs:1244
+#: src/ui/settings.rs:1263
 msgid "Open themes folder"
 msgstr "開啟主題資料夾"
 
-#: src/ui/settings.rs:1245
+#: src/ui/settings.rs:1264
 msgid "Colour from album art"
 msgstr "使用專輯封面顏色"
 
-#: src/ui/settings.rs:1246
+#: src/ui/settings.rs:1265
 msgid "Compact library sidebar"
 msgstr "精簡的音樂庫側邊欄"
 
-#: src/ui/settings.rs:1247
+#: src/ui/settings.rs:1266
 msgid "Compact track list"
 msgstr "精簡的歌曲清單"
 
-#: src/ui/settings.rs:1248
+#: src/ui/settings.rs:1267
 msgid "Middle-click autoscroll"
 msgstr "中鍵自動捲動"
 
-#: src/ui/settings.rs:1249
+#: src/ui/settings.rs:1268
 msgid "Custom title bar"
 msgstr "自訂標題列"
 
-#: src/ui/settings.rs:1251
+#: src/ui/settings.rs:1270
 msgid "Player bar visualizer"
 msgstr "播放列視覺效果"
 
-#: src/ui/settings.rs:1252
+#: src/ui/settings.rs:1271
 msgid "Click player bar to change visualizer"
 msgstr "點擊播放列切換視覺化效果"
 
-#: src/ui/settings.rs:1261
+#: src/ui/settings.rs:1280
 msgid "Light mode theme"
 msgstr "淺色模式主題"
 
-#: src/ui/settings.rs:1264
+#: src/ui/settings.rs:1283
 msgid ""
 "Used while your computer is in light mode. Only light themes are listed."
 msgstr "電腦處於淺色模式時使用。僅列出淺色主題。"
 
-#: src/ui/settings.rs:1268
+#: src/ui/settings.rs:1287
 msgid "Dark mode theme"
 msgstr "深色模式主題"
 
-#: src/ui/settings.rs:1271
+#: src/ui/settings.rs:1290
 msgid "Used while your computer is in dark mode. Only dark themes are listed."
 msgstr "電腦處於深色模式時使用。僅列出深色主題。"
 
-#: src/ui/settings.rs:1288
+#: src/ui/settings.rs:1307
 msgid "Follow system uses your Omarchy colours."
 msgstr "「跟隨系統」會使用你的 Omarchy 色彩。"
 
-#: src/ui/settings.rs:1292
+#: src/ui/settings.rs:1311
 msgid "Follow system uses your desktop's light or dark appearance."
 msgstr "「跟隨系統」會使用桌面的淺色或深色外觀。"
 
-#: src/ui/settings.rs:1297 src/ui/settings.rs:2772
+#: src/ui/settings.rs:1316 src/ui/settings.rs:2818
 msgid "Language"
 msgstr "語言"
 
-#: src/ui/settings.rs:1300
+#: src/ui/settings.rs:1319
 msgid ""
 "System follows your computer's language. Untranslated text stays in English."
 msgstr "「系統」會跟隨電腦的語言。未翻譯的文字會以英文顯示。"
 
-#: src/ui/settings.rs:1307
+#: src/ui/settings.rs:1326
 msgid "Use the current cover's colour on pages and the player bar."
 msgstr "在頁面和播放列中使用目前封面的顏色。"
 
-#: src/ui/settings.rs:1312
+#: src/ui/settings.rs:1331
 msgid "Show names without covers in the sidebar."
 msgstr "在側邊欄中只顯示名稱，不顯示封面。"
 
-#: src/ui/settings.rs:1316
+#: src/ui/settings.rs:1335
 msgid "Show each track on one line without a cover."
 msgstr "每首歌曲顯示為一行，不顯示封面。"
 
-#: src/ui/settings.rs:1319
+#: src/ui/settings.rs:1338
 msgid "Interface zoom"
 msgstr "介面縮放"
 
-#: src/ui/settings.rs:1323
+#: src/ui/settings.rs:1342
 msgid "Ctrl+Plus and Ctrl+Minus work anywhere; Ctrl+0 resets."
 msgstr "Ctrl+加號和 Ctrl+減號隨處可用，Ctrl+0 可重設。"
 
-#: src/ui/settings.rs:1327
+#: src/ui/settings.rs:1346
 msgid "Cmd+Plus and Cmd+Minus work anywhere; Cmd+0 resets."
 msgstr "Cmd+加號和 Cmd+減號隨處可用，Cmd+0 可重設。"
 
-#: src/ui/settings.rs:1336
+#: src/ui/settings.rs:1355
 msgid ""
 "Middle-click a list, then move the pointer to scroll it. Off by default, "
 "because a middle click usually pastes on Linux."
@@ -1768,20 +1754,20 @@ msgstr ""
 "在清單上按一下滑鼠中鍵，然後移動指標即可捲動。預設為關閉，因為在 Linux 上按中"
 "鍵通常會貼上。"
 
-#: src/ui/settings.rs:1352
+#: src/ui/settings.rs:1371
 msgid ""
 "Show the song moving behind the player bar's controls while it plays here."
 msgstr "歌曲在本機播放時，在播放列控制項後方顯示它的律動。"
 
-#: src/ui/settings.rs:1357
+#: src/ui/settings.rs:1376
 msgid "Allow clicks on empty player bar space to cycle the visualizer."
 msgstr "允許點擊播放列的空白區域來切換視覺化效果。"
 
-#: src/ui/settings.rs:1360 src/ui/settings.rs:2123
+#: src/ui/settings.rs:1379 src/ui/settings.rs:2169
 msgid "Frame rate"
 msgstr "影格速率"
 
-#: src/ui/settings.rs:1363
+#: src/ui/settings.rs:1382
 msgid ""
 "How often the player bar and mini player visualizers draw. Lower rates use "
 "fewer resources. MilkDrop has its own."
@@ -1789,36 +1775,36 @@ msgstr ""
 "播放列和迷你播放器視覺化效果的繪製頻率。影格速率越低，使用的資源越少。"
 "MilkDrop 有獨立的設定。"
 
-#: src/ui/settings.rs:1511
+#: src/ui/settings.rs:1530
 msgid "Off"
 msgstr "關閉"
 
-#: src/ui/settings.rs:1512
+#: src/ui/settings.rs:1531
 msgid "Spectrum"
 msgstr "頻譜"
 
-#: src/ui/settings.rs:1513
+#: src/ui/settings.rs:1532
 msgid "Waveform"
 msgstr "波形"
 
-#: src/ui/settings.rs:1708
+#: src/ui/settings.rs:1727
 msgid "Proxy"
 msgstr "Proxy"
 
-#: src/ui/settings.rs:1710
+#: src/ui/settings.rs:1729
 msgid "Mode, host, port, username and password"
 msgstr "模式、主機、連接埠、使用者名稱和密碼"
 
-#: src/ui/settings.rs:1713
+#: src/ui/settings.rs:1732
 msgid "Off, System, HTTP or SOCKS5 proxy for network requests."
 msgstr "網路要求的 Proxy：關閉、系統、HTTP 或 SOCKS5。"
 
-#: src/ui/settings.rs:1723
+#: src/ui/settings.rs:1742
 msgctxt "proxy"
 msgid "Mode"
 msgstr "模式"
 
-#: src/ui/settings.rs:1726
+#: src/ui/settings.rs:1745
 msgid ""
 "Off ignores environment variables. System uses them, and the OS proxy on "
 "macOS and Windows."
@@ -1826,47 +1812,47 @@ msgstr ""
 "「關閉」會忽略環境變數。「系統」會使用環境變數，在 macOS 和 Windows 上還會使"
 "用作業系統的 Proxy。"
 
-#: src/ui/settings.rs:1778 src/ui/login.rs:653
+#: src/ui/settings.rs:1797 src/ui/login.rs:648
 msgid "Apply settings"
 msgstr "套用設定"
 
-#: src/ui/settings.rs:1790
+#: src/ui/settings.rs:1809
 msgid "Not using a proxy."
 msgstr "未使用 Proxy。"
 
-#: src/ui/settings.rs:1791
+#: src/ui/settings.rs:1810
 msgid "Using the system proxy."
 msgstr "正在使用系統 Proxy。"
 
-#: src/ui/settings.rs:1803 src/ui/keys.rs:387
+#: src/ui/settings.rs:1822 src/ui/keys.rs:409
 msgid "Mini player"
 msgstr "迷你播放器"
 
-#: src/ui/settings.rs:1804 src/ui/winamp/mod.rs:732 src/ui/winamp/mod.rs:879
+#: src/ui/settings.rs:1823 src/ui/winamp/mod.rs:777 src/ui/winamp/mod.rs:924
 msgid "Always on top"
 msgstr "最上層顯示"
 
-#: src/ui/settings.rs:1805
+#: src/ui/settings.rs:1824
 msgid "Show the mini player in taskbar"
 msgstr "在工作列中顯示迷你播放器"
 
-#: src/ui/settings.rs:1806
+#: src/ui/settings.rs:1825
 msgid "Random skin"
 msgstr "隨機面板"
 
-#: src/ui/settings.rs:1807
+#: src/ui/settings.rs:1826
 msgid "Winamp"
 msgstr "Winamp"
 
-#: src/ui/settings.rs:1808
+#: src/ui/settings.rs:1827
 msgid "Windows Media Player"
 msgstr "Windows Media Player"
 
-#: src/ui/settings.rs:1820
+#: src/ui/settings.rs:1839
 msgid "Show the mini player"
 msgstr "顯示迷你播放器"
 
-#: src/ui/settings.rs:1824
+#: src/ui/settings.rs:1843
 msgid ""
 "Use a Winamp or Windows Media Player skin. Press Ctrl+M to return. Drop a "
 "skin on either window to add it."
@@ -1874,7 +1860,7 @@ msgstr ""
 "使用 Winamp 或 Windows Media Player 面板。按 Ctrl+M 返回。將面板拖曳到任一視"
 "窗上即可新增。"
 
-#: src/ui/settings.rs:1828
+#: src/ui/settings.rs:1847
 msgid ""
 "Use a Winamp or Windows Media Player skin. Press Cmd+Shift+M to return. Drop "
 "a skin on either window to add it."
@@ -1882,63 +1868,73 @@ msgstr ""
 "使用 Winamp 或 Windows Media Player 面板。按 Cmd+Shift+M 返回。將面板拖曳到任"
 "一視窗上即可新增。"
 
-#: src/ui/settings.rs:1839 src/ui/settings.rs:1903
+#: src/ui/settings.rs:1858 src/ui/settings.rs:1945
 msgid "Classic .wsz skins. Find more at the Winamp Skin Museum."
 msgstr "經典 .wsz 面板。更多面板可在 Winamp Skin Museum 找到。"
 
-#: src/ui/settings.rs:1850 src/ui/settings.rs:1967
-msgid "Windows Media Player .wmz skins. Drop one on either window to add it."
-msgstr "Windows Media Player .wmz 面板。將面板拖曳到任一視窗上即可新增。"
+#: src/ui/settings.rs:1869 src/ui/settings.rs:1998
+msgid ""
+"Windows Media Player .wmz skins. Find more in the Internet Archive's "
+"collection."
+msgstr ""
+"Windows Media Player .wmz 面板。可在 Internet Archive 的收藏中找到更多。"
 
-#: src/ui/settings.rs:1857
+#: src/ui/settings.rs:1876
 msgid "Pick another skin each time the mini player opens."
 msgstr "每次開啟迷你播放器時換一個面板。"
 
-#: src/ui/settings.rs:1860 src/ui/winamp/mod.rs:719
+#: src/ui/settings.rs:1879 src/ui/winamp/mod.rs:764
 msgid "Size"
 msgstr "大小"
 
-#: src/ui/settings.rs:1861
+#: src/ui/settings.rs:1880
 msgid "Whole-number scaling keeps skin pixels sharp."
 msgstr "以整數倍縮放可讓面板像素保持清晰。"
 
-#: src/ui/settings.rs:1866
+#: src/ui/settings.rs:1885
 msgid "Keep the mini player above everything else."
 msgstr "讓迷你播放器顯示在所有其他視窗之上。"
 
-#: src/ui/settings.rs:1872 src/ui/winamp/mod.rs:742
+#: src/ui/settings.rs:1891 src/ui/winamp/mod.rs:787
 msgid "Show in taskbar"
 msgstr "在工作列中顯示"
 
-#: src/ui/settings.rs:1875
+#: src/ui/settings.rs:1894
 msgid ""
 "Keep a taskbar button for the mini player. The tray icon stays available "
 "when hidden."
 msgstr "在工作列中保留迷你播放器的按鈕。隱藏後仍可使用系統匣圖示。"
 
-#: src/ui/settings.rs:1884
+#: src/ui/settings.rs:1899
+msgid "Skins folder"
+msgstr "面板資料夾"
+
+#: src/ui/settings.rs:1902
+msgid "Winamp and Windows Media Player skins are both kept here."
+msgstr "Winamp 和 Windows Media Player 面板都保存在這裡。"
+
+#: src/ui/settings.rs:1910
 msgid "Switch to it"
 msgstr "切換至此面板"
 
-#: src/ui/settings.rs:1913
+#: src/ui/settings.rs:1954
 msgid "Skin Museum"
 msgstr "Skin Museum"
 
-#: src/ui/settings.rs:1983
+#: src/ui/settings.rs:2006
+msgid "Windows Media Player Skins Collection"
+msgstr "Windows Media Player 面板合集"
+
+#: src/ui/settings.rs:2029
 #, rust-format
 msgid "Installed skins are in {folder}. None of this kind yet."
 msgstr "已安裝的面板位於 {folder}。目前還沒有這一類面板。"
 
-#: src/ui/settings.rs:2007
-msgid ""
-"This skin has no equalizer or playlist window, and its scripts do not run."
-msgstr "此面板沒有等化器和播放清單視窗，其指令碼也不會執行。"
-
-#: src/ui/settings.rs:2072
+#: src/ui/settings.rs:2118
 msgid "MilkDrop window"
 msgstr "MilkDrop 視窗"
 
-#: src/ui/settings.rs:2080
+#: src/ui/settings.rs:2126
 msgid ""
 "A projectM visualiser for local playback. Open it here, from the top bar, "
 "with Ctrl+Shift+K, or from the mini player's V menu. Press ? or F1 for its "
@@ -1947,7 +1943,7 @@ msgstr ""
 "用於本機播放的 projectM 視覺效果。可從這裡、頂端列、按 Ctrl+Shift+K 或透過迷"
 "你播放器的 V 選單開啟。按 ? 或 F1 查看快捷鍵。"
 
-#: src/ui/settings.rs:2084
+#: src/ui/settings.rs:2130
 msgid ""
 "A projectM visualiser for local playback. Open it here, from the top bar, "
 "with Cmd+Shift+K, or from the mini player's V menu. Press ? or F1 for its "
@@ -1956,12 +1952,12 @@ msgstr ""
 "用於本機播放的 projectM 視覺效果。可從這裡、頂端列、按 Cmd+Shift+K 或透過迷你"
 "播放器的 V 選單開啟。按 ? 或 F1 查看快捷鍵。"
 
-#: src/ui/settings.rs:2090 src/ui/settings.rs:2269
+#: src/ui/settings.rs:2136 src/ui/settings.rs:2315
 msgid "Presets"
 msgstr "預設集"
 
 #. Translators: {folder} is the path of the MilkDrop presets folder.
-#: src/ui/settings.rs:2095
+#: src/ui/settings.rs:2141
 #, rust-format
 msgid ""
 "None yet in {folder}. Add .milk files here. Spotifast downloads presets when "
@@ -1971,7 +1967,7 @@ msgstr ""
 "料夾是空的，Spotifast 會下載預設集。"
 
 #. Translators: {folder} is the path of the MilkDrop presets folder.
-#: src/ui/settings.rs:2101
+#: src/ui/settings.rs:2147
 #, rust-format
 msgid ""
 "One preset in {folder}. Add .milk files here. Spotifast downloads presets "
@@ -1981,7 +1977,7 @@ msgstr ""
 "料夾是空的，Spotifast 會下載預設集。"
 
 #. Translators: {count} is the number of presets, {folder} the path of the MilkDrop presets folder.
-#: src/ui/settings.rs:2107
+#: src/ui/settings.rs:2153
 #, rust-format
 msgid ""
 "{count} preset in {folder}. Add .milk files here. Spotifast downloads "
@@ -1993,20 +1989,20 @@ msgstr[0] ""
 "{folder} 中有 {count} 個預設集。請將 .milk 檔案加入這裡。第一次開啟 MilkDrop "
 "時若資料夾是空的，Spotifast 會下載預設集。"
 
-#: src/ui/settings.rs:2116
+#: src/ui/settings.rs:2162
 msgid "Time per preset"
 msgstr "每個預設集的時間"
 
-#: src/ui/settings.rs:2119
+#: src/ui/settings.rs:2165
 msgid "How long each preset plays before the next fades in."
 msgstr "每個預設集播放多久後再淡入下一個。"
 
-#: src/ui/settings.rs:2127
+#: src/ui/settings.rs:2173
 msgid "Lower rates use fewer resources. Uncapped draws as fast as possible."
 msgstr "影格速率越低，使用的資源越少。「不限制」會盡可能快速繪製。"
 
 #. Translators: {hz} is the screen's refresh rate in hertz.
-#: src/ui/settings.rs:2132
+#: src/ui/settings.rs:2178
 #, rust-format
 msgid ""
 "Your screen refreshes at {hz} Hz. Higher rates do not add visible frames. "
@@ -2015,320 +2011,545 @@ msgstr ""
 "你的螢幕更新頻率為 {hz} Hz，更高的速率不會增加可見的影格。「不限制」會盡可能"
 "快速繪製。"
 
-#: src/ui/settings.rs:2139
+#: src/ui/settings.rs:2185
 msgid "Resolution"
 msgstr "解析度"
 
-#: src/ui/settings.rs:2142
+#: src/ui/settings.rs:2188
 msgid "Half and Quarter use fewer resources and scale the image back up."
 msgstr "「一半」和「四分之一」使用較少資源，並會將畫面放大顯示。"
 
 #. Translators: search keywords for the MilkDrop preset download buttons.
-#: src/ui/settings.rs:2149
+#: src/ui/settings.rs:2195
 msgid "Get presets"
 msgstr "取得預設集"
 
-#: src/ui/settings.rs:2187
+#: src/ui/settings.rs:2233
 msgid "Fetching..."
 msgstr "正在取得..."
 
 #. Translators: {pack} is the name of a MilkDrop preset pack.
-#: src/ui/settings.rs:2190
+#: src/ui/settings.rs:2236
 #, rust-format
 msgid "Get {pack}"
 msgstr "取得 {pack}"
 
-#: src/ui/settings.rs:2241
+#: src/ui/settings.rs:2287
 msgctxt "resolution"
 msgid "Full"
 msgstr "完整"
 
-#: src/ui/settings.rs:2242
+#: src/ui/settings.rs:2288
 msgctxt "resolution"
 msgid "Half"
 msgstr "一半"
 
-#: src/ui/settings.rs:2243
+#: src/ui/settings.rs:2289
 msgctxt "resolution"
 msgid "Quarter"
 msgstr "四分之一"
 
-#: src/ui/settings.rs:2257
+#: src/ui/settings.rs:2303
 msgid "Equalizer"
 msgstr "等化器"
 
-#: src/ui/settings.rs:2263
+#: src/ui/settings.rs:2309
 msgid ""
 "A ten-band equalizer for playback on this computer. It does not affect other "
 "devices."
 msgstr "用於這台電腦播放的十段等化器，不會影響其他裝置。"
 
 #. Translators: a search keyword for the equalizer's preamplifier slider.
-#: src/ui/settings.rs:2271
+#: src/ui/settings.rs:2317
 msgid "Preamp"
 msgstr "前級放大"
 
 #. Translators: a search keyword for the equalizer's frequency band sliders.
-#: src/ui/settings.rs:2273
+#: src/ui/settings.rs:2319
 msgid "Bands"
 msgstr "頻段"
 
 #. Translators: short label under the equalizer's preamplifier slider.
-#: src/ui/settings.rs:2355
+#: src/ui/settings.rs:2401
 msgctxt "equalizer"
 msgid "Pre"
 msgstr "前級"
 
-#: src/ui/settings.rs:2372
+#: src/ui/settings.rs:2418
 msgid "Storage"
 msgstr "儲存空間"
 
-#: src/ui/settings.rs:2375
+#: src/ui/settings.rs:2421
 msgid "Artwork cache"
 msgstr "封面圖片快取"
 
 #. Translators: {folder} is the path of a cache folder.
-#: src/ui/settings.rs:2377 src/ui/settings.rs:2383
+#: src/ui/settings.rs:2423 src/ui/settings.rs:2429
 #, rust-format
 msgid "Stored in {folder}"
 msgstr "儲存於 {folder}"
 
-#: src/ui/settings.rs:2390
+#: src/ui/settings.rs:2436
 msgid "Play history"
 msgstr "播放紀錄"
 
 #. Translators: {file} is the path of the play history file.
-#: src/ui/settings.rs:2394
+#: src/ui/settings.rs:2440
 #, rust-format
 msgid "Tracks played here are stored in {file}. This file is never uploaded."
 msgstr "在這裡播放的歌曲會儲存在 {file}。這個檔案永遠不會上傳。"
 
-#: src/ui/settings.rs:2399
+#: src/ui/settings.rs:2445
 msgid "Sign-in"
 msgstr "登入"
 
-#: src/ui/settings.rs:2402
+#: src/ui/settings.rs:2448
 msgid "Sign-ins are saved in the system credential store when available."
 msgstr "登入資訊會在可用時儲存在系統的認證存放區中。"
 
-#: src/ui/settings.rs:2411 src/ui/settings.rs:2470
+#: src/ui/settings.rs:2457 src/ui/settings.rs:2516
 msgid "Checking…"
 msgstr "正在檢查…"
 
-#: src/ui/settings.rs:2413 src/ui/collection.rs:989 src/ui/collection.rs:1016
+#: src/ui/settings.rs:2459 src/ui/collection.rs:989 src/ui/collection.rs:1016
 msgid "Unavailable"
 msgstr "無法使用"
 
-#: src/ui/settings.rs:2423
+#: src/ui/settings.rs:2469
 msgid "Clear artwork"
 msgstr "清除封面圖片"
 
-#: src/ui/settings.rs:2433
+#: src/ui/settings.rs:2479
 msgid "Clearing…"
 msgstr "正在清除…"
 
-#: src/ui/settings.rs:2435
+#: src/ui/settings.rs:2481
 msgid "Clear audio"
 msgstr "清除音訊"
 
-#: src/ui/settings.rs:2452
+#: src/ui/settings.rs:2498
 msgid "Clear history"
 msgstr "清除紀錄"
 
-#: src/ui/settings.rs:2464 src/ui/show.rs:42
+#: src/ui/settings.rs:2510 src/ui/show.rs:42
 msgid "About"
 msgstr "關於"
 
-#: src/ui/settings.rs:2467
+#: src/ui/settings.rs:2513
 msgid "Built with Rust, egui, and librespot. Not affiliated with Spotify."
 msgstr "使用 Rust、egui 和 librespot 打造。與 Spotify 無關。"
 
-#: src/ui/settings.rs:2469
+#: src/ui/settings.rs:2515
 msgid "Check for updates"
 msgstr "檢查更新"
 
-#: src/ui/settings.rs:2471 src/ui/dialogs.rs:153 src/ui/keys.rs:419
+#: src/ui/settings.rs:2517 src/ui/dialogs.rs:153 src/ui/keys.rs:441
 #: src/ui/topbar.rs:504
 msgid "Keyboard shortcuts"
 msgstr "鍵盤快捷鍵"
 
-#: src/ui/settings.rs:2472 src/ui/update.rs:65
+#: src/ui/settings.rs:2518 src/ui/update.rs:65
 msgid "Release notes"
 msgstr "版本資訊"
 
-#: src/ui/settings.rs:2473
+#: src/ui/settings.rs:2519
 msgid "Source code"
 msgstr "原始碼"
 
 #. Translators: {query} is the text typed into the settings search field.
-#: src/ui/settings.rs:2557
+#: src/ui/settings.rs:2603
 #, rust-format
 msgid "No settings for “{query}”"
 msgstr "沒有與「{query}」相關的設定"
 
-#: src/ui/settings.rs:2558
+#: src/ui/settings.rs:2604
 msgid "Try fewer words, or check the spelling."
 msgstr "請減少字詞，或檢查拼字。"
 
-#: src/ui/settings.rs:2579
+#: src/ui/settings.rs:2625
 msgctxt "start with your computer"
 msgid "Off"
 msgstr "關閉"
 
-#: src/ui/settings.rs:2580
+#: src/ui/settings.rs:2626
 msgid "With the window"
 msgstr "開啟視窗"
 
-#: src/ui/settings.rs:2584
+#: src/ui/settings.rs:2630
 msgid "In the menu bar"
 msgstr "在選單列中"
 
-#: src/ui/settings.rs:2586
+#: src/ui/settings.rs:2632
 msgid "In the tray"
 msgstr "在系統匣中"
 
-#: src/ui/settings.rs:2605
+#: src/ui/settings.rs:2651
 msgid "Allow Spotifast in System Settings, General, Login Items."
 msgstr "請在「系統設定」>「一般」>「登入項目」中允許 Spotifast。"
 
-#: src/ui/settings.rs:2611
+#: src/ui/settings.rs:2657
 msgid ""
 "Starting in the menu bar needs Keep music playing when the window closes. "
 "Until then, the window opens."
 msgstr ""
 "要在選單列中啟動，需要開啟「關閉視窗後繼續播放音樂」。在此之前會開啟視窗。"
 
-#: src/ui/settings.rs:2616
+#: src/ui/settings.rs:2662
 msgid ""
 "Starting in the tray needs Keep music playing when the window closes. Until "
 "then, the window opens."
 msgstr ""
 "要在系統匣中啟動，需要開啟「關閉視窗後繼續播放音樂」。在此之前會開啟視窗。"
 
-#: src/ui/settings.rs:2622
+#: src/ui/settings.rs:2668
 msgid "Open Spotifast when you log in, with its window or in the menu bar."
 msgstr "登入時開啟 Spotifast，顯示視窗或留在選單列中。"
 
-#: src/ui/settings.rs:2627
+#: src/ui/settings.rs:2673
 msgid "Open Spotifast when you log in, with its window or in the tray."
 msgstr "登入時開啟 Spotifast，顯示視窗或留在系統匣中。"
 
-#: src/ui/settings.rs:2745
+#: src/ui/settings.rs:2791
 msgctxt "language"
 msgid "System"
 msgstr "系統"
 
-#: src/ui/soloist.rs:84
+#: src/ui/soloist.rs:131 src/ui/dialogs.rs:53
+msgid "Not now"
+msgstr "以後再說"
+
+#: src/ui/soloist.rs:143 src/ui/soloist.rs:719
 msgid "Use the built-in player"
 msgstr "使用內建播放器"
 
-#: src/ui/soloist.rs:96 src/ui/soloist.rs:456
-msgid "Setup, privacy and limitations"
-msgstr "設定、隱私權和限制"
+#. Translators: {step} and {steps} are numbers, as in "Step 2 of 3".
+#: src/ui/soloist.rs:199
+#, rust-format
+msgid "Step {step} of {steps}"
+msgstr "第 {step} 步，共 {steps} 步"
 
-#: src/ui/soloist.rs:175
+#: src/ui/soloist.rs:312 src/ui/soloist.rs:798
 msgid "Listen with Spotify Soloist"
 msgstr "用 Spotify Soloist 聆聽"
 
-#: src/ui/soloist.rs:181
-msgid "Spotify's official player for listening outside the Spotify app."
-msgstr "Spotify 官方播放器，可在 Spotify 應用程式之外聆聽音樂。"
+#: src/ui/soloist.rs:315
+msgid ""
+"Spotify's own player, running on this computer. Spotifast sets it up and "
+"keeps it updated."
+msgstr "Spotify 官方播放器，在這部電腦上執行。Spotifast 負責設定和更新。"
 
-#: src/ui/soloist.rs:190
-msgid "Requires Spotify Premium. Spotifast handles downloads and updates."
-msgstr "需要 Spotify Premium。Spotifast 會處理下載和更新。"
+#: src/ui/soloist.rs:321
+msgid "Get your personal key from Spotify."
+msgstr "從 Spotify 取得你的個人金鑰。"
 
-#: src/ui/soloist.rs:193 src/ui/login.rs:361
+#: src/ui/soloist.rs:322
+msgid "Spotifast downloads the player."
+msgstr "Spotifast 下載播放器。"
+
+#: src/ui/soloist.rs:323
+msgid "Choose it once in the Spotify app."
+msgstr "在 Spotify 應用程式中選擇一次。"
+
+#: src/ui/soloist.rs:332 src/ui/soloist.rs:910
 msgid "Set up Soloist"
 msgstr "設定 Soloist"
 
-#: src/ui/soloist.rs:209
-msgid "Downloading Soloist…"
-msgstr "正在下載 Soloist…"
+#: src/ui/soloist.rs:338
+msgid "Requires Spotify Premium."
+msgstr "需要 Spotify Premium。"
 
-#: src/ui/soloist.rs:214
+#: src/ui/soloist.rs:349 src/ui/soloist.rs:935
+msgid "Setup, privacy and limitations"
+msgstr "設定、隱私權和限制"
+
+#: src/ui/soloist.rs:365
+msgid "Get your Soloist key"
+msgstr "取得 Soloist 金鑰"
+
+#: src/ui/soloist.rs:368
+msgid ""
+"Spotify gives each Premium account its own key. Spotifast keeps it in your "
+"system's credential store."
+msgstr ""
+"Spotify 為每個 Premium 帳戶提供專屬金鑰。Spotifast 會將其儲存在系統的認證存放"
+"區中。"
+
+#: src/ui/soloist.rs:384
+msgid "Copy your key from Spotify's Soloist page."
+msgstr "從 Spotify 的 Soloist 頁面複製金鑰。"
+
+#: src/ui/soloist.rs:399
+msgid "Paste it here."
+msgstr "貼到這裡。"
+
+#: src/ui/soloist.rs:412
+msgid "Soloist key"
+msgstr "Soloist 金鑰"
+
+#: src/ui/soloist.rs:443
+msgid "Download Soloist"
+msgstr "下載 Soloist"
+
+#: src/ui/soloist.rs:460
+msgid "Starting Soloist"
+msgstr "正在啟動 Soloist"
+
+#: src/ui/soloist.rs:461
+msgid "Checking your key and starting Spotify's player."
+msgstr "正在檢查金鑰並啟動 Spotify 的播放器。"
+
+#: src/ui/soloist.rs:472
+msgid ""
+"This is taking longer than usual. Spotify may be busy, so it's safe to wait."
+msgstr "這比平常久。Spotify 可能正忙，可以放心等待。"
+
+#: src/ui/soloist.rs:488 src/ui/soloist.rs:755
+msgid "Downloading Soloist"
+msgstr "正在下載 Soloist"
+
+#: src/ui/soloist.rs:489 src/ui/soloist.rs:753
+msgid "Directly from Spotify, to this computer."
+msgstr "直接從 Spotify 下載到這部電腦。"
+
+#. Translators: {received} and {total} are numbers of megabytes.
+#. Translators: {received} and {total} are sizes in megabytes, such as 12.5.
+#: src/ui/soloist.rs:496 src/ui/update.rs:90
+#, rust-format
+msgid "{received} of {total} MB"
+msgstr "{received} / {total} MB"
+
+#: src/ui/soloist.rs:545
+msgid "Choose Soloist in Spotify"
+msgstr "在 Spotify 中選擇 Soloist"
+
+#: src/ui/soloist.rs:546
+msgid "You only do this once, on the same network."
+msgstr "只需在同一網路下操作一次。"
+
+#: src/ui/soloist.rs:554
+msgid "Open the Spotify desktop app, on the same account."
+msgstr "用同一帳戶開啟 Spotify 桌面應用程式。"
+
+#: src/ui/soloist.rs:563
+msgid "Play a song. Soloist often only appears while one plays."
+msgstr "播放一首歌曲。Soloist 通常只在播放時才會出現。"
+
+#: src/ui/soloist.rs:571
+msgid "Open its list of devices and choose:"
+msgstr "開啟裝置清單並選擇："
+
+#: src/ui/soloist.rs:576 src/ui/soloist.rs:857 src/ui/topbar.rs:604
+msgid "Waiting for Spotify…"
+msgstr "正在等待 Spotify…"
+
+#: src/ui/soloist.rs:584
+msgid "Soloist isn't in the list"
+msgstr "清單中沒有 Soloist"
+
+#: src/ui/soloist.rs:613
+msgid ""
+"Phones and the web player may not list it until it has been chosen once. "
+"Start with the desktop app, on this computer."
+msgstr ""
+"手機和網頁播放器可能要在選擇過一次後才會顯示它。請先從這部電腦上的桌面應用程"
+"式開始。"
+
+#: src/ui/soloist.rs:617
+msgid ""
+"A firewall, VPN or guest Wi-Fi can hide it. Allow Soloist on your local "
+"network, or pair once over your phone's hotspot."
+msgstr ""
+"防火牆、VPN 或訪客 Wi-Fi 可能會讓它無法顯示。請在區域網路中允許 Soloist，或透"
+"過手機熱點配對一次。"
+
+#: src/ui/soloist.rs:624
+msgid "More help in the guide"
+msgstr "在指南中查看更多說明"
+
+#: src/ui/soloist.rs:643
+msgid "Almost there"
+msgstr "快完成了"
+
+#: src/ui/soloist.rs:646
+msgid "Soloist is connected. Spotify is confirming it's on your account."
+msgstr "Soloist 已連線。Spotify 正在確認它已連結到你的帳戶。"
+
+#: src/ui/soloist.rs:660
+msgid ""
+"Spotify is slow to answer. Playing a song on Soloist from the Spotify app "
+"can help."
+msgstr ""
+"Spotify 回應較慢。在 Spotify 應用程式中用 Soloist 播放一首歌曲可能會有幫助。"
+
+#: src/ui/soloist.rs:674
 msgid "Ready to listen"
 msgstr "可以開始聆聽了"
 
-#: src/ui/soloist.rs:218
+#: src/ui/soloist.rs:675
+msgid "Soloist will play your music on this computer."
+msgstr "Soloist 將在這部電腦上播放你的音樂。"
+
+#: src/ui/soloist.rs:678
 msgid "Start listening"
 msgstr "開始聆聽"
 
-#: src/ui/soloist.rs:224
+#: src/ui/soloist.rs:691
+msgid "Soloist didn't start"
+msgstr "Soloist 未能啟動"
+
+#: src/ui/soloist.rs:701
+msgid "Enter a different key"
+msgstr "輸入其他金鑰"
+
+#: src/ui/soloist.rs:722 src/ui/soloist.rs:957
 msgid "Connect in Spotify"
 msgstr "在 Spotify 中連接"
 
-#: src/ui/soloist.rs:230
+#: src/ui/soloist.rs:723
+msgid "Reconnecting Soloist…"
+msgstr "正在重新連線 Soloist…"
+
+#: src/ui/soloist.rs:726
+msgid "Keep browsing. A song you choose now starts when it's back."
+msgstr "你可以繼續瀏覽。現在選擇的歌曲會在恢復後開始播放。"
+
+#: src/ui/soloist.rs:734
+msgid "Soloist isn't running"
+msgstr "Soloist 未執行"
+
+#: src/ui/soloist.rs:743
+msgid "Soloist needs your key"
+msgstr "Soloist 需要你的金鑰"
+
+#: src/ui/soloist.rs:744 src/ui/soloist.rs:858
+msgid "Spotifast can't find the key you saved."
+msgstr "Spotifast 找不到你儲存的金鑰。"
+
+#: src/ui/soloist.rs:747 src/ui/soloist.rs:955
+msgid "Add your key"
+msgstr "新增金鑰"
+
+#: src/ui/soloist.rs:762
+msgid "Soloist needs to connect again"
+msgstr "Soloist 需要重新連線"
+
+#: src/ui/soloist.rs:765
+msgid "Spotify signed it out on this computer. Choose it once more in Spotify."
+msgstr "Spotify 已在這部電腦上將其登出。請在 Spotify 中再選擇一次。"
+
+#: src/ui/soloist.rs:771
+msgid "Spotify hasn't listed Soloist yet"
+msgstr "Spotify 尚未列出 Soloist"
+
+#: src/ui/soloist.rs:774
 msgid ""
-"Open Spotify with the same account and network.\n"
-"In its device picker, choose:"
-msgstr ""
-"使用同一帳號和同一網路開啟 Spotify。\n"
-"在裝置清單中選擇："
+"Soloist is running. Playing a song on it from the Spotify app usually helps."
+msgstr "Soloist 正在執行。在 Spotify 應用程式中用它播放一首歌曲通常會有幫助。"
 
-#: src/ui/soloist.rs:281 src/ui/soloist.rs:399
-msgid "Enabled on this computer"
-msgstr "已在這部電腦上啟用"
+#: src/ui/soloist.rs:802
+msgid "Spotify's own player, running on this computer. Requires Premium."
+msgstr "Spotify 官方播放器，在這部電腦上執行。需要 Premium。"
 
-#: src/ui/soloist.rs:282 src/ui/soloist.rs:401
-msgid "Updates automatically."
-msgstr "自動更新。"
+#: src/ui/soloist.rs:809
+msgid "Status"
+msgstr "狀態"
 
-#: src/ui/soloist.rs:286
-msgid "Spotify's player, with lossless support. Requires Premium."
-msgstr "Spotify 播放器，支援無損音訊。需要 Premium。"
+#: src/ui/soloist.rs:810
+msgid "Version"
+msgstr "版本"
 
-#: src/ui/soloist.rs:292
+#: src/ui/soloist.rs:821
+msgid "Spotify manages it. Soloist doesn't report the format it plays."
+msgstr "由 Spotify 管理。Soloist 不會回報其播放的格式。"
+
+#: src/ui/soloist.rs:826
+msgid "Spotify access"
+msgstr "Spotify 存取權限"
+
+#: src/ui/soloist.rs:829
+msgid "Made for you, listening activity and Spotify lyrics."
+msgstr "專為你打造、聆聽動態和 Spotify 歌詞。"
+
+#: src/ui/soloist.rs:834
 msgid "Turn off Soloist"
 msgstr "關閉 Soloist"
 
-#: src/ui/soloist.rs:308
+#: src/ui/soloist.rs:837
+msgid "Go back to the built-in player. Your key stays saved."
+msgstr "返回內建播放器。你的金鑰仍會保留。"
+
+#: src/ui/soloist.rs:848
+msgid "Ready on this computer."
+msgstr "已在這部電腦上就緒。"
+
+#: src/ui/soloist.rs:853
+msgid "Downloading Soloist…"
+msgstr "正在下載 Soloist…"
+
+#: src/ui/soloist.rs:877
+#, rust-format
+msgid "{version}, good until {date}. Updates automatically."
+msgstr "{version}，有效期限至 {date}。自動更新。"
+
+#: src/ui/soloist.rs:889
+msgid "Update ready. It will install when Soloist is inactive."
+msgstr "更新已就緒，將在 Soloist 處於非使用中狀態時安裝。"
+
+#: src/ui/soloist.rs:928
+msgid "Turn off"
+msgstr "關閉"
+
+#: src/soloist/mod.rs:73
 msgid ""
 "Spotify has not published Soloist for this platform. The built-in player "
 "remains available."
 msgstr "Spotify 尚未發布適用於此平台的 Soloist。內建播放器仍可使用。"
 
-#: src/ui/soloist.rs:314
-msgid "Sign in to Spotify before setting up Soloist."
-msgstr "設定 Soloist 前，請先登入 Spotify。"
+#: src/soloist/mod.rs:77
+msgid "Spotify hasn't confirmed your sign-in yet. Try again in a moment."
+msgstr "Spotify 尚未確認你的登入。請稍後再試一次。"
 
-#: src/ui/soloist.rs:328
-msgid "1. Get your Soloist key from Spotify"
-msgstr "1. 從 Spotify 取得 Soloist 金鑰"
+#: src/soloist/mod.rs:79
+msgid "That doesn't look like a Soloist key."
+msgstr "這看起來不是 Soloist 金鑰。"
 
-#: src/ui/soloist.rs:342
-msgid "Paste your personal Soloist key"
-msgstr "貼上你的個人 Soloist 金鑰"
-
-#: src/ui/soloist.rs:349
-msgid "Retry with saved key"
-msgstr "使用已儲存的金鑰重試"
-
-#: src/ui/soloist.rs:351
-msgid "2. Download and enable Soloist"
-msgstr "2. 下載並啟用 Soloist"
-
-#: src/ui/soloist.rs:369
-msgid "Enable with saved key"
-msgstr "使用已儲存的金鑰啟用"
-
-#: src/ui/soloist.rs:391 src/ui/soloist.rs:410
+#: src/soloist/mod.rs:82
 msgid ""
-"Open Spotify with the same account and network. In its device picker, choose:"
-msgstr "使用相同帳號和網路開啟 Spotify，然後在裝置清單中選擇："
+"Spotifast couldn't reach your saved key. Unlock the system credential store "
+"and try again."
+msgstr "Spotifast 無法讀取你儲存的金鑰。請解鎖系統的認證存放區後再試一次。"
 
-#: src/ui/soloist.rs:422
-msgid "Update ready. It will install when Soloist is inactive."
-msgstr "更新已就緒，將在 Soloist 處於非使用中狀態時安裝。"
+#: src/soloist/mod.rs:86
+msgid ""
+"Spotifast couldn't download Soloist. Check your connection and try again."
+msgstr "Spotifast 無法下載 Soloist。請檢查連線後再試一次。"
 
-#: src/ui/soloist.rs:443
-#, rust-format
-msgid "Version {version} · expires {date}"
-msgstr "版本 {version} · 到期日期 {date}"
+#: src/soloist/mod.rs:90
+msgid ""
+"Soloist stopped while starting. Check your key and this computer's audio "
+"service."
+msgstr "Soloist 在啟動時停止。請檢查金鑰和這部電腦的音訊服務。"
 
-#: src/ui/soloist.rs:452
-msgid "Spotify manages audio quality."
-msgstr "音質由 Spotify 管理。"
+#: src/soloist/mod.rs:92
+msgid "Soloist took too long to start."
+msgstr "Soloist 啟動時間過長。"
+
+#: src/soloist/mod.rs:93
+msgid "Soloist stopped unexpectedly."
+msgstr "Soloist 意外停止。"
+
+#: src/soloist/mod.rs:94
+msgid "Soloist keeps losing its connection."
+msgstr "Soloist 不斷中斷連線。"
+
+#: src/soloist/mod.rs:95
+msgid "Soloist lost its audio output."
+msgstr "Soloist 失去了音訊輸出。"
+
+#: src/soloist/mod.rs:98
+msgid ""
+"This Soloist build has expired, and Spotify hasn't published a new one yet."
+msgstr "此 Soloist 版本已過期，Spotify 尚未發佈新版本。"
 
 #: src/api/models.rs:296
 msgid "Single"
@@ -2342,12 +2563,12 @@ msgstr "合輯"
 msgid "Appears On"
 msgstr "參與作品"
 
-#: src/milkdrop.rs:59
+#: src/milkdrop.rs:73
 msgid "Uncapped"
 msgstr "不限制"
 
 #. Translators: A frame rate that matches the display. Keep {rate}.
-#: src/milkdrop.rs:63
+#: src/milkdrop.rs:77
 #, rust-format
 msgid "{rate} fps, your screen"
 msgstr "{rate} fps，與螢幕相同"
@@ -2678,10 +2899,6 @@ msgstr ""
 "你正在使用 Spotifast 以前使用的共用登入。Spotifast 已不再提供它，Spotify 也隨"
 "時可能停止接受它。請註冊 Spotifast，讓音樂不會中斷。大約需要兩分鐘。"
 
-#: src/ui/dialogs.rs:53
-msgid "Not now"
-msgstr "以後再說"
-
 #: src/ui/dialogs.rs:64
 msgid "Delete playlist?"
 msgstr "要刪除播放清單嗎？"
@@ -2884,161 +3101,169 @@ msgstr "顯示更多熱門歌曲"
 msgid "Recommended for you"
 msgstr "為你推薦"
 
-#: src/ui/keys.rs:293
+#: src/ui/keys.rs:305
 msgctxt "key"
 msgid "Space"
 msgstr "空白鍵"
 
-#: src/ui/keys.rs:294
+#: src/ui/keys.rs:306
 msgid "Play or pause"
 msgstr "播放或暫停"
 
-#: src/ui/keys.rs:298
+#: src/ui/keys.rs:310
 msgid "Previous or next"
 msgstr "上一首或下一首"
 
-#: src/ui/keys.rs:302
+#: src/ui/keys.rs:314
 msgid "Seek 10 seconds"
 msgstr "快轉或倒轉 10 秒"
 
-#: src/ui/keys.rs:306
+#: src/ui/keys.rs:318
 msgid "Volume up or down"
 msgstr "調高或調低音量"
 
-#: src/ui/keys.rs:308
+#: src/ui/keys.rs:320
 msgid "Mute or unmute"
 msgstr "靜音或取消靜音"
 
-#: src/ui/keys.rs:311
+#: src/ui/keys.rs:323
 msgid "Like or unlike the playing song"
 msgstr "對正在播放的歌曲按讚或取消按讚"
 
-#: src/ui/keys.rs:313
+#: src/ui/keys.rs:325
 msgid "Toggle shuffle"
 msgstr "切換隨機播放"
 
-#: src/ui/keys.rs:314
+#: src/ui/keys.rs:326
 msgid "Cycle repeat"
 msgstr "切換重複播放模式"
 
-#: src/ui/keys.rs:315
+#: src/ui/keys.rs:327
 msgid "Show the queue"
 msgstr "顯示待播清單"
 
-#: src/ui/keys.rs:316
+#: src/ui/keys.rs:328
 msgid "Show the lyrics"
 msgstr "顯示歌詞"
 
-#: src/ui/keys.rs:318
+#: src/ui/keys.rs:333
+msgid "Full screen lyrics: MilkDrop behind the words"
+msgstr "全螢幕歌詞：文字後顯示 MilkDrop"
+
+#: src/ui/keys.rs:338
+msgid "Full screen lyrics: next or previous preset"
+msgstr "全螢幕歌詞：下一個或上一個預設"
+
+#: src/ui/keys.rs:340
 msgid "Lyrics: leave full screen"
 msgstr "歌詞：退出全螢幕"
 
-#: src/ui/keys.rs:321
+#: src/ui/keys.rs:343
 msgid "Song list: extend or shrink the selection"
 msgstr "歌曲清單：擴大或縮小選取範圍"
 
-#: src/ui/keys.rs:325
+#: src/ui/keys.rs:347
 msgid "Song list: add the selected songs to the queue"
 msgstr "歌曲清單：將所選歌曲加入待播清單"
 
-#: src/ui/keys.rs:329
+#: src/ui/keys.rs:351
 msgid "Song list: play the selected songs next"
 msgstr "歌曲清單：接著播放所選歌曲"
 
-#: src/ui/keys.rs:334
+#: src/ui/keys.rs:356
 msgid "Song list: select all"
 msgstr "歌曲清單：全選"
 
-#: src/ui/keys.rs:338
+#: src/ui/keys.rs:360
 msgid "Song list: copy the selected songs' links"
 msgstr "歌曲清單：複製所選歌曲的連結"
 
-#: src/ui/keys.rs:342
+#: src/ui/keys.rs:364
 msgid "Playlist: cut the selected songs"
 msgstr "播放清單：剪下所選歌曲"
 
-#: src/ui/keys.rs:346
+#: src/ui/keys.rs:368
 msgid "Playlist: add the pasted song links"
 msgstr "播放清單：加入貼上的歌曲連結"
 
 #. Translators: Keep the key names. Only the word "or" is translated.
-#: src/ui/keys.rs:351
+#: src/ui/keys.rs:373
 msgid "Cmd+F  or  /"
 msgstr "Cmd+F  或  /"
 
 #. Translators: Keep the key names. Only the word "or" is translated.
-#: src/ui/keys.rs:354
+#: src/ui/keys.rs:376
 msgid "Ctrl+F  or  /"
 msgstr "Ctrl+F  或  /"
 
-#: src/ui/keys.rs:360
+#: src/ui/keys.rs:382
 msgid "Show or hide the sidebar"
 msgstr "顯示或隱藏側邊欄"
 
-#: src/ui/keys.rs:362
+#: src/ui/keys.rs:384
 msgid "Back or forward"
 msgstr "上一頁或下一頁"
 
-#: src/ui/keys.rs:365
+#: src/ui/keys.rs:387
 msgid "Scroll the page"
 msgstr "捲動頁面"
 
-#: src/ui/keys.rs:369
+#: src/ui/keys.rs:391
 msgid "Top or bottom of the page"
 msgstr "頁面頂部或底部"
 
-#: src/ui/keys.rs:381
+#: src/ui/keys.rs:403
 msgid "Go to the playing artist"
 msgstr "前往正在播放的藝人"
 
-#: src/ui/keys.rs:385
+#: src/ui/keys.rs:407
 msgid "Go to the playing album"
 msgstr "前往正在播放的專輯"
 
-#: src/ui/keys.rs:390
+#: src/ui/keys.rs:412
 msgid "MilkDrop, under the mini player"
 msgstr "MilkDrop，位於迷你播放器下方"
 
 #. Translators: Keep the key name F. Translate "or" and "double-click".
-#: src/ui/keys.rs:394
+#: src/ui/keys.rs:416
 msgid "F  or  double-click"
 msgstr "F  或  按兩下"
 
-#: src/ui/keys.rs:395
+#: src/ui/keys.rs:417
 msgid "MilkDrop: fill the screen"
 msgstr "MilkDrop：全螢幕"
 
-#: src/ui/keys.rs:397
+#: src/ui/keys.rs:419
 msgid "MilkDrop: next preset"
 msgstr "MilkDrop：下一個預設集"
 
-#: src/ui/keys.rs:400
+#: src/ui/keys.rs:422
 msgid "MilkDrop: previous preset"
 msgstr "MilkDrop：上一個預設集"
 
-#: src/ui/keys.rs:402
+#: src/ui/keys.rs:424
 msgid "MilkDrop: keep this preset"
 msgstr "MilkDrop：保留這個預設集"
 
-#: src/ui/keys.rs:405
+#: src/ui/keys.rs:427
 msgid "MilkDrop: leave full screen, or close"
 msgstr "MilkDrop：退出全螢幕或關閉"
 
 #. Translators: Keep the key names. Only the word "or" is translated.
-#: src/ui/keys.rs:414
+#: src/ui/keys.rs:436
 msgid "Cmd+/ or ?"
 msgstr "Cmd+/ 或 ?"
 
 #. Translators: Keep the key names. Only the word "or" is translated.
-#: src/ui/keys.rs:417
+#: src/ui/keys.rs:439
 msgid "Ctrl+/ or ?"
 msgstr "Ctrl+/ 或 ?"
 
-#: src/ui/keys.rs:423
+#: src/ui/keys.rs:445
 msgid "Close the window"
 msgstr "關閉視窗"
 
-#: src/ui/keys.rs:425 src/ui/winamp/mod.rs:767
+#: src/ui/keys.rs:447 src/ui/winamp/mod.rs:812
 msgid "Quit"
 msgstr "結束"
 
@@ -3162,13 +3387,13 @@ msgstr "如何註冊 Spotifast"
 msgid "Proxy Settings"
 msgstr "Proxy 設定"
 
-#: src/ui/login.rs:418
+#: src/ui/login.rs:413
 msgid ""
 "A Client ID is 32 letters and digits. Copy it from Spotify's developer "
 "dashboard."
 msgstr "Client ID 由 32 個字母和數字組成。請從 Spotify 開發人員資訊主頁複製。"
 
-#: src/ui/login.rs:478
+#: src/ui/login.rs:473
 msgid ""
 "Spotify asks you to register Spotifast once, on an account with Premium. It "
 "takes about two minutes and gives you a Client ID."
@@ -3176,32 +3401,32 @@ msgstr ""
 "Spotify 要求你用具有 Premium 的帳戶註冊一次 Spotifast。大約需要兩分鐘，完成後"
 "你會得到一個 Client ID。"
 
-#: src/ui/login.rs:488
+#: src/ui/login.rs:483
 msgid "Open Spotify's developer dashboard."
 msgstr "開啟 Spotify 開發人員資訊主頁。"
 
-#: src/ui/login.rs:509
+#: src/ui/login.rs:504
 msgid ""
 "Click Create app, Spotify's name for this registration. Any name will do."
 msgstr "點選「Create app」，這是 Spotify 對此註冊的稱呼。名稱隨意。"
 
-#: src/ui/login.rs:517
+#: src/ui/login.rs:512
 msgid "Under Redirect URIs, add exactly:"
 msgstr "在「Redirect URIs」中準確新增："
 
-#: src/ui/login.rs:526
+#: src/ui/login.rs:521
 msgid "Tick Web API, accept the terms, and save."
 msgstr "勾選「Web API」，接受條款並儲存。"
 
-#: src/ui/login.rs:533
+#: src/ui/login.rs:528
 msgid "Paste the Client ID into the field and sign in."
 msgstr "將 Client ID 貼到輸入框並登入。"
 
-#: src/ui/mod.rs:406
+#: src/ui/mod.rs:409
 msgid "Spotify is being slow on the shared sign-in."
 msgstr "Spotify 在共用登入上回應緩慢。"
 
-#: src/ui/mod.rs:409
+#: src/ui/mod.rs:412
 msgid ""
 "Spotifast no longer offers the shared sign-in, and Spotify can stop "
 "accepting it at any time. Register Spotifast and you won't have to wait."
@@ -3211,11 +3436,11 @@ msgstr ""
 
 #. Translators: a button that opens a page explaining why
 #. the banner it sits in appeared.
-#: src/ui/mod.rs:419 src/ui/mod.rs:450
+#: src/ui/mod.rs:423 src/ui/mod.rs:455
 msgid "Why?"
 msgstr "為什麼？"
 
-#: src/ui/mod.rs:442
+#: src/ui/mod.rs:446
 msgid ""
 "Spotify refused the key that unlocks the audio. Spotifast can't fix that, "
 "but it sometimes clears up on its own. You can still play on your phone or "
@@ -3224,23 +3449,23 @@ msgstr ""
 "Spotify 拒絕提供解鎖音訊的金鑰。Spotifast 沒辦法解決，但有時過一陣子會自己恢"
 "復。你仍然可以在手機或其他 Spotify 裝置上播放。"
 
-#: src/ui/mod.rs:446
+#: src/ui/mod.rs:451
 msgid "Play on another device"
 msgstr "在其他裝置上播放"
 
-#: src/ui/mod.rs:497
+#: src/ui/mod.rs:504
 msgid "Close banner"
 msgstr "關閉橫幅"
 
-#: src/ui/mod.rs:668
+#: src/ui/mod.rs:681
 msgid "Minimize"
 msgstr "最小化"
 
-#: src/ui/mod.rs:669
+#: src/ui/mod.rs:682
 msgid "Maximize"
 msgstr "最大化"
 
-#: src/ui/mod.rs:670
+#: src/ui/mod.rs:683
 msgid "Restore"
 msgstr "還原"
 
@@ -3489,10 +3714,6 @@ msgstr "正在更新音樂庫…"
 msgid "Checking for updates…"
 msgstr "正在檢查更新…"
 
-#: src/ui/topbar.rs:604
-msgid "Waiting for Spotify…"
-msgstr "正在等待 Spotify…"
-
 #. Translators: {version} is a version number such as 1.2.0.
 #: src/ui/topbar.rs:644
 #, rust-format
@@ -3506,12 +3727,6 @@ msgstr "關閉更新"
 #: src/ui/update.rs:72
 msgid "Checking download…"
 msgstr "正在檢查下載…"
-
-#. Translators: {received} and {total} are sizes in megabytes, such as 12.5.
-#: src/ui/update.rs:90
-#, rust-format
-msgid "{received} of {total} MB"
-msgstr "{received} / {total} MB"
 
 #: src/ui/update.rs:106
 msgid "Ready to install"
@@ -3549,94 +3764,94 @@ msgstr "收合等化器"
 msgid "Roll the equalizer down"
 msgstr "展開等化器"
 
-#: src/ui/winamp/mod.rs:442 src/ui/winamp/mod.rs:490 src/ui/winamp/mod.rs:660
+#: src/ui/winamp/mod.rs:487 src/ui/winamp/mod.rs:535 src/ui/winamp/mod.rs:705
 msgid "Back to the big window (Ctrl+M)"
 msgstr "返回大視窗 (Ctrl+M)"
 
-#: src/ui/winamp/mod.rs:443 src/ui/winamp/mod.rs:488 src/ui/winamp/mod.rs:658
+#: src/ui/winamp/mod.rs:488 src/ui/winamp/mod.rs:533 src/ui/winamp/mod.rs:703
 msgid "Back to the big window (Cmd+Shift+M)"
 msgstr "返回大視窗 (Cmd+Shift+M)"
 
-#: src/ui/winamp/mod.rs:522
+#: src/ui/winamp/mod.rs:567
 msgid "Roll the window down"
 msgstr "展開視窗"
 
-#: src/ui/winamp/mod.rs:692
+#: src/ui/winamp/mod.rs:737
 msgid "Roll the window up"
 msgstr "收合視窗"
 
-#: src/ui/winamp/mod.rs:758
+#: src/ui/winamp/mod.rs:803
 msgid "Choose a skin"
 msgstr "選擇面板"
 
-#: src/ui/winamp/mod.rs:764
+#: src/ui/winamp/mod.rs:809
 msgid "Big window"
 msgstr "大視窗"
 
-#: src/ui/winamp/mod.rs:897 src/ui/winamp/playlist.rs:743
+#: src/ui/winamp/mod.rs:942 src/ui/winamp/playlist.rs:743
 #: src/ui/winamp/playlist.rs:748
 msgid "Song info"
 msgstr "歌曲資訊"
 
-#: src/ui/winamp/mod.rs:922
+#: src/ui/winamp/mod.rs:967
 msgid "Size: 1x, 2x, 3x, 4x"
 msgstr "大小：1x、2x、3x、4x"
 
-#: src/ui/winamp/mod.rs:937
+#: src/ui/winamp/mod.rs:982
 msgid "Visualisation"
 msgstr "視覺效果"
 
-#: src/ui/winamp/mod.rs:945
+#: src/ui/winamp/mod.rs:990
 msgid "Spectrum analyser"
 msgstr "頻譜分析儀"
 
-#: src/ui/winamp/mod.rs:946
+#: src/ui/winamp/mod.rs:991
 msgid "Oscilloscope"
 msgstr "示波器"
 
 #. Translators: The visualiser choice that shows no visualisation.
-#: src/ui/winamp/mod.rs:948
+#: src/ui/winamp/mod.rs:993
 msgctxt "visualiser"
 msgid "Nothing"
 msgstr "無"
 
-#: src/ui/winamp/mod.rs:1094
+#: src/ui/winamp/mod.rs:1139
 msgid "Play in mono"
 msgstr "以單聲道播放"
 
-#: src/ui/winamp/mod.rs:1102
+#: src/ui/winamp/mod.rs:1147
 msgid "Play in stereo"
 msgstr "以立體聲播放"
 
 #. Translators: {percent} is a number from 0 to 100, followed by a percent sign.
-#: src/ui/winamp/mod.rs:1193
+#: src/ui/winamp/mod.rs:1238
 #, rust-format
 msgid "Balance: {percent}% left"
 msgstr "左右平衡：左 {percent}%"
 
 #. Translators: {percent} is a number from 0 to 100, followed by a percent sign.
-#: src/ui/winamp/mod.rs:1198
+#: src/ui/winamp/mod.rs:1243
 #, rust-format
 msgid "Balance: {percent}% right"
 msgstr "左右平衡：右 {percent}%"
 
-#: src/ui/winamp/mod.rs:1201
+#: src/ui/winamp/mod.rs:1246
 msgid "Balance: center"
 msgstr "左右平衡：置中"
 
 #. Translators: {percent} is a number from 0 to 100, followed by a percent sign.
-#: src/ui/winamp/mod.rs:1206
+#: src/ui/winamp/mod.rs:1251
 #, rust-format
 msgid "Volume: {percent}%"
 msgstr "音量：{percent}%"
 
 #. Translators: {position} and {duration} are times such as 2:12, {percent} a number from 0 to 100.
-#: src/ui/winamp/mod.rs:1222
+#: src/ui/winamp/mod.rs:1267
 #, rust-format
 msgid "Seek to: {position}/{duration} ({percent}%)"
 msgstr "跳至：{position}/{duration} ({percent}%)"
 
-#: src/ui/winamp/mod.rs:1557
+#: src/ui/winamp/mod.rs:1602
 msgid "Open the big window"
 msgstr "開啟大視窗"
 
