@@ -46,4 +46,9 @@ a Free account): signed in, a profile query answered 200, play 200, the song
 played to 43 s and paused on command.
 
 Containers without the setuid sandbox need `--no-sandbox` on the command
-line. The Rust side (`src/web_player.rs`) still starts only the macOS helper.
+line. Spotifast starts it with `--headless --no-sandbox` from a
+`spotifast-free-helper` folder beside the app or in `~/.local/share`
+(`src/web_player.rs`, `helper_path`): castLabs Electron renamed to
+`spotifast-free-helper`, with this folder and `Diagnostics.js` in
+`resources/app`. With that layout, the Free live tests in `src/web_player.rs`
+and `src/free_reads.rs` pass on Linux (Ubuntu 24.04).
