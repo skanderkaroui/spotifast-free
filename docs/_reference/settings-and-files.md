@@ -27,6 +27,7 @@ Spotifast follows each platform's conventions. On Linux:
 | Audio cache | `~/.cache/spotifast/audio/` | Always |
 | Artwork cache | `~/.cache/spotifast/art/` | Always |
 | Lyrics cache | `~/.cache/spotifast/lyrics/` | Always |
+| Skin previews | `~/.cache/spotifast/skin-previews/` | Always, they are drawn again |
 | Account-scoped playlist page cache | `~/.cache/spotifast/playlists/<account-id>/` | Always |
 | Account-scoped playlist list | `~/.cache/spotifast/library/` | Always |
 | Account-scoped Home shelves | `~/.cache/spotifast/home/` | Always |
@@ -400,7 +401,7 @@ main fields are:
 | `winamp_window` | `false` | The window is the Winamp mini player |
 | `winamp_show_taskbar` | `true` | Windows since 0.8.0, and Linux X11 sessions: show the Winamp window's taskbar button; the main window always keeps its button. Wayland and macOS ignore it |
 | `custom_titlebar` | `false` | Windows and Linux: draw Spotifast's own title bar and window buttons instead of the desktop's |
-| `skin` | none | File or folder name in the skins folder; blank uses the built-in skin |
+| `skin` | `Spotifast Wide` | File or folder name in the skins folder, or `Spotifast Tall` or `Spotifast Wide`; blank uses the built-in Winamp skin |
 | `random_skin` | `false` | Since 0.11.0: pick a different skin (built-in or installed) each time the mini player opens; `skin` holds the one picked |
 | `skin_scale` | by display | Screen pixels per skin pixel, 1 to 4 |
 | `winamp_on_top` | `false` | Keep the mini player above other windows |
@@ -421,6 +422,8 @@ main fields are:
 | `milkdrop_fps` | `60` | MilkDrop frame rate; `0` is uncapped. At most 30 while the system saves energy |
 | `milkdrop_screen_hz` | `0` | Last refresh rate reported by MilkDrop's window |
 | `milkdrop_fullscreen` | `false` | The MilkDrop window fills the screen |
+| `milkdrop_panel_height` | `232` | The MilkDrop panel's height in the mini player, in skin pixels |
+| `lyrics_milkdrop` | `false` | MilkDrop rather than the cover's art behind full screen lyrics |
 | `milkdrop_size` | `640, 480` | The MilkDrop window's size in points |
 | `keep_playing_in_background` | `true` | Close to tray |
 | `tray_icon` | `colour` | Linux and Windows: the tray icon in `colour`, or in `white` or `black` to match the panel or taskbar. macOS ignores it: the menu bar draws its icon black or white to match itself |

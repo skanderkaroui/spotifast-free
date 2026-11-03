@@ -225,6 +225,14 @@ pub struct NowPlaying {
     pub resuming: bool,
 }
 
+/// What Soloist's state does to the window: see `App::soloist_view`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SoloistView {
+    App,
+    Loading,
+    Setup,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Target {
     Local,
@@ -338,6 +346,17 @@ const ARTIST_METADATA_REFRESH: Duration = Duration::from_secs(10 * 60);
 struct ArtistMetadataRead {
     received_at: Instant,
     has_counts: bool,
+}
+
+/// MilkDrop edge to edge, what it replaced, and its controls.
+#[derive(Clone, Copy)]
+struct Immersive {
+    /// Whether MilkDrop was behind the lyrics before; it goes back to that.
+    backdrop_was: bool,
+    /// A frame has arrived, so the lyrics, cover and bars have gone.
+    showing: bool,
+    /// Until when the controls show, on the input clock.
+    controls_until: f64,
 }
 
 pub struct App {
@@ -481,6 +500,21 @@ pub struct App {
     pub soloist_device_id: Option<String>,
     pub soloist_update: Option<String>,
     soloist_select: bool,
+    /// When `soloist_status` last became what it is now.
+    pub(crate) soloist_status_at: Instant,
+    /// The app has opened since sign-in, so the loading screen stays away.
+    pub(crate) soloist_settled: bool,
+    /// When Spotifast next starts a stopped player by itself.
+    pub(crate) soloist_retry_at: Option<Instant>,
+    soloist_retries: usize,
+    soloist_bound_at: Option<Instant>,
+    /// Music was playing on Soloist when it stopped.
+    soloist_resume: bool,
+    /// Setup was chosen in this run, not resumed from `session.json`.
+    soloist_setup_chosen: bool,
+    /// Setup is open for someone whose Soloist was already set up, who can
+    /// leave it again without giving the player up.
+    pub(crate) soloist_setup_optional: bool,
     pub local: LocalState,
     pub remote: Option<RemoteSnapshot>,
     remote_polled_at: Instant,
@@ -653,6 +687,10 @@ pub struct App {
     pub softened_covers: crate::images::SoftenedCovers,
     /// The track the lyrics below are for.
     pub lyrics_uri: Option<String>,
+    /// How many of `LYRICS_RETRIES` this song has used.
+    lyrics_retries: usize,
+    /// When to ask again for lyrics a busy service didn't answer for.
+    lyrics_retry_at: Option<Instant>,
     /// `Loaded(None)` when no lyrics are available.
     pub lyrics: Loadable<Option<crate::lyrics::Lyrics>>,
     /// Whether the panel follows the current line. Manual scrolling disables
@@ -700,6 +738,20 @@ pub struct App {
     /// `Drop` stops the child when the app does.
     #[cfg(feature = "milkdrop")]
     milkdrop_host: Option<crate::milkdrop::host::Host>,
+    /// MilkDrop's frames for a skin's pane; `None` until one first shows.
+    #[cfg(feature = "milkdrop")]
+    milkdrop_pane: Option<crate::milkdrop::pane::Stream>,
+    /// What fills full screen lyrics: MilkDrop rather than the cover's art.
+    /// Follows `settings.lyrics_milkdrop`, or is on for a trip from a skin.
+    milkdrop_backdrop: bool,
+    /// Full screen lyrics came from the mini player and go back to it.
+    skin_return: bool,
+    /// The main window is on its way, and full screen with it.
+    lyrics_after_switch: bool,
+    /// The next switch to the mini player goes back to the same skin.
+    keep_skin: bool,
+    /// Full screen lyrics stepped aside for MilkDrop alone. Not remembered.
+    immersive: Option<Immersive>,
     last_eviction: Instant,
     /// Playback snapshot for the current frame, built once per redraw.
     frame_now: Option<NowPlaying>,
@@ -903,6 +955,7 @@ fn media_app() -> fastframe_now_playing::App {
 }
 
 const TRAY_SHOW: &str = "show";
+const TRAY_MAIN_WINDOW: &str = "main-window";
 const TRAY_PLAY_PAUSE: &str = "play-pause";
 const TRAY_NEXT: &str = "next";
 const TRAY_PREVIOUS: &str = "previous";
@@ -992,6 +1045,28 @@ fn free_playback_available() -> bool {
 const STARTS_WINDOWED: bool =
     cfg!(windows) || (cfg!(target_os = "linux") && !cfg!(feature = "demo"));
 
+/// How long a returning listener may see the loading screen for one step of
+/// Soloist's start. Past this the app opens and a banner carries on.
+const SOLOIST_LOADING_GRACE: Duration = Duration::from_secs(10);
+/// Every start reports pairing until Soloist answers, and a dropped session
+/// usually comes back. Only past this does it need the listener.
+pub(crate) const SOLOIST_PAIRING_GRACE: Duration = Duration::from_secs(20);
+/// The waits before Spotifast starts a stopped player again by itself.
+const SOLOIST_RETRIES: [Duration; 3] = [
+    Duration::from_secs(2),
+    Duration::from_secs(10),
+    Duration::from_secs(30),
+];
+/// A player that ran this long starts its retries from the first again.
+const SOLOIST_STABLE: Duration = Duration::from_secs(60);
+/// How long to wait before each new try at lyrics that failed.
+const LYRICS_RETRIES: [Duration; 4] = [
+    Duration::from_secs(5),
+    Duration::from_secs(15),
+    Duration::from_secs(45),
+    Duration::from_secs(120),
+];
+
 /// The tray menu's Play or Pause entry, for what is playing.
 fn play_pause_label(playing: bool) -> &'static str {
     if playing { "Pause" } else { "Play" }
@@ -1033,6 +1108,7 @@ fn tray_config() -> fastframe_tray::Config {
         themed_icon: true,
         menu: vec![
             MenuItem::action(TRAY_SHOW, "Show or hide Spotifast Free"),
+            MenuItem::action(TRAY_MAIN_WINDOW, "Open main window"),
             MenuItem::Separator,
             MenuItem::action(TRAY_PLAY_PAUSE, play_pause_label(false)),
             MenuItem::action(TRAY_NEXT, "Next"),
@@ -1065,6 +1141,7 @@ fn link_recording(
 
 impl App {
     pub fn new(waker: &Waker, dirs: AppDirs, mut settings: Settings, options: AppOptions) -> Self {
+        let milkdrop_backdrop = settings.lyrics_milkdrop;
         // The legacy password file has no endpoint of its own. Keep the old
         // settings beside it until migration binds that password in the store.
         settings.proxy_password_legacy |= dirs.proxy_secret_file().try_exists().unwrap_or(true);
@@ -1105,6 +1182,9 @@ impl App {
         backend
             .soloist_output_volume
             .set(session.soloist_output_volume.unwrap_or(100));
+        if let Some(volume) = session.soloist_volume {
+            backend.soloist_output_volume.remember(volume);
+        }
         let soloist_onboarding = session.soloist_onboarding.restore(settings.soloist_enabled);
         let wake = waker.clone();
         let media_controls = options
@@ -1224,6 +1304,14 @@ impl App {
             soloist_device_id: None,
             soloist_update: None,
             soloist_select: false,
+            soloist_status_at: Instant::now(),
+            soloist_settled: false,
+            soloist_retry_at: None,
+            soloist_retries: 0,
+            soloist_bound_at: None,
+            soloist_resume: false,
+            soloist_setup_chosen: false,
+            soloist_setup_optional: false,
             local: LocalState::default(),
             remote: None,
             remote_polled_at: Instant::now() - REMOTE_POLL_UNSEEN,
@@ -1334,6 +1422,8 @@ impl App {
             lyrics_backdrop: Default::default(),
             softened_covers: Default::default(),
             lyrics_uri: None,
+            lyrics_retries: 0,
+            lyrics_retry_at: None,
             lyrics: Loadable::NotLoaded,
             lyrics_following: true,
             lyrics_line_shown: None,
@@ -1360,6 +1450,13 @@ impl App {
             milkdrop_pos: session.milkdrop_pos,
             #[cfg(feature = "milkdrop")]
             milkdrop_host: None,
+            #[cfg(feature = "milkdrop")]
+            milkdrop_pane: None,
+            milkdrop_backdrop,
+            skin_return: false,
+            lyrics_after_switch: false,
+            keep_skin: false,
+            immersive: None,
             last_eviction: Instant::now(),
             frame_now: None,
             sign_in_url: None,
@@ -1486,7 +1583,13 @@ impl App {
         self.backend.art().forget_textures();
         ctx.set_theme(self.theme_preference());
         self.applied_dark = None;
-        self.winamp.forget_textures();
+        self.forget_skin_textures();
+        #[cfg(target_os = "linux")]
+        if self.settings.winamp_window {
+            crate::hyprland::bare_skin_windows();
+        } else {
+            crate::hyprland::keep_borders();
+        }
         self.window_hidden = false;
         self.hide_intent = false;
         self.wants_show = false;
@@ -1545,10 +1648,19 @@ impl App {
         }
     }
 
+    /// The textures of the skin and its pane belong to the last window.
+    fn forget_skin_textures(&mut self) {
+        self.winamp.forget_textures();
+        #[cfg(feature = "milkdrop")]
+        if let Some(stream) = &mut self.milkdrop_pane {
+            stream.forget_texture();
+        }
+    }
+
     /// The window is gone but the process stays: audio, the tray, and the
     /// media controls keep running until Show or Quit.
     pub fn window_gone(&mut self) {
-        self.winamp.forget_textures();
+        self.forget_skin_textures();
         self.window_hidden = true;
         self.hide_intent = false;
         self.wants_show = false;
@@ -1691,6 +1803,39 @@ impl App {
                     .as_deref()
                     .is_none_or(|product| product == "premium")
             })
+    }
+
+    /// What Soloist's state does to the window. Setup belongs to people who
+    /// have not finished it. Once they have, nothing Soloist does takes the
+    /// app away: a stopped player is a banner over a working library.
+    pub fn soloist_view(&self) -> SoloistView {
+        use crate::soloist::Status;
+        if self.show_soloist_onboarding() {
+            SoloistView::Setup
+        } else if !self.soloist_waiting()
+            || self.soloist_settled
+            || matches!(self.soloist_status, Status::NeedsKey | Status::Failed(_))
+        {
+            SoloistView::App
+        } else {
+            SoloistView::Loading
+        }
+    }
+
+    /// Spotifast is bringing the player back and needs nothing from the
+    /// listener, so a song chosen now waits for it.
+    pub fn soloist_recovering(&self) -> bool {
+        use crate::soloist::Status;
+        self.soloist_waiting()
+            && self.soloist_view() == SoloistView::App
+            && match self.soloist_status {
+                Status::NeedsKey => false,
+                Status::Failed(_) => self.soloist_retry_at.is_some(),
+                Status::Pairing { .. } | Status::Ready { .. } => {
+                    self.soloist_status_at.elapsed() < SOLOIST_PAIRING_GRACE
+                }
+                _ => true,
+            }
     }
 
     pub fn user_id(&self) -> Option<&str> {
@@ -1878,6 +2023,14 @@ impl App {
             && self.soloist_audio
     }
 
+    /// The level Linux's route plays our Soloist at. A change is heard from
+    /// here at once; Soloist is told, and its report catches up behind.
+    fn soloist_route_volume(&self) -> Option<u8> {
+        (cfg!(target_os = "linux") && self.settings.soloist_enabled && self.soloist_audio)
+            .then(|| self.backend.soloist_output_volume.route_percent())
+            .flatten()
+    }
+
     /// The built-in sink or an audible processing route from our Soloist child.
     /// Spotify Free's sound never passes through Spotifast, so it has none.
     pub fn audio_processing_available(&self) -> bool {
@@ -1927,8 +2080,9 @@ impl App {
             Status::Starting | Status::Off => gettext(self.locale, "Starting Soloist…"),
             Status::Downloading { .. } => gettext(self.locale, "Downloading Soloist from Spotify…"),
             Status::Ready { .. } => gettext(self.locale, "Verifying Soloist…"),
-            Status::Pairing { .. } => gettext(self.locale, "3. Pair once in Spotify"),
-            Status::NeedsKey | Status::Failed(_) => gettext(self.locale, "Soloist needs attention"),
+            Status::Pairing { .. } | Status::NeedsKey | Status::Failed(_) => {
+                gettext(self.locale, "Connecting to Spotify…")
+            }
         }
     }
 
@@ -2345,11 +2499,12 @@ impl App {
                 }
             }
         };
-        let volume = if self.has_soloist_output_volume()
-            && self.soloist_device_id.is_some()
-            && self.soloist_device_id.as_deref() == device.and_then(|d| d.id.as_deref())
-        {
+        let own_soloist = self.soloist_device_id.is_some()
+            && self.soloist_device_id.as_deref() == device.and_then(|d| d.id.as_deref());
+        let volume = if self.has_soloist_output_volume() && own_soloist {
             self.backend.soloist_output_volume.percent()
+        } else if let Some(percent) = self.soloist_route_volume().filter(|_| own_soloist) {
+            percent
         } else {
             match &self.pending_remote_volume {
                 Some(pending)
@@ -2940,7 +3095,7 @@ impl App {
                     if self.lyrics_uri.as_deref() == Some(uri.as_str()) {
                         self.lyrics = match result {
                             Ok(found) => Loadable::Loaded(found),
-                            Err(error) => Loadable::Failed(error),
+                            Err(error) => self.lyrics_failed(error, Instant::now()),
                         };
                     }
                 }
@@ -3122,12 +3277,26 @@ impl App {
             Update::Status(status) => {
                 let ready = matches!(status, Status::Ready { .. });
                 if matches!(status, Status::Ready { .. } | Status::Pairing { .. }) { self.soloist_key.clear(); }
+                if std::mem::discriminant(&status) != std::mem::discriminant(&self.soloist_status) {
+                    self.soloist_status_at = Instant::now();
+                }
                 if !ready {
+                    // Remembered before the target goes: the player may stop
+                    // mid-song, and its song should carry on when it is back.
+                    self.soloist_resume |= self.soloist_device_id.is_some()
+                        && self.targets_own_soloist()
+                        && self.now_playing().is_some_and(|now| now.playing);
                     self.soloist_audio = false;
                     self.clear_soloist_target();
                     self.backend.send(Command::SoloistDevice(None));
                 }
                 if let Status::Ready { version, .. } = &status && self.soloist_update.as_ref() == Some(version) { self.soloist_update = None; }
+                if let Status::Failed(failure) = &status {
+                    self.schedule_soloist_retry(&failure.clone());
+                }
+                if matches!(status, Status::NeedsKey) {
+                    self.soloist_give_up();
+                }
                 self.soloist_status = status;
                 if ready {
                     self.devices_fetched_at = None;
@@ -3147,6 +3316,58 @@ impl App {
         }
     }
 
+    /// Decides what a failure does next. Someone who finished setup gets
+    /// their player back by itself a few times. During setup only a sign-in
+    /// still being verified retries: anything else needs them to read it.
+    fn schedule_soloist_retry(&mut self, failure: &crate::soloist::Failure) {
+        self.soloist_settled = true;
+        if self
+            .soloist_bound_at
+            .take()
+            .is_some_and(|at| at.elapsed() >= SOLOIST_STABLE)
+        {
+            self.soloist_retries = 0;
+        }
+        let returning = self.soloist_onboarding == crate::settings::SoloistOnboarding::Complete;
+        let due = (self.settings.soloist_enabled
+            && failure.retries()
+            && (returning || *failure == crate::soloist::Failure::NotSignedIn))
+            .then(|| SOLOIST_RETRIES.get(self.soloist_retries))
+            .flatten();
+        self.soloist_retry_at = due.map(|wait| Instant::now() + *wait);
+        if due.is_none() {
+            self.soloist_give_up();
+        }
+    }
+
+    /// Nothing will bring the player back unasked: a song held for it would
+    /// only start at some surprising later moment.
+    fn soloist_give_up(&mut self) {
+        self.soloist_retry_at = None;
+        if self.queued_play.take().is_some() {
+            self.clear_play_pending();
+        }
+    }
+
+    fn retry_soloist_when_due(&mut self, ctx: &egui::Context) {
+        let Some(at) = self.soloist_retry_at else {
+            return;
+        };
+        let now = Instant::now();
+        if now < at {
+            ctx.request_repaint_after(at - now);
+            return;
+        }
+        self.soloist_retry_at = None;
+        self.soloist_retries += 1;
+        self.soloist_status = crate::soloist::Status::Starting;
+        self.soloist_status_at = now;
+        self.backend.send(Command::Soloist {
+            enabled: true,
+            key: None,
+        });
+    }
+
     fn bind_soloist_device(&mut self) {
         let crate::soloist::Status::Ready { name, .. } = &self.soloist_status else {
             return;
@@ -3158,14 +3379,43 @@ impl App {
             .iter()
             .filter(|device| device.name == *name && device.id.is_some())
             .collect();
+        // Spotify's list leaves out a quiet device now and then. Soloist is
+        // still running and signed in, so one short list changes nothing.
+        if matching.is_empty() && self.soloist_device_id.is_some() {
+            return;
+        }
         let device = (matching.len() == 1).then(|| matching[0].clone());
         let newly_bound = self.soloist_device_id.is_none();
         self.soloist_device_id = device.as_ref().and_then(|device| device.id.clone());
         self.backend.send(Command::SoloistDevice(device));
         if newly_bound && let Some(id) = self.soloist_device_id.clone() {
-            if std::mem::take(&mut self.soloist_select) {
-                let play = self.now_playing().is_some_and(|now| now.playing);
+            self.soloist_settled = true;
+            self.soloist_retry_at = None;
+            self.soloist_bound_at = Some(Instant::now());
+            // A setup resumed from an earlier run has nothing left to show.
+            if self.soloist_onboarding == crate::settings::SoloistOnboarding::Setup
+                && !self.soloist_setup_chosen
+            {
+                self.soloist_onboarding = crate::settings::SoloistOnboarding::Complete;
+                self.save_session();
+            }
+            let elsewhere = self.remote_fresh().is_some_and(|remote| {
+                remote.state.is_playing
+                    && remote.state.device.as_ref().and_then(|d| d.id.as_deref())
+                        != Some(id.as_str())
+            });
+            let resume = std::mem::take(&mut self.soloist_resume) && !elsewhere;
+            if self.queued_play.is_some() {
+                // A song chosen while the player was away outranks what it
+                // was playing before.
+                self.soloist_select = false;
+                self.selected_device = Some(id);
+                self.replay_queued_play();
+            } else if std::mem::take(&mut self.soloist_select) {
+                let play = resume || self.now_playing().is_some_and(|now| now.playing);
                 self.transfer_remote(id, play);
+            } else if resume {
+                self.transfer_remote(id, true);
             } else if !self.local.is_active()
                 && self.selected_device.is_none()
                 && self
@@ -3183,6 +3433,7 @@ impl App {
             AuthStatus::Connected { .. } => {
                 self.sign_in_url = None;
                 if self.settings.soloist_enabled {
+                    self.soloist_status_at = Instant::now();
                     self.backend.send(Command::Soloist {
                         enabled: true,
                         key: None,
@@ -3204,6 +3455,10 @@ impl App {
                 self.soloist_audio = false;
                 self.soloist_update = None;
                 self.soloist_select = false;
+                self.soloist_settled = false;
+                self.soloist_retries = 0;
+                self.soloist_resume = false;
+                self.soloist_give_up();
                 if matches!(self.dialog, Some(Dialog::PersonalAppIntro)) {
                     self.dialog = None;
                 }
@@ -4248,6 +4503,31 @@ impl App {
         }
     }
 
+    /// LRCLIB's outages come in short bursts, so a failure stays "looking"
+    /// and is asked again a few times before it is shown.
+    fn lyrics_failed(
+        &mut self,
+        error: String,
+        now: Instant,
+    ) -> Loadable<Option<crate::lyrics::Lyrics>> {
+        let Some(wait) = LYRICS_RETRIES.get(self.lyrics_retries) else {
+            return Loadable::Failed(error);
+        };
+        self.lyrics_retries += 1;
+        self.lyrics_retry_at = Some(now + *wait);
+        Loadable::Loading
+    }
+
+    /// Asks again once the wait is over, if the song is still the one waiting.
+    fn retry_lyrics_when_due(&mut self, now: Instant) {
+        if self.lyrics_retry_at.is_none_or(|at| now < at) {
+            return;
+        }
+        self.lyrics_retry_at = None;
+        self.lyrics = Loadable::NotLoaded;
+        self.request_lyrics();
+    }
+
     /// Asks for the playing track's lyrics unless they are here or on the
     /// way. Podcasts have no lyrics to ask for.
     pub fn request_lyrics(&mut self) {
@@ -4258,6 +4538,10 @@ impl App {
             && !matches!(self.lyrics, Loadable::NotLoaded | Loadable::Failed(_))
         {
             return;
+        }
+        if self.lyrics_uri.as_deref() != Some(now.uri.as_str()) {
+            self.lyrics_retries = 0;
+            self.lyrics_retry_at = None;
         }
         self.lyrics_uri = Some(now.uri.clone());
         self.lyrics_following = true;
@@ -4297,6 +4581,24 @@ impl App {
 
     fn tick(&mut self, ctx: &egui::Context) {
         self.poll_custom_themes(ctx);
+        self.retry_soloist_when_due(ctx);
+        if self.queued_play.is_some() && self.soloist_waiting() && !self.soloist_recovering() {
+            self.soloist_give_up();
+        }
+        if self.soloist_view() == SoloistView::Loading {
+            let waited = self.soloist_status_at.elapsed();
+            if self.is_connected() && waited >= SOLOIST_LOADING_GRACE {
+                self.soloist_settled = true;
+            } else {
+                ctx.request_repaint_after(SOLOIST_LOADING_GRACE.saturating_sub(waited));
+            }
+        } else if self.soloist_recovering()
+            && self.soloist_status_at.elapsed() < SOLOIST_PAIRING_GRACE
+        {
+            ctx.request_repaint_after(
+                SOLOIST_PAIRING_GRACE.saturating_sub(self.soloist_status_at.elapsed()),
+            );
+        }
         if let Some(wait) = self.window_focus(ctx.input(|input| {
             // A minimised window is away even where it keeps focus.
             let viewport = input.viewport();
@@ -4515,6 +4817,10 @@ impl App {
             self.evict_stale_pages();
         }
         self.sync_skin(ctx);
+        self.retry_lyrics_when_due(Instant::now());
+        if let Some(at) = self.lyrics_retry_at {
+            ctx.request_repaint_after(at.saturating_duration_since(Instant::now()));
+        }
         if self.settings_dirty && self.last_settings_save.elapsed() > Duration::from_secs(2) {
             self.save_settings();
         }
@@ -4546,6 +4852,7 @@ impl App {
         if let Some(loaded) = self.winamp.poll() {
             self.skin_loaded(loaded, ctx);
         }
+        self.run_wmp_skin(ctx);
         self.winamp.poll_choices();
         // Random needs the list before the mini player is first opened.
         if self.settings.random_skin && !self.winamp.choices_known() {
@@ -4586,7 +4893,7 @@ impl App {
     #[cfg(feature = "milkdrop")]
     fn sync_milkdrop(&mut self, ctx: &egui::Context) {
         let presets = self.dirs.milkdrop_dir();
-        let open = self.settings.milkdrop_open;
+        let open = self.plain_milkdrop_wanted();
         let size = self.settings.milkdrop_size;
         let pos = self.milkdrop_pos;
         let fullscreen = self.settings.milkdrop_fullscreen;
@@ -4641,6 +4948,157 @@ impl App {
         // Poll the child while the main window is otherwise idle.
         if self.settings.milkdrop_open {
             ctx.request_repaint_after(std::time::Duration::from_millis(300));
+        }
+    }
+
+    /// Whether MilkDrop is showing in the Winamp frame: open, beside a
+    /// classic skin's mini player.
+    pub fn milkdrop_framed(&self) -> bool {
+        self.settings.milkdrop_open && self.settings.winamp_window && self.winamp.skin.wmp.is_none()
+    }
+
+    /// Puts the demo in full screen lyrics with MilkDrop behind them.
+    #[cfg(feature = "demo")]
+    pub fn demo_lyrics_milkdrop(&mut self, milkdrop: bool) {
+        self.milkdrop_backdrop = milkdrop;
+        self.lyrics_fullscreen = Some(false);
+        self.show_lyrics_panel = true;
+    }
+
+    /// A first use has nothing to draw but the idle preset, which hardly
+    /// answers the music; the packs are fetched in the background and the
+    /// picture fills up on its own.
+    #[cfg(feature = "milkdrop")]
+    fn fetch_presets_if_none(&mut self, ctx: &egui::Context) {
+        let folder = self.dirs.milkdrop_dir();
+        if self.winamp.presets.downloading().is_none() && !crate::milkdrop::has_presets(&folder) {
+            self.winamp
+                .presets
+                .download_missing(folder, ctx.clone(), self.applied_proxy.clone());
+            self.toast(gettext(self.locale, "Downloading MilkDrop preset packs"));
+        }
+    }
+
+    /// Whether MilkDrop has the whole window, past its first frame.
+    pub fn immersive(&self) -> bool {
+        self.immersive.is_some_and(|mode| mode.showing)
+    }
+
+    /// The first frame is in: the rest of the view may go. Until then it
+    /// stays, so a MilkDrop that cannot draw changes nothing.
+    pub fn immersive_arrived(&mut self) {
+        if let Some(mode) = &mut self.immersive {
+            mode.showing = true;
+        }
+    }
+
+    /// Whether immersive mode's controls show: the pointer moved within the
+    /// last few seconds. Moves them on, and says when to look again.
+    pub fn immersive_controls(&mut self, moved: bool, now: f64) -> Option<f64> {
+        const SHOWN_FOR: f64 = 3.0;
+        let mode = self.immersive.as_mut()?;
+        if moved {
+            mode.controls_until = now + SHOWN_FOR;
+        }
+        (now < mode.controls_until).then_some(mode.controls_until - now)
+    }
+
+    /// Everything back as it was, the backdrop included.
+    fn end_immersive(&mut self) {
+        if let Some(mode) = self.immersive.take() {
+            self.milkdrop_backdrop = mode.backdrop_was;
+        }
+    }
+
+    /// Whether the plain MilkDrop window should be open. Not beside a classic
+    /// skin, whose panel has it; not on a trip to full screen from a skin,
+    /// which took it along; and not while MilkDrop is behind the lyrics. One
+    /// child draws at a time, and the window comes back when that ends.
+    fn plain_milkdrop_wanted(&self) -> bool {
+        self.settings.milkdrop_open
+            && !self.milkdrop_framed()
+            && !self.skin_return
+            && !self.milkdrop_behind_lyrics()
+    }
+
+    /// Whether full screen lyrics want MilkDrop behind them.
+    pub fn milkdrop_behind_lyrics(&self) -> bool {
+        self.milkdrop_backdrop && self.lyrics_fullscreen.is_some()
+    }
+
+    /// MilkDrop's picture for a pane this many physical pixels big. Called
+    /// from drawing; see `milkdrop::pane::Stream::show`.
+    #[cfg(feature = "milkdrop")]
+    pub fn milkdrop_picture(
+        &mut self,
+        ctx: &egui::Context,
+        pixels: [f32; 2],
+    ) -> crate::milkdrop::pane::Picture {
+        let side = if self.milkdrop_behind_lyrics() {
+            crate::milkdrop::frames::FULL_SCREEN_SIDE
+        } else {
+            crate::milkdrop::frames::PANE_SIDE
+        };
+        let scale = self.settings.milkdrop_scale;
+        let tap = &self.winamp.tap;
+        self.milkdrop_pane
+            .get_or_insert_with(|| crate::milkdrop::pane::Stream::new(std::sync::Arc::clone(tap)))
+            .show(ctx, pixels, scale, side)
+    }
+
+    /// Has the picture answer `picture`, whatever a child would.
+    #[cfg(all(test, feature = "milkdrop"))]
+    pub fn answer_milkdrop(&mut self, picture: crate::milkdrop::pane::Picture) {
+        let tap = &self.winamp.tap;
+        self.milkdrop_pane
+            .get_or_insert_with(|| crate::milkdrop::pane::Stream::new(std::sync::Arc::clone(tap)))
+            .answer = Some(picture);
+    }
+
+    /// How bright MilkDrop's picture is, from 0 to 1.
+    #[cfg(feature = "milkdrop")]
+    pub fn milkdrop_glow(&self) -> f32 {
+        self.milkdrop_pane
+            .as_ref()
+            .map_or(0.0, crate::milkdrop::pane::Stream::glow)
+    }
+
+    /// Starts and stops the pane's child, and hands it the settings.
+    #[cfg(feature = "milkdrop")]
+    fn sync_milkdrop_pane(&mut self) {
+        let fps = self.milkdrop_pane_fps();
+        let seconds = self.settings.milkdrop_seconds;
+        let presets = self.dirs.milkdrop_dir();
+        #[cfg(feature = "demo")]
+        if self.winamp.demo_sounding {
+            self.winamp.tap.push(&crate::demo::demo_sound(), 1.0);
+        }
+        // Behind the lyrics the picture holds still with the music. Anywhere
+        // else it is a visualizer like the others, and they keep moving.
+        let frozen =
+            self.milkdrop_behind_lyrics() && !self.now_playing().is_some_and(|now| now.playing);
+        if let Some(stream) = &mut self.milkdrop_pane {
+            stream.tick(&presets, fps, seconds, frozen);
+        }
+    }
+
+    /// How fast the pane's child draws, up to what is worth copying between
+    /// processes: the visualizers' rate for a skin's pane, which is one of
+    /// them, and MilkDrop's own for its window, which has its own focus. It
+    /// stops by itself once nobody can see the pane.
+    #[cfg(feature = "milkdrop")]
+    pub fn milkdrop_pane_fps(&self) -> u32 {
+        let rate = if self.milkdrop_framed() || self.milkdrop_behind_lyrics() {
+            Some(crate::power::milkdrop_fps(
+                self.power.conditions(),
+                self.settings.milkdrop_fps,
+            ))
+        } else {
+            self.visualiser_fps()
+        };
+        match rate {
+            None | Some(0) => crate::milkdrop::DEFAULT_FPS,
+            Some(rate) => rate.min(crate::milkdrop::DEFAULT_FPS),
         }
     }
 
@@ -4715,10 +5173,279 @@ impl App {
         }
     }
 
+    /// Muting here is remembering the volume and setting it to zero.
+    fn volume_is_muted(&self) -> bool {
+        self.volume_before_mute.is_some()
+    }
+
+    /// What a Windows Media Player skin sees of the player right now.
+    fn wmp_deck(&self) -> crate::skin::wmp::deck::Deck {
+        use crate::skin::wmp::deck::{Deck, PlayState, Song};
+        let now = self.now_playing();
+        let song = now.as_ref().map(|now| Song {
+            title: now.title.clone(),
+            artist: now
+                .artists
+                .iter()
+                .map(|artist| artist.name.as_str())
+                .collect::<Vec<_>>()
+                .join(", "),
+            album: now.album_name.clone(),
+            uri: now.uri.clone(),
+            duration_s: f64::from(now.duration_ms) / 1000.0,
+        });
+        let state = match &now {
+            Some(now) if now.loading => PlayState::Buffering,
+            Some(now) if now.playing => PlayState::Playing,
+            Some(now) if now.position_ms > 0 && !now.resuming => PlayState::Paused,
+            _ => PlayState::Stopped,
+        };
+        let mut queue: Vec<Song> = song.iter().cloned().collect();
+        if let Some(fetched) = self.queue.get() {
+            queue.extend(fetched.queue.iter().map(|item| Song {
+                title: item.name().to_owned(),
+                artist: item.subtitle(),
+                album: String::new(),
+                uri: item.uri().to_owned(),
+                duration_s: f64::from(item.duration_ms()) / 1000.0,
+            }));
+        }
+        let presets = crate::eq::PRESETS
+            .iter()
+            .map(|preset| preset.name.to_owned())
+            .collect();
+        Deck {
+            state,
+            position_s: now
+                .as_ref()
+                .map_or(0.0, |now| f64::from(now.position_ms) / 1000.0),
+            bitrate: 320_000,
+            // A dragged slider's level is the one shown, wherever it plays.
+            volume: self.volume_preview.map_or_else(
+                || {
+                    now.as_ref().map_or_else(
+                        || crate::app::volume_to_percent(self.local.volume),
+                        |now| now.volume_percent,
+                    )
+                },
+                |fraction| (fraction * 100.0).round() as u8,
+            ),
+            mute: self.volume_is_muted(),
+            balance: (self.settings.balance * 100.0).round() as i32,
+            shuffle: now.as_ref().is_some_and(|now| now.shuffle),
+            repeat: now
+                .as_ref()
+                .is_some_and(|now| now.repeat != crate::player::RepeatMode::Off),
+            can_control: now.as_ref().is_none_or(|now| now.can_control),
+            playing: song.as_ref().map(|_| 0),
+            song,
+            queue,
+            eq_on: self.settings.eq_on,
+            eq_bands: self.settings.eq_bands_db,
+            eq_preamp: self.settings.eq_preamp_db,
+            eq_presets: presets,
+            eq_preset: None,
+            effect: match self.settings.vis {
+                crate::settings::VisMode::Bars => 0,
+                crate::settings::VisMode::Scope => 1,
+                crate::settings::VisMode::Off => 2,
+            },
+        }
+    }
+
+    /// Runs the worn Windows Media Player skin for this frame: starts it,
+    /// or stops it if it came off, and does what it asks.
+    fn run_wmp_skin(&mut self, ctx: &egui::Context) {
+        // A trip to full screen comes back to the skin as it was.
+        let wearing = (self.settings.winamp_window || self.skin_return)
+            .then(|| self.winamp.skin.wmp.clone())
+            .flatten();
+        // Off, or a different skin on: this one's views get to save their
+        // state under its own name.
+        let same = |runtime: &crate::skin::wmp::runtime::Runtime| {
+            wearing
+                .as_ref()
+                .is_some_and(|wmp| std::sync::Arc::ptr_eq(wmp, &runtime.wmp))
+        };
+        if !self.winamp.runtime.as_ref().is_none_or(same)
+            && let Some(mut runtime) = self.winamp.runtime.take()
+        {
+            runtime.shut_down();
+            self.save_skin_preferences(&mut runtime);
+        }
+        let Some(wmp) = wearing else {
+            return;
+        };
+        let deck = self.wmp_deck();
+        if self.winamp.runtime.is_none() {
+            let context = ctx.clone();
+            let measure: std::sync::Arc<crate::skin::wmp::paint::Measure> =
+                std::sync::Arc::new(move |text: &str, size, bold, mono| {
+                    let font = if mono {
+                        egui::FontId::monospace(size)
+                    } else if bold {
+                        fastframe_fonts::Weight::Bold.font_id(size)
+                    } else {
+                        fastframe_fonts::Weight::Regular.font_id(size)
+                    };
+                    context.fonts_mut(|fonts| {
+                        fonts
+                            .layout_no_wrap(text.to_owned(), font, egui::Color32::WHITE)
+                            .size()
+                            .x
+                    })
+                });
+            let wake = ctx.clone();
+            let preferences = self.winamp.take_skin_preferences();
+            self.winamp.runtime = Some(crate::skin::wmp::runtime::Runtime::new(
+                self.winamp.worn.clone().unwrap_or_default(),
+                wmp,
+                deck.clone(),
+                preferences,
+                measure,
+                move || wake.request_repaint(),
+            ));
+            if let Some(runtime) = &mut self.winamp.runtime {
+                runtime.await_window();
+            }
+            #[cfg(feature = "demo")]
+            for script in std::mem::take(&mut self.winamp.demo_scripts) {
+                if let Some(runtime) = &mut self.winamp.runtime
+                    && let Some(at) = runtime.primary()
+                {
+                    let key = runtime.views[at].state.key;
+                    runtime.run_script(key, &script, std::time::Instant::now());
+                }
+            }
+        }
+        let Some(mut runtime) = self.winamp.runtime.take() else {
+            return;
+        };
+        let commands = runtime.tick(deck, std::time::Instant::now());
+        for command in commands {
+            self.wmp_command(command, &runtime.shared.deck);
+        }
+        self.save_skin_preferences(&mut runtime);
+        if let Some(wake) = runtime.next_wake(std::time::Instant::now()) {
+            ctx.request_repaint_after(wake);
+        }
+        self.winamp.runtime = Some(runtime);
+    }
+
+    /// Saves what the running skin stored with `theme.savePreference`.
+    fn save_skin_preferences(&mut self, runtime: &mut crate::skin::wmp::runtime::Runtime) {
+        if !std::mem::take(&mut runtime.shared.prefs_changed) {
+            return;
+        }
+        let path = crate::winamp::skin_preferences_path(&self.dirs.skins_dir(), &runtime.name);
+        match serde_json::to_vec_pretty(&runtime.shared.prefs) {
+            Ok(bytes) => self
+                .files
+                .write(&path, bytes, fastframe_file::Access::Default),
+            Err(error) => log::warn!("could not encode the skin's preferences: {error}"),
+        }
+    }
+
+    /// Turns what a skin asks into what the rest of the app understands.
+    fn wmp_command(
+        &mut self,
+        command: crate::skin::wmp::deck::Command,
+        deck: &crate::skin::wmp::deck::Deck,
+    ) {
+        use crate::skin::wmp::deck::Command;
+        let playing = self.now_playing().is_some_and(|now| now.playing);
+        match command {
+            Command::Play if !playing => self.actions.push(Action::TogglePlay),
+            Command::Pause if playing => self.actions.push(Action::TogglePlay),
+            Command::Play | Command::Pause => {}
+            Command::Stop => {
+                if playing {
+                    self.actions.push(Action::TogglePlay);
+                }
+                self.actions.push(Action::Seek(0));
+            }
+            Command::Next => self.actions.push(Action::Next),
+            Command::Previous => self.actions.push(Action::Previous),
+            Command::Seek(position) => self.actions.push(Action::Seek(position)),
+            Command::SeekBy(by) => self.actions.push(Action::SeekBy(by)),
+            Command::SetVolume(volume) => {
+                self.volume_preview = None;
+                self.actions.push(Action::SetVolume(volume));
+            }
+            Command::PreviewVolume(volume) => {
+                self.volume_preview = Some(f32::from(volume) / 100.0);
+                self.actions.push(Action::PreviewVolume(volume));
+            }
+            Command::SetMute(mute) => {
+                if self.volume_is_muted() != mute {
+                    self.actions.push(Action::ToggleMute);
+                }
+            }
+            Command::SetBalance(balance) => {
+                self.actions
+                    .push(Action::SetBalance(balance as f32 / 100.0));
+            }
+            Command::SetShuffle(on) => self.actions.push(Action::SetShuffle(on)),
+            Command::SetRepeat(on) => self.actions.push(Action::SetRepeat(if on {
+                crate::player::RepeatMode::Context
+            } else {
+                crate::player::RepeatMode::Off
+            })),
+            Command::PlayQueued(row) => {
+                // The first row is what is on already.
+                if row > 0
+                    && let Some(song) = deck.queue.get(row)
+                {
+                    self.actions.push(Action::PlayFromRow {
+                        context: crate::model::RowContext::Queue,
+                        uri: song.uri.clone(),
+                        index: (row - 1) as u32,
+                    });
+                }
+            }
+            Command::SetEqBand(band, gain) => {
+                self.actions
+                    .push(Action::SetEqBand(band, gain.clamp(-12.0, 12.0)));
+            }
+            Command::SetEqPreamp(gain) => self.actions.push(Action::SetEqPreamp(gain)),
+            Command::SetEqOn(on) => {
+                if self.settings.eq_on != on {
+                    self.actions.push(Action::ToggleEq);
+                }
+            }
+            Command::SetEqPreset(preset) => self.actions.push(Action::ApplyEqPreset(preset)),
+            Command::ResetEq => {
+                for band in 0..10 {
+                    self.actions.push(Action::SetEqBand(band, 0.0));
+                }
+            }
+            Command::Effect(by) => {
+                // With MilkDrop showing, a skin's Next moves through presets.
+                #[cfg(feature = "milkdrop")]
+                if self
+                    .milkdrop_pane
+                    .as_ref()
+                    .is_some_and(|stream| stream.step(by))
+                {
+                    return;
+                }
+                #[cfg(not(feature = "milkdrop"))]
+                let _ = by;
+                self.actions.push(Action::CycleVisualiser);
+            }
+            Command::BackToMain => {
+                if self.settings.winamp_window {
+                    self.actions.push(Action::ToggleWinampWindow);
+                }
+            }
+        }
+    }
+
     /// Applies a loaded skin. Installed files become the selected skin.
     fn skin_loaded(&mut self, loaded: crate::winamp::Loaded, ctx: &egui::Context) {
         match loaded.result {
             Ok(skin) => {
+                self.winamp.set_skin_preferences(loaded.preferences);
                 self.winamp
                     .wear(Some(loaded.name.clone()), std::sync::Arc::new(skin));
                 if loaded.installed {
@@ -5015,6 +5742,18 @@ impl App {
                         Action::ShowWindow
                     } else {
                         Action::HideWindow
+                    }
+                }
+                Event::Menu(TRAY_MAIN_WINDOW) => {
+                    if !self.settings.winamp_window {
+                        Action::ShowWindow
+                    } else if self.window_hidden {
+                        // Closed to the tray: the next window is the main one.
+                        self.settings.winamp_window = false;
+                        self.settings_dirty = true;
+                        Action::ShowWindow
+                    } else {
+                        Action::ToggleWinampWindow
                     }
                 }
                 Event::Menu(TRAY_PLAY_PAUSE) => Action::TogglePlay,
@@ -9926,7 +10665,7 @@ impl App {
     /// in one ordered exchange: two independent requests race, and shuffle
     /// sometimes lost.
     fn play_request(&mut self, request: PlayRequest, shuffle_first: bool) {
-        if self.soloist_waiting() {
+        if self.soloist_waiting() && !self.soloist_recovering() {
             return;
         }
         // Whatever starts now outranks a play-search still in flight.
@@ -9953,7 +10692,7 @@ impl App {
     }
 
     fn start_play(&mut self, request: PlayRequest, shuffle_first: bool) {
-        if self.soloist_waiting() {
+        if self.soloist_waiting() && !self.soloist_recovering() {
             self.clear_play_pending();
             return;
         }
@@ -10031,6 +10770,11 @@ impl App {
             at: Instant::now(),
         });
         self.queue_start_pending = Some(self.target());
+        // Held for Soloist, never handed to the built-in player meanwhile.
+        if self.soloist_waiting() {
+            self.queued_play = Some(request);
+            return;
+        }
         match self.target() {
             Target::Local if !self.local.connected => {
                 // Hold the request while the local engine reconnects.
@@ -10612,6 +11356,18 @@ impl App {
             self.pending_remote_volume = None;
             self.session_dirty = true;
             return;
+        }
+        if self.soloist_route_volume().is_some()
+            && self.targets_own_soloist()
+            && self.can_set_volume()
+        {
+            self.backend.soloist_output_volume.lead(percent);
+        }
+        if self.targets_own_soloist()
+            && self.can_set_volume()
+            && self.backend.soloist_output_volume.remember(percent)
+        {
+            self.session_dirty = true;
         }
         match self.target() {
             Target::Local => {
@@ -11823,6 +12579,7 @@ impl App {
     }
 
     fn leave_lyrics_fullscreen(&mut self, ctx: &egui::Context) {
+        self.end_immersive();
         if let Some(was_fullscreen) = self.lyrics_fullscreen.take() {
             ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(was_fullscreen));
             if self.lyrics_restore_maximized {
@@ -11831,6 +12588,11 @@ impl App {
             self.lyrics_fullscreen_restoring = Some(was_fullscreen);
             self.lyrics_fullscreen_seen = false;
             self.lyrics_line_shown = None;
+            if std::mem::take(&mut self.skin_return) {
+                self.milkdrop_backdrop = self.settings.lyrics_milkdrop;
+                self.keep_skin = true;
+                self.actions.push(Action::ToggleWinampWindow);
+            }
         }
     }
 
@@ -11839,7 +12601,17 @@ impl App {
     pub(crate) fn apply(&mut self, action: Action, ctx: &egui::Context) {
         // Covers buttons, row double-clicks, keyboard/media shortcuts and IPC
         // before any optimistic state or queued request can change.
+        let held = self.soloist_recovering()
+            && matches!(
+                &action,
+                Action::PlayContext { .. }
+                    | Action::PlayEpisode { .. }
+                    | Action::PlayUris { .. }
+                    | Action::PlayFromRow { .. }
+                    | Action::ShufflePlay(_)
+            );
         if self.soloist_waiting()
+            && !held
             && matches!(
                 &action,
                 Action::PlayContext { .. }
@@ -11890,6 +12662,12 @@ impl App {
         ) {
             // ToggleQueuePanel is deliberately absent: in lyrics fullscreen
             // it flips the queue column instead of leaving the view.
+            // These all ask for a window of their own, so a trip from a skin
+            // ends here rather than going back.
+            if self.lyrics_fullscreen.is_some() && std::mem::take(&mut self.skin_return) {
+                self.milkdrop_backdrop = self.settings.lyrics_milkdrop;
+                self.keep_skin = matches!(action, Action::ToggleWinampWindow);
+            }
             self.leave_lyrics_fullscreen(ctx);
         }
         if self.changes_song_by_hand(&action) {
@@ -12860,7 +13638,10 @@ impl App {
                 self.lyrics_line_shown = None;
             }
             Action::PauseLyricsFollow => self.lyrics_following = false,
-            Action::RetryLyrics => self.request_lyrics(),
+            Action::RetryLyrics => {
+                self.lyrics_retries = 0;
+                self.request_lyrics();
+            }
             Action::ToggleDevicesPopup => {
                 self.show_devices = !self.show_devices;
                 if self.show_devices {
@@ -13041,8 +13822,21 @@ impl App {
             // Free's web player has no engine settings to restart with.
             Action::RestartEngine if !self.capabilities().engine_settings => {}
             Action::StartSoloistSetup => {
+                self.soloist_setup_optional = self.settings.soloist_enabled
+                    && self.soloist_onboarding == crate::settings::SoloistOnboarding::Complete;
                 self.soloist_onboarding = crate::settings::SoloistOnboarding::Setup;
+                self.soloist_setup_chosen = true;
+                self.soloist_give_up();
                 self.save_session();
+            }
+            Action::LeaveSoloistSetup => {
+                self.soloist_onboarding = crate::settings::SoloistOnboarding::Complete;
+                self.soloist_setup_optional = false;
+                self.save_session();
+            }
+            Action::EnableSoloist => {
+                self.apply(Action::StartSoloistSetup, ctx);
+                self.apply(Action::SetSoloist(true), ctx);
             }
             Action::FinishSoloistSetup => {
                 if self.settings.soloist_enabled
@@ -13074,6 +13868,10 @@ impl App {
                 self.mark_settings_dirty();
                 self.soloist_select = enabled;
                 self.soloist_update = None;
+                self.soloist_retries = 0;
+                self.soloist_resume &= enabled;
+                self.soloist_give_up();
+                self.soloist_status_at = Instant::now();
                 let key = if enabled {
                     self.soloist_key.trim().to_owned()
                 } else {
@@ -13089,7 +13887,15 @@ impl App {
                     key: (!key.trim().is_empty()).then_some(key),
                 });
             }
-            Action::RetrySoloist => self.apply(Action::SetSoloist(true), ctx),
+            Action::RetrySoloist => {
+                // Stops whatever is left first: a player that is only slow
+                // still runs, and starting it again would change nothing.
+                self.backend.send(Command::Soloist {
+                    enabled: false,
+                    key: None,
+                });
+                self.apply(Action::SetSoloist(true), ctx);
+            }
             Action::RestartEngine => {
                 self.save_settings();
                 let config = engine_config(
@@ -13222,10 +14028,20 @@ impl App {
                     ),
                 }
             }
+            Action::WmpInput {
+                view,
+                input,
+                modifiers,
+            } => {
+                if let Some(runtime) = &mut self.winamp.runtime {
+                    runtime.input(view, input, modifiers, std::time::Instant::now());
+                }
+            }
             Action::ToggleWinampWindow => {
                 // One window at a time: this one closes and the loop in
                 // `main` opens the other kind where each was last.
-                if !self.settings.winamp_window && self.settings.random_skin {
+                let keep_skin = std::mem::take(&mut self.keep_skin);
+                if !self.settings.winamp_window && self.settings.random_skin && !keep_skin {
                     self.winamp.poll_choices();
                     self.winamp.refresh_choices(&self.dirs.skins_dir(), ctx);
                     // Until the first listing is back the skin stays as it is.
@@ -13437,21 +14253,58 @@ impl App {
                 self.settings_dirty = true;
                 #[cfg(feature = "milkdrop")]
                 if self.settings.milkdrop_open {
-                    // A first open has nothing to draw but the idle preset,
-                    // which hardly answers the music; fetch the packs in the
-                    // background and the window fills up on its own.
-                    let folder = self.dirs.milkdrop_dir();
-                    if self.winamp.presets.downloading().is_none()
-                        && !crate::milkdrop::has_presets(&folder)
-                    {
-                        self.winamp.presets.download_missing(
-                            folder,
-                            ctx.clone(),
-                            self.applied_proxy.clone(),
-                        );
-                        self.toast(gettext(self.locale, "Downloading MilkDrop preset packs"));
-                    }
+                    self.fetch_presets_if_none(ctx);
                 }
+            }
+            Action::MilkdropEffect(by) => {
+                #[cfg(feature = "milkdrop")]
+                if let Some(stream) = &self.milkdrop_pane {
+                    stream.step(by);
+                }
+                #[cfg(not(feature = "milkdrop"))]
+                let _ = by;
+            }
+            Action::MilkdropFullscreen => {
+                if self.skin_return || self.lyrics_fullscreen.is_some() {
+                    return;
+                }
+                self.milkdrop_backdrop = true;
+                if self.settings.winamp_window {
+                    // One window at a time: the mini player's goes, the main
+                    // one comes, and full screen follows as it arrives.
+                    self.skin_return = true;
+                    self.lyrics_after_switch = true;
+                    self.actions.push(Action::ToggleWinampWindow);
+                } else {
+                    self.actions.push(Action::SetLyricsFullscreen(true));
+                }
+            }
+            Action::EnterImmersive => {
+                if self.lyrics_fullscreen.is_some() && self.immersive.is_none() {
+                    self.immersive = Some(Immersive {
+                        backdrop_was: self.milkdrop_backdrop,
+                        showing: false,
+                        controls_until: 0.0,
+                    });
+                    self.milkdrop_backdrop = true;
+                    #[cfg(feature = "milkdrop")]
+                    self.fetch_presets_if_none(ctx);
+                }
+            }
+            Action::LeaveImmersive => self.end_immersive(),
+            Action::ToggleLyricsMilkdrop => {
+                // Off is a choice of its own, and there is nothing left to be
+                // immersed in; the mode's memory of the backdrop goes with it.
+                self.immersive = None;
+                self.milkdrop_backdrop = !self.milkdrop_backdrop;
+                if !self.skin_return {
+                    self.settings.lyrics_milkdrop = self.milkdrop_backdrop;
+                    self.mark_settings_dirty();
+                }
+            }
+            Action::SetMilkdropPanel(height) => {
+                self.settings.milkdrop_panel_height = height;
+                self.mark_settings_dirty();
             }
             Action::SetMilkdropSeconds(seconds) => {
                 self.settings.milkdrop_seconds = seconds.clamp(1, 3600);
@@ -13814,7 +14667,10 @@ impl App {
         // MilkDrop runs in a child process and can outlive the main window.
         // Poll it before applying actions because its keys produce actions.
         #[cfg(feature = "milkdrop")]
-        self.sync_milkdrop(ctx);
+        {
+            self.sync_milkdrop(ctx);
+            self.sync_milkdrop_pane();
+        }
         self.apply_actions(ctx);
         self.sync_media_controls(ctx);
         self.sync_window_title(ctx);
@@ -14172,6 +15028,10 @@ impl App {
         if self.settings.winamp_window && needs_sign_in && !self.switch_intent {
             self.actions.push(Action::ToggleWinampWindow);
         }
+        if self.lyrics_after_switch && !self.settings.winamp_window && !self.switch_intent {
+            self.lyrics_after_switch = false;
+            self.actions.push(Action::SetLyricsFullscreen(true));
+        }
         if self.settings.winamp_window {
             crate::ui::winamp::show(self, ui);
         } else {
@@ -14314,6 +15174,7 @@ impl App {
             let session = SessionState {
                 soloist_onboarding: self.soloist_onboarding,
                 soloist_output_volume: Some(self.backend.soloist_output_volume.percent()),
+                soloist_volume: self.backend.soloist_output_volume.remembered(),
                 device_history: self.device_history.clone(),
                 last_page: Some(self.page().encode()),
                 recent_contexts: self.recent_contexts.clone(),
@@ -14372,6 +15233,12 @@ impl App {
 
     /// Final teardown at real quit.
     pub fn shutdown(&mut self) {
+        // Quit on a trip from a skin: the next start opens the mini player,
+        // not the main window the trip borrowed.
+        if std::mem::take(&mut self.skin_return) {
+            self.settings.winamp_window = true;
+            self.settings_dirty = true;
+        }
         self.save_state();
         self.flush_files();
         self.backend.shutdown();
@@ -16504,6 +17371,43 @@ mod tests {
     /// A track change requests fresh lyrics while fullscreen shows the
     /// queue column: the lyrics panel flag stays off there, so gating on
     /// it alone would leave the previous track's words up.
+    #[test]
+    fn a_busy_lyrics_service_is_asked_again_before_the_failure_shows() {
+        let mut app = headless_app();
+        app.local.track = Some(crate::player::LocalTrack {
+            uri: "spotify:track:a".into(),
+            ..Default::default()
+        });
+        app.local.playback = Playback::Playing;
+        app.request_lyrics();
+        let mut now = Instant::now();
+        for wait in LYRICS_RETRIES {
+            app.lyrics = app.lyrics_failed("503".into(), now);
+            assert!(matches!(app.lyrics, Loadable::Loading));
+            app.retry_lyrics_when_due(now + wait - Duration::from_millis(1));
+            assert!(app.lyrics_retry_at.is_some(), "not before its time");
+            now += wait;
+            app.retry_lyrics_when_due(now);
+            assert!(app.lyrics_retry_at.is_none());
+            assert!(matches!(app.lyrics, Loadable::Loading));
+        }
+        app.lyrics = app.lyrics_failed("503".into(), now);
+        assert!(matches!(app.lyrics, Loadable::Failed(_)));
+        assert!(app.lyrics_retry_at.is_none());
+        app.apply(Action::RetryLyrics, &egui::Context::default());
+        assert_eq!(app.lyrics_retries, 0, "a click starts over");
+        app.lyrics = app.lyrics_failed("503".into(), now);
+        assert!(app.lyrics_retry_at.is_some());
+        app.local.track = Some(crate::player::LocalTrack {
+            uri: "spotify:track:b".into(),
+            ..Default::default()
+        });
+        app.request_lyrics();
+        assert!(app.lyrics_retry_at.is_none(), "the next song starts clean");
+        assert_eq!(app.lyrics_retries, 0);
+        app.backend.shutdown();
+    }
+
     #[test]
     fn track_change_requests_lyrics_with_fullscreen_queue_open() {
         let mut app = headless_app();
@@ -22698,7 +23602,7 @@ mod tests {
             },
             ready.clone(),
             Status::NeedsKey,
-            Status::Failed("unavailable".into()),
+            Status::Failed(crate::soloist::Failure::InvalidKey),
         ] {
             app.on_soloist(Update::Status(status));
             assert!(app.soloist_waiting());
@@ -22786,6 +23690,265 @@ mod tests {
             app.audio_processing_available(),
             "built-in player remains available"
         );
+        app.backend.shutdown();
+    }
+
+    /// A listener who finished setup, with Soloist playing on this computer.
+    fn listening_on_soloist(name: &str) -> (egui::Context, App) {
+        use crate::soloist::{Status, Update};
+        let ctx = egui::Context::default();
+        let mut app = test_app(name);
+        app.backend.set_offline(true);
+        app.auth = AuthStatus::Connected {
+            username: "listener".into(),
+        };
+        app.user = Some(crate::api::models::User {
+            id: "listener".into(),
+            product: Some("premium".into()),
+            ..Default::default()
+        });
+        app.settings.soloist_enabled = true;
+        app.soloist_onboarding = crate::settings::SoloistOnboarding::Complete;
+        app.on_soloist(Update::Status(Status::Ready {
+            name: "owned".into(),
+            version: "test".into(),
+            expires: u64::MAX,
+        }));
+        app.devices = vec![Device {
+            id: Some("own".into()),
+            name: "owned".into(),
+            ..Default::default()
+        }];
+        app.bind_soloist_device();
+        assert_eq!(app.soloist_device_id.as_deref(), Some("own"));
+        (ctx, app)
+    }
+
+    fn soloist_is_due(app: &mut App, ctx: &egui::Context) {
+        app.soloist_retry_at = Some(Instant::now());
+        app.retry_soloist_when_due(ctx);
+    }
+
+    /// The report behind the banner: a player that stopped put a returning
+    /// listener on the setup page, with its key field, and nothing came back.
+    #[test]
+    fn a_stopped_soloist_never_returns_a_finished_listener_to_setup() {
+        // Windows ARM has no Soloist, so no setup to show.
+        if !crate::soloist::install::supported() {
+            return;
+        }
+        use crate::soloist::{Failure, Status, Update};
+        let (ctx, mut app) = listening_on_soloist("soloist-stops");
+        for failure in [
+            Failure::Stopped,
+            Failure::Unstable,
+            Failure::AudioLost,
+            Failure::KeyStore,
+            Failure::Expired,
+        ] {
+            app.on_soloist(Update::Status(Status::Failed(failure)));
+            assert_eq!(app.soloist_view(), SoloistView::App);
+            assert!(!app.show_soloist_onboarding());
+        }
+        app.on_soloist(Update::Status(Status::NeedsKey));
+        assert_eq!(app.soloist_view(), SoloistView::App);
+        app.on_soloist(Update::Status(Status::Pairing {
+            name: "owned".into(),
+            version: "test".into(),
+        }));
+        assert_eq!(app.soloist_view(), SoloistView::App);
+        assert_eq!(
+            app.soloist_onboarding,
+            crate::settings::SoloistOnboarding::Complete
+        );
+        // Only the listener's own choice opens setup again.
+        app.apply(Action::StartSoloistSetup, &ctx);
+        assert_eq!(app.soloist_view(), SoloistView::Setup);
+        app.backend.shutdown();
+    }
+
+    #[test]
+    fn a_stopped_soloist_restarts_by_itself_a_few_times_then_asks() {
+        use crate::soloist::{Failure, Status, Update};
+        let (ctx, mut app) = listening_on_soloist("soloist-restarts");
+        for _ in 0..SOLOIST_RETRIES.len() {
+            app.on_soloist(Update::Status(Status::Failed(Failure::Stopped)));
+            assert!(app.soloist_recovering(), "a restart is scheduled");
+            soloist_is_due(&mut app, &ctx);
+            assert!(matches!(app.soloist_status, Status::Starting));
+        }
+        app.on_soloist(Update::Status(Status::Failed(Failure::Stopped)));
+        assert!(app.soloist_retry_at.is_none(), "out of tries");
+        assert!(!app.soloist_recovering());
+        app.apply(Action::RetrySoloist, &ctx);
+        assert!(matches!(app.soloist_status, Status::Starting));
+        app.on_soloist(Update::Status(Status::Failed(Failure::Stopped)));
+        assert!(app.soloist_retry_at.is_some(), "Try again starts afresh");
+        app.backend.shutdown();
+    }
+
+    /// Restarting cannot fix these, and retrying a key store only nags.
+    #[test]
+    fn soloist_failures_that_need_the_listener_do_not_restart() {
+        use crate::soloist::{Failure, Status, Update};
+        let (_ctx, mut app) = listening_on_soloist("soloist-no-restart");
+        for failure in [Failure::KeyStore, Failure::InvalidKey, Failure::Expired] {
+            app.on_soloist(Update::Status(Status::Failed(failure)));
+            assert!(app.soloist_retry_at.is_none());
+        }
+        app.backend.shutdown();
+    }
+
+    /// During setup a failure is for reading, except a sign-in Spotify is
+    /// still verifying: that passes by itself (#1137).
+    #[test]
+    fn setup_waits_out_an_unverified_sign_in_but_not_other_failures() {
+        // Windows ARM has no Soloist, so no setup to show.
+        if !crate::soloist::install::supported() {
+            return;
+        }
+        use crate::soloist::{Failure, Status, Update};
+        let (ctx, mut app) = listening_on_soloist("soloist-setup-failure");
+        app.apply(Action::StartSoloistSetup, &ctx);
+        app.on_soloist(Update::Status(Status::Failed(Failure::Stopped)));
+        assert!(app.soloist_retry_at.is_none());
+        assert_eq!(app.soloist_view(), SoloistView::Setup);
+        app.on_soloist(Update::Status(Status::Failed(Failure::NotSignedIn)));
+        assert!(app.soloist_retry_at.is_some());
+        app.backend.shutdown();
+    }
+
+    /// Spotify's device list leaves a quiet Soloist out now and then. That
+    /// dropped the verified device, and with it the whole app.
+    #[test]
+    fn a_short_device_list_does_not_unbind_a_running_soloist() {
+        let (_ctx, mut app) = listening_on_soloist("soloist-short-list");
+        app.devices.clear();
+        app.bind_soloist_device();
+        assert_eq!(app.soloist_device_id.as_deref(), Some("own"));
+        assert!(!app.soloist_waiting());
+        app.backend.shutdown();
+    }
+
+    /// A song chosen while the player restarts waits for it, and never
+    /// starts on the built-in player instead.
+    #[test]
+    fn a_song_chosen_while_soloist_reconnects_waits_for_it() {
+        use crate::soloist::{Failure, Status, Update};
+        let (ctx, mut app) = listening_on_soloist("soloist-held-play");
+        app.local_ready = true;
+        app.on_soloist(Update::Status(Status::Failed(Failure::Stopped)));
+        app.apply(
+            Action::PlayUris {
+                uris: vec!["spotify:track:held".into()],
+                index: 0,
+            },
+            &ctx,
+        );
+        assert!(app.queued_play.is_some());
+        assert!(app.backend.take_remote_play_requests().is_empty());
+        app.on_soloist(Update::Status(Status::Ready {
+            name: "owned".into(),
+            version: "test".into(),
+            expires: u64::MAX,
+        }));
+        app.bind_soloist_device();
+        assert!(app.queued_play.is_none());
+        assert_eq!(app.selected_device.as_deref(), Some("own"));
+        assert_eq!(app.backend.take_remote_play_requests().len(), 1);
+        app.backend.shutdown();
+    }
+
+    /// Once nothing will restart the player, a held song is let go rather
+    /// than starting at some surprising later moment.
+    #[test]
+    fn a_held_song_is_dropped_when_soloist_gives_up() {
+        use crate::soloist::{Failure, Status, Update};
+        let (ctx, mut app) = listening_on_soloist("soloist-held-dropped");
+        app.on_soloist(Update::Status(Status::Failed(Failure::Stopped)));
+        app.apply(
+            Action::PlayUris {
+                uris: vec!["spotify:track:held".into()],
+                index: 0,
+            },
+            &ctx,
+        );
+        app.on_soloist(Update::Status(Status::Failed(Failure::KeyStore)));
+        assert!(app.queued_play.is_none());
+        assert!(!app.any_play_pending());
+        app.backend.shutdown();
+    }
+
+    /// The old loading screen's link could save "setup" in a working
+    /// session. Starting from it must not reopen setup on every launch.
+    #[test]
+    fn a_saved_setup_step_ends_itself_when_soloist_verifies() {
+        use crate::settings::SoloistOnboarding;
+        use crate::soloist::{Status, Update};
+        let (_ctx, mut app) = listening_on_soloist("soloist-resumed-setup");
+        app.soloist_onboarding = SoloistOnboarding::Setup;
+        app.on_soloist(Update::Status(Status::Starting));
+        app.on_soloist(Update::Status(Status::Ready {
+            name: "owned".into(),
+            version: "test".into(),
+            expires: u64::MAX,
+        }));
+        app.bind_soloist_device();
+        assert_eq!(app.soloist_onboarding, SoloistOnboarding::Complete);
+        app.backend.shutdown();
+    }
+
+    /// Pressing Try again after the retries ran out still picks the song up.
+    #[test]
+    fn try_again_resumes_what_soloist_was_playing() {
+        use crate::soloist::{Failure, Status, Update};
+        let (ctx, mut app) = listening_on_soloist("soloist-try-again-resumes");
+        app.soloist_resume = true;
+        app.on_soloist(Update::Status(Status::Failed(Failure::KeyStore)));
+        app.apply(Action::RetrySoloist, &ctx);
+        assert!(app.soloist_resume);
+        app.apply(Action::SetSoloist(false), &ctx);
+        assert!(!app.soloist_resume);
+        app.backend.shutdown();
+    }
+
+    /// Setup opened from the banner is a visit, not a way to lose the app.
+    #[test]
+    fn a_finished_listener_can_leave_setup_and_keep_soloist() {
+        // Windows ARM has no Soloist, so no setup to show.
+        if !crate::soloist::install::supported() {
+            return;
+        }
+        use crate::settings::SoloistOnboarding;
+        let (ctx, mut app) = listening_on_soloist("soloist-leave-setup");
+        app.on_soloist(crate::soloist::Update::Status(
+            crate::soloist::Status::NeedsKey,
+        ));
+        app.apply(Action::StartSoloistSetup, &ctx);
+        assert!(app.soloist_setup_optional);
+        assert_eq!(app.soloist_view(), SoloistView::Setup);
+        app.apply(Action::LeaveSoloistSetup, &ctx);
+        assert_eq!(app.soloist_onboarding, SoloistOnboarding::Complete);
+        assert_eq!(app.soloist_view(), SoloistView::App);
+        assert!(app.settings.soloist_enabled);
+        app.backend.shutdown();
+    }
+
+    /// Chosen in this run, it ends with its own Start listening instead.
+    #[test]
+    fn setup_chosen_now_keeps_its_last_step() {
+        use crate::settings::SoloistOnboarding;
+        use crate::soloist::{Status, Update};
+        let (ctx, mut app) = listening_on_soloist("soloist-chosen-setup");
+        app.apply(Action::StartSoloistSetup, &ctx);
+        app.on_soloist(Update::Status(Status::Starting));
+        app.on_soloist(Update::Status(Status::Ready {
+            name: "owned".into(),
+            version: "test".into(),
+            expires: u64::MAX,
+        }));
+        app.bind_soloist_device();
+        assert_eq!(app.soloist_onboarding, SoloistOnboarding::Setup);
         app.backend.shutdown();
     }
 
@@ -22907,7 +24070,7 @@ mod tests {
             });
             let seq = app.remote_poll_seq;
             app.on_soloist(crate::soloist::Update::Status(
-                crate::soloist::Status::Failed("stopped".into()),
+                crate::soloist::Status::Failed(crate::soloist::Failure::Stopped),
             ));
             assert_eq!(app.remote.is_some(), id == "speaker");
             assert_eq!(app.selected_device.is_some(), id == "speaker");
@@ -23003,6 +24166,7 @@ mod tests {
         app.attach(&ctx);
         crate::demo::populate(&mut app);
         let mut shown_at = None;
+        let mut button_at = None;
         for width in (760..=1600).step_by(8) {
             let width = width as f32;
             let mut tree = None;
@@ -23030,6 +24194,16 @@ mod tests {
             };
             let repeat = button("Repeat").expect("Repeat");
             let lyrics = button("Lyrics").expect("Lyrics");
+            // The full screen button is the last on the right, keeps clear
+            // of Repeat, and outlasts Listening activity as it narrows.
+            if let Some(full) = button("Full screen lyrics") {
+                button_at.get_or_insert(width);
+                assert!(full.x1 <= f64::from(width), "inside the bar at {width}");
+                assert!(lyrics.x1 < full.x0, "right of the rest at {width}");
+                assert!(lyrics.x0 - repeat.x1 >= 10.0, "clear of Repeat at {width}");
+            } else {
+                assert!(button_at.is_none(), "it stays once shown, gone at {width}");
+            }
             if let Some(friends) = button("Listening activity") {
                 shown_at.get_or_insert(width);
                 assert!(friends.y0 > 700.0, "in the player bar at {width}");
@@ -23039,7 +24213,8 @@ mod tests {
                 assert!(shown_at.is_none(), "it stays once shown, gone at {width}");
             }
         }
-        assert!(shown_at.is_some_and(|width| width > 760.0 && width <= 840.0));
+        assert!(button_at.is_some_and(|width| width > 760.0 && width <= 840.0));
+        assert!(shown_at.is_some_and(|width| Some(width) > button_at && width <= 920.0));
         app.backend.shutdown();
     }
 
@@ -23427,6 +24602,7 @@ mod tests {
         for name in ["A.wsz", "B.wsz"] {
             std::fs::write(skins.join(name), b"skin").unwrap();
         }
+        app.settings.skin = None;
         app.apply(Action::SetRandomSkin(true), &ctx);
         app.settings.winamp_window = false;
         app.switch_intent = false;
@@ -25719,6 +26895,138 @@ mod tests {
             app.actions
         );
         app.backend.shutdown();
+    }
+
+    /// Beside a classic skin MilkDrop opens in the frame, and only there;
+    /// full screen hands it to the plain window until that leaves it.
+    /// The way to full screen from a skin: the mini player's window goes,
+    /// the main one comes, the lyrics take the screen with MilkDrop behind
+    /// them, and leaving goes back to the same skin, not to a random pick.
+    #[test]
+    fn full_screen_from_a_skin_goes_there_and_back() {
+        let ctx = egui::Context::default();
+        let mut app = test_app("milkdrop-trip");
+        app.settings.winamp_window = true;
+        app.settings.milkdrop_open = true;
+        app.settings.random_skin = true;
+        app.settings.skin = Some("mine".into());
+        app.actions.push(Action::MilkdropFullscreen);
+        app.apply_actions(&ctx);
+        assert!(!app.settings.winamp_window);
+        assert!(app.skin_return);
+        assert!(app.lyrics_after_switch);
+        assert!(app.settings.milkdrop_open, "still open for the way back");
+        assert!(!app.settings.lyrics_milkdrop, "the default is not changed");
+
+        // The new window's first frame.
+        app.switch_intent = false;
+        app.lyrics_after_switch = false;
+        app.actions.push(Action::SetLyricsFullscreen(true));
+        app.apply_actions(&ctx);
+        assert!(app.milkdrop_behind_lyrics());
+
+        app.actions.push(Action::SetLyricsFullscreen(false));
+        app.apply_actions(&ctx);
+        assert!(app.settings.winamp_window, "back in the mini player");
+        assert!(!app.skin_return);
+        assert_eq!(app.settings.skin.as_deref(), Some("mine"));
+        assert!(!app.milkdrop_backdrop, "and the art is the default again");
+    }
+
+    /// Quitting in the middle of the trip counts as having gone home.
+    #[test]
+    fn quitting_on_a_trip_from_a_skin_opens_the_mini_player_next() {
+        let ctx = egui::Context::default();
+        let mut app = test_app("milkdrop-trip-quit");
+        app.settings.winamp_window = true;
+        app.actions.push(Action::MilkdropFullscreen);
+        app.apply_actions(&ctx);
+        assert!(!app.settings.winamp_window);
+        app.shutdown();
+        assert!(app.settings.winamp_window);
+    }
+
+    /// One child at a time: the plain window waits out the backdrop, and its
+    /// being open is not forgotten.
+    #[cfg(feature = "milkdrop")]
+    #[test]
+    fn the_plain_milkdrop_window_steps_aside_for_the_backdrop() {
+        let ctx = egui::Context::default();
+        let mut app = test_app("milkdrop-one-child");
+        app.settings.milkdrop_open = true;
+        assert!(app.plain_milkdrop_wanted());
+        app.lyrics_fullscreen = Some(false);
+        assert!(app.plain_milkdrop_wanted(), "art behind the lyrics");
+        app.actions.push(Action::ToggleLyricsMilkdrop);
+        app.apply_actions(&ctx);
+        assert!(!app.plain_milkdrop_wanted());
+        assert!(app.settings.milkdrop_open);
+        app.actions.push(Action::SetLyricsFullscreen(false));
+        app.apply_actions(&ctx);
+        assert!(app.plain_milkdrop_wanted(), "back with the backdrop gone");
+    }
+
+    /// In the main window the key flips the backdrop and it is remembered; a
+    /// page opened from full screen ends a trip from a skin where it is.
+    #[test]
+    fn the_lyrics_backdrop_is_remembered_and_a_page_ends_the_trip() {
+        let ctx = egui::Context::default();
+        let mut app = test_app("milkdrop-backdrop");
+        assert!(!app.milkdrop_backdrop, "art by default");
+        app.actions.push(Action::SetLyricsFullscreen(true));
+        app.actions.push(Action::ToggleLyricsMilkdrop);
+        app.apply_actions(&ctx);
+        assert!(app.milkdrop_behind_lyrics());
+        assert!(app.settings.lyrics_milkdrop);
+        app.actions.push(Action::SetLyricsFullscreen(false));
+        app.apply_actions(&ctx);
+        assert!(!app.milkdrop_behind_lyrics(), "only in full screen");
+        assert!(app.settings.lyrics_milkdrop, "and kept for next time");
+
+        app.settings.lyrics_milkdrop = false;
+        app.milkdrop_backdrop = true;
+        app.skin_return = true;
+        app.lyrics_fullscreen = Some(false);
+        app.actions.push(Action::Open(Page::Home));
+        app.apply_actions(&ctx);
+        assert!(
+            !app.settings.winamp_window,
+            "the page is in the main window"
+        );
+        assert!(!app.skin_return);
+        assert!(!app.milkdrop_backdrop);
+    }
+
+    #[test]
+    fn milkdrop_opens_framed_beside_a_classic_skin() {
+        let mut app = test_app("milkdrop-framed");
+        app.settings.milkdrop_open = true;
+        assert!(
+            !app.milkdrop_framed(),
+            "the main window keeps the plain one"
+        );
+        app.settings.winamp_window = true;
+        assert!(app.milkdrop_framed());
+        app.settings.winamp_window = false;
+        assert!(
+            !app.milkdrop_framed(),
+            "the frame goes with the mini player"
+        );
+        app.settings.winamp_window = true;
+        app.settings.milkdrop_open = false;
+        assert!(!app.milkdrop_framed(), "and closed is closed");
+    }
+
+    /// A skin's next-visualisation button goes through the bars and the wave
+    /// while no MilkDrop picture is on show.
+    #[test]
+    fn a_skins_effect_command_cycles_the_bars_without_a_picture() {
+        let mut app = test_app("wmp-effect");
+        app.wmp_command(
+            crate::skin::wmp::deck::Command::Effect(1),
+            &crate::skin::wmp::deck::Deck::default(),
+        );
+        assert!(matches!(app.actions.as_slice(), [Action::CycleVisualiser]));
     }
 
     /// MilkDrop playback keys produce the same actions as the main window.
@@ -31571,6 +32879,45 @@ mod tests {
         app.backend.shutdown();
     }
 
+    /// Every step of a drag is heard and shown at once, even the ones paced
+    /// out of the commands to Soloist.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn a_soloist_route_takes_a_drag_with_no_round_trip() {
+        let mut app = remote_volume_app();
+        let device = app.remote.as_ref().unwrap().state.device.as_ref();
+        app.soloist_device_id = device.unwrap().id.clone();
+        app.settings.soloist_enabled = true;
+        app.soloist_audio = true;
+        let route = app.backend.soloist_output_volume.clone();
+        route.lead(50);
+        for percent in [25, 26, 27] {
+            app.set_volume(percent, false);
+            assert_eq!(route.route_percent(), Some(percent));
+            assert_eq!(app.now_playing().unwrap().volume_percent, percent);
+        }
+        app.soloist_audio = false;
+        app.set_volume(90, true);
+        assert_eq!(route.route_percent(), Some(27), "no route to apply it to");
+    }
+
+    /// The deck is what a skin's sliders read back: a drag must not snap to
+    /// the level from before it on the next tick.
+    #[test]
+    fn a_skin_s_drag_is_previewed_and_the_deck_shows_it() {
+        use crate::skin::wmp::deck::Command;
+        let mut app = remote_volume_app();
+        let deck = app.wmp_deck();
+        let before = deck.volume;
+        let dragged = before.wrapping_add(13) % 100;
+        app.wmp_command(Command::PreviewVolume(dragged), &deck);
+        assert_eq!(app.wmp_deck().volume, dragged);
+        assert!(matches!(app.actions.last(), Some(Action::PreviewVolume(_))));
+        app.wmp_command(Command::SetVolume(dragged), &deck);
+        assert_eq!(app.volume_preview, None);
+        assert!(matches!(app.actions.last(), Some(Action::SetVolume(_))));
+    }
+
     #[test]
     fn soloist_output_volume_is_local_only_when_mac_capture_is_ready() {
         let mut app = remote_volume_app();
@@ -34251,6 +35598,7 @@ mod tests {
                 name: "A.wsz".into(),
                 result: Ok(some_skin("A")),
                 installed: false,
+                preferences: std::collections::HashMap::new(),
             },
             &egui::Context::default(),
         );
@@ -34267,6 +35615,7 @@ mod tests {
                 name: "Dropped.wsz".into(),
                 result: Ok(some_skin("Dropped")),
                 installed: true,
+                preferences: std::collections::HashMap::new(),
             },
             &egui::Context::default(),
         );
@@ -34284,6 +35633,7 @@ mod tests {
                 name: "Gone.wsz".into(),
                 result: Err(crate::skin::SkinError::Empty),
                 installed: false,
+                preferences: std::collections::HashMap::new(),
             },
             &egui::Context::default(),
         );

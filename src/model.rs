@@ -1399,6 +1399,8 @@ pub enum Action {
     SetSoloist(bool),
     RetrySoloist,
     StartSoloistSetup,
+    EnableSoloist,
+    LeaveSoloistSetup,
     FinishSoloistSetup,
     UseBuiltInPlayer,
     RestartEngine,
@@ -1415,6 +1417,12 @@ pub enum Action {
     ClearPlayHistory,
     /// Open or close the Winamp window.
     ToggleWinampWindow,
+    /// The pointer or a key on a view of a Windows Media Player skin.
+    WmpInput {
+        view: u32,
+        input: crate::skin::wmp::runtime::Input,
+        modifiers: crate::skin::wmp::runtime::Modifiers,
+    },
     /// Select a skin, or the built-in skin for `None`.
     SetSkin(Option<String>),
     /// Install and select a skin file.
@@ -1472,6 +1480,18 @@ pub enum Action {
     ToggleWinampShade,
     /// Open or close the MilkDrop window.
     ToggleWinampMilkdrop,
+    /// Move the MilkDrop picture in the skinned window on or back a preset.
+    MilkdropEffect(i32),
+    /// Take the skinned MilkDrop window to full screen, in the plain window.
+    MilkdropFullscreen,
+    /// MilkDrop alone in the window, from full screen lyrics.
+    EnterImmersive,
+    /// Full screen lyrics back as they were.
+    LeaveImmersive,
+    /// Puts MilkDrop behind full screen lyrics, or the cover's art back.
+    ToggleLyricsMilkdrop,
+    /// The size of the picture in the skinned MilkDrop window, in points.
+    SetMilkdropPanel(u32),
     /// How long each MilkDrop preset plays, in seconds.
     SetMilkdropSeconds(u32),
     SetMilkdropScale(u32),
