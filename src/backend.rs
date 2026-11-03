@@ -4408,7 +4408,17 @@ impl Worker {
         }
         // Each ad Spotify plays is logged locally, never sent anywhere.
         let ad_log = Some(self.dirs.volume_dir().join("ads.jsonl"));
-        match WebPlayer::start(self.web_player_notify(), self.web_player_account(), ad_log) {
+        let started = WebPlayer::start(self.web_player_notify(), self.web_player_account(), ad_log);
+        self.web_player_started(started)
+    }
+
+    /// Takes a helper that just started, or says why it could not.
+    #[cfg(target_os = "macos")]
+    fn web_player_started(
+        &mut self,
+        started: std::io::Result<crate::web_player::WebPlayer>,
+    ) -> bool {
+        match started {
             Ok(player) => {
                 log::info!("web player helper started");
                 self.web_player = Some(player);
@@ -10051,16 +10061,21 @@ mod authorization_tests {
     fn a_started_helper_reports_local_playback_connected() {
         let (runtime, mut worker, events) = worker("helper-connected");
         let _entered = runtime.enter();
-        // Safety: set before the helper is looked up, in this test only.
-        unsafe { std::env::set_var("SPOTIFAST_PLAYBACK_HELPER", "/bin/cat") };
-        assert!(worker.ensure_web_player());
+        // Any process stands in for the helper: only its start is checked.
+        let stand_in = crate::web_player::WebPlayer::spawn(
+            std::process::Command::new("cat"),
+            worker.web_player_notify(),
+            worker.web_player_account(),
+            None,
+        );
+        assert!(worker.web_player_started(stand_in));
         assert!(
             events
                 .try_iter()
                 .any(|event| matches!(event, Event::Local(state) if state.connected)),
             "the app is told local playback is connected"
         );
-        if let Some(mut player) = worker.web_player.take() {
+        if let Some(player) = worker.web_player.take() {
             player.shutdown();
         }
     }
