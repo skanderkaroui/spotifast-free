@@ -202,8 +202,10 @@ impl WebPlayer {
         #[cfg(not(target_os = "macos"))]
         let candidates = {
             let mut found = vec![exe.parent()?.join(LINUX_HELPER_DIR).join(LINUX_HELPER_EXE)];
+            // XDG: an empty or relative XDG_DATA_HOME counts as unset.
             if let Some(data) = std::env::var_os("XDG_DATA_HOME")
                 .map(PathBuf::from)
+                .filter(|path| path.is_absolute())
                 .or_else(|| {
                     std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".local/share"))
                 })
