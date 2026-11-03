@@ -50,7 +50,8 @@ every song and every ad itself, with its own DRM and restrictions.
 | **Edits** | Create, rename and describe playlists, add, move and remove songs, change a cover, save albums, shows and episodes, follow playlists |
 | **Ads** | Played by Spotify and shown as the playing item; skip and seek are held while one plays, as on Spotify |
 | **Hidden** | Other devices and Cast, queue editing and Play next, local files, Soloist, the equalizer, visualizers and MilkDrop, playback engine settings, upcoming releases and pre-save. Spotify plays the audio inside WebKit, so Spotifast Free cannot hear or route it |
-| **Not yet** | Free playback on Windows and Linux. Those builds play Premium only, like Spotifast |
+| **Linux** | Free plays through a separate helper download (castLabs Electron, about 120 MB): unpack `spotifast-…-linux-free-helper-x86_64.tar.gz` (or `aarch64`) from the release into `~/.local/share`, so it sits at `~/.local/share/spotifast-free-helper`. Spotifast Free finds it, and its sign-in offers Spotify Free |
+| **Not yet** | Free playback on Windows. That build plays Premium only, like Spotifast |
 
 The helper keeps its own Spotify sign-in, separate from your browsers. It
 starts with Spotifast Free and keeps running, so the first press plays at

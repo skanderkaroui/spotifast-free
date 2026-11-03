@@ -367,12 +367,32 @@ jobs:
           path: "*.flatpak"
           if-no-files-found: error
 
+  # Spotify Free on Linux plays through this helper: Spotify's web player
+  # in castLabs Electron (experiments/linux-playback-host). It is its own
+  # download, about 120 MB, unpacked into ~/.local/share by those who want
+  # Free; Premium never needs it.
+  linux-free-helper:
+    name: Linux Free helper (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Package
+        run: sh experiments/linux-playback-host/package.sh "$GITHUB_REF_NAME" "${{ matrix.arch }}" dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-free-helper-${{ matrix.arch }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
   publish:
     name: GitHub release
     # The bundle is welcome but not required: a Flatpak failure must not
     # hold the release.
-    needs: [build, windows, macos, flatpak]
-    if: ${{ !cancelled() && needs.build.result == 'success' && needs.windows.result == 'success' && needs.macos.result == 'success' }}
+    needs: [build, windows, macos, flatpak, linux-free-helper]
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.windows.result == 'success' && needs.macos.result == 'success' && needs.linux-free-helper.result == 'success' }}
     runs-on: ubuntu-latest
     # Publishing waits for the maintainer's approval, and only this job can
     # read the release signing key (v* tags only).
