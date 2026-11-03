@@ -232,6 +232,12 @@ A song picked from the search results plays on its own, and, with Autoplay on,
 Spotify continues with songs it suggests after it, as in the Spotify apps. The other results are
 not queued after it.
 
+## Opening a Spotify link
+
+Paste a link to a song, album, artist, playlist or podcast into the search box
+and press `Enter` to open it. A link to a song opens its album with the song
+selected and in view. Spotifast does not start playing it.
+
 ## Search from a launcher
 
 **In development, not included in 0.8.0:** a Spotify search link opens Search
@@ -329,7 +335,9 @@ Winamp skins do not yet have equivalent accessibility coverage.
 | `Ctrl+A` | Select every song in a playlist, album or Liked Songs |
 | `Ctrl+C` / `Ctrl+V` | Copy the selected songs' links / add copied song links to your playlist |
 | `Ctrl+X` | Copy the selected songs' links and remove the songs from your playlist |
-| `Ctrl+M` | Winamp mini player |
+| `Shift+Q` | Add the selected songs to the queue, or show the queue if none are selected |
+| `Shift+N` | Play the selected songs next, on this computer |
+| `Ctrl+M` | Mini player |
 | `Ctrl+Shift+K` | MilkDrop |
 | `Ctrl+,` | Settings |
 | `Ctrl+/` or `?` | All shortcuts |
@@ -764,6 +772,11 @@ count sort last.
 The same answer gives an artist's monthly listeners, which the top of the
 artist page then shows first.
 
+## Discography
+
+An artist's discography can be narrowed to Albums, Singles & EPs, Compilations
+or Appears On.
+
 ## Upcoming albums
 
 Artist pages show a **Release countdown** section between Popular and Discography
@@ -798,7 +811,7 @@ let apps remove a description, so clearing the field keeps the current one.
 You can replace it with other text instead.
 
 If Spotify refuses permission, sign in again and approve image uploads. If you
-use a personal Spotify app, reconnect it in Settings as well.
+use your own Client ID, authorize it again in Settings as well.
 
 ## Lyrics
 
