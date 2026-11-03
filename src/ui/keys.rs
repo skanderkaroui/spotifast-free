@@ -941,7 +941,7 @@ mod tests {
                 .any(|action| matches!(action, Action::ToggleWinampMilkdrop))
         };
         assert!(press(&mut app));
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         {
             app.local_device_id = Some(crate::web_player::DEVICE_ID.into());
             assert!(!app.capabilities().visualizers);

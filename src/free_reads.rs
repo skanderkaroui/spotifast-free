@@ -945,7 +945,7 @@ pub fn play_count_page(
 
 /// Spotify's play count for each song of the album or artist `uri`, read
 /// through the Free web player's page.
-#[cfg(target_os = "macos")]
+#[cfg(free_helper)]
 pub async fn play_counts(
     reader: &crate::web_player::Reader,
     uri: &str,
@@ -1267,7 +1267,7 @@ mod tests {
 /// Live, against Spotify, through the real helper and its saved sign-in:
 /// `SPOTIFAST_PLAYBACK_HELPER=... cargo test --lib free_reads::live -- --ignored`.
 /// It only reads the account; nothing plays.
-#[cfg(all(test, target_os = "macos"))]
+#[cfg(all(test, free_helper))]
 mod live {
     use super::*;
 

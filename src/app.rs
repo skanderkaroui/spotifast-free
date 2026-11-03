@@ -1030,11 +1030,11 @@ const TRAY_WAIT: Duration = Duration::from_secs(30);
 
 /// Whether a Free account can play here, through the macOS web player helper.
 fn free_playback_available() -> bool {
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     {
         crate::web_player::WebPlayer::available()
     }
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(free_helper))]
     {
         false
     }
@@ -11304,11 +11304,11 @@ impl App {
     /// every control Spotify's own bar offers except the volume, which stays
     /// with the web player.
     pub fn free_web_player(&self) -> bool {
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         {
             self.local_device_id.as_deref() == Some(crate::web_player::DEVICE_ID)
         }
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(not(free_helper))]
         {
             false
         }
@@ -11321,13 +11321,13 @@ impl App {
         if !self.free_web_player() {
             return Capabilities::new(Engine::Librespot, Default::default(), false);
         }
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         let in_ad = self
             .local
             .track
             .as_ref()
             .is_some_and(|track| crate::web_player::is_ad(&track.uri));
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(not(free_helper))]
         let in_ad = false;
         Capabilities::new(Engine::FreeWebPlayer, self.local.restrictions, in_ad)
     }
@@ -13521,7 +13521,7 @@ impl App {
             Action::SignInFree => {
                 // On the click, while Spotifast is active: let the helper's
                 // sign-in window come to the front when it opens.
-                #[cfg(target_os = "macos")]
+                #[cfg(free_helper)]
                 crate::window::yield_to_free_helper();
                 self.backend.send(Command::SignInFree);
             }
@@ -24005,7 +24005,7 @@ mod tests {
         // A Free sign-in playing through Spotify's web player is never
         // offered Soloist, even before its plan is known.
         app.user.as_mut().unwrap().product = None;
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         {
             app.local_device_id = Some(crate::web_player::DEVICE_ID.into());
             assert!(!app.soloist_offered());
@@ -27819,7 +27819,7 @@ mod tests {
     /// A Free account's plays wait for local playback to report itself
     /// connected. The helper reports that at sign-in, before its process
     /// runs, so a play is sent at once instead of held forever.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn a_free_play_is_sent_once_the_helper_reports_ready() {
         let mut app = test_app("free-helper-ready");
@@ -27839,7 +27839,7 @@ mod tests {
 
     /// The helper reports full scale because it has no volume. That must not
     /// replace the saved level a Premium session starts librespot at.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn the_free_helper_keeps_the_saved_volume() {
         let mut app = test_app("free-helper-volume");
@@ -27859,7 +27859,7 @@ mod tests {
     /// A Free click on a song in a sorted playlist view plays the playlist
     /// from that song (Spotify Free ignores a song list), so Next stays in
     /// the playlist.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn a_free_click_in_a_sorted_view_plays_inside_the_playlist() {
         let mut app = test_app("free-sorted-view");
@@ -27893,7 +27893,7 @@ mod tests {
     /// Spotify lists the helper's web player as a separate device. A paused
     /// helper must still receive Free plays, not that device via the Web API,
     /// which refuses Free accounts.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn a_paused_free_helper_still_receives_plays() {
         let mut app = test_app("free-helper-target");
@@ -27907,7 +27907,7 @@ mod tests {
 
     /// The helper reports playback itself, so a Free account sends Spotify
     /// no playback or queue polls that would spend the shared rate limit.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn the_free_web_player_does_not_poll_the_web_api() {
         let mut app = test_app("free-helper-polls");
@@ -27926,7 +27926,7 @@ mod tests {
 
     /// Spotify's web player takes its volume through Connect, so the
     /// slider stays live for Free.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn the_free_web_player_offers_volume() {
         let mut app = test_app("free-helper-volume");
@@ -27951,7 +27951,7 @@ mod tests {
         app.backend.shutdown();
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     fn playing_app(name: &str, free: bool, uri: &str) -> App {
         let mut app = test_app(name);
         app.handle_playback(LocalPlayback::Ready {
@@ -27977,7 +27977,7 @@ mod tests {
         app
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn free_volume_is_sent_but_not_saved_as_premiums() {
         for free in [true, false] {
@@ -27995,7 +27995,7 @@ mod tests {
         }
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn free_queue_adds_go_through_the_helper() {
         let mut app = playing_app("cap-queue-free", true, "spotify:track:a");
@@ -28014,7 +28014,7 @@ mod tests {
         app.backend.shutdown();
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn only_premium_edits_the_queue() {
         for free in [true, false] {
@@ -28028,7 +28028,7 @@ mod tests {
         }
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn next_and_seek_do_nothing_during_a_free_ad() {
         let mut app = playing_app("cap-ad-next", true, crate::web_player::AD_URI);
@@ -28067,7 +28067,7 @@ mod tests {
         app.backend.shutdown();
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn free_radio_plays_spotifys_radio_without_the_page() {
         let mut app = playing_app("cap-radio", true, "spotify:track:a");
@@ -28081,7 +28081,7 @@ mod tests {
         app.backend.shutdown();
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn free_next_up_comes_from_spotifys_upcoming_list() {
         let mut app = playing_app("cap-upcoming", true, "spotify:track:a");

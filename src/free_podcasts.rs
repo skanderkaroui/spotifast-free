@@ -572,7 +572,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, target_os = "macos"))]
+#[cfg(all(test, free_helper))]
 mod live {
     use super::*;
 

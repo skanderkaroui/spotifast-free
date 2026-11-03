@@ -811,10 +811,10 @@ pub enum Command {
     },
     /// Internal: a Web API browser flow or verification ended (success or not).
     /// The Free helper's page read the signed-in account.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     FreeSignedIn(Box<Result<User, ApiError>>),
     /// The Free helper's page reported a change in Spotify's sign-in.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     FreeAccount(crate::web_player::Account),
     SignInEnded {
         source: ApiSource,
@@ -1929,21 +1929,21 @@ struct Worker {
     signed_in: bool,
     /// Signed in on Spotify's own page in the Free helper, with no Web API
     /// grant: the helper's page answers for the account.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     free_session: bool,
     /// The Free sign-in's account, once the page has read it.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     free_account: Option<String>,
     /// The plan, once the Web API has answered.
     premium: Option<bool>,
     /// Free accounts on macOS play through Spotify's own web player in a
     /// hidden helper, started as soon as the plan is known and kept running
     /// so presses never wait on a cold start. Stopped on sign-out.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     web_player: Option<crate::web_player::WebPlayer>,
     /// Start the helper when the Free plan is known rather than on the first
     /// press. Off only in tests, which must not launch WebKit.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     start_web_player_early: bool,
     cancel_signin: Option<watch::Sender<bool>>,
     authorizing_source: Option<ApiSource>,
@@ -2054,14 +2054,14 @@ impl Worker {
             search_tasks: Vec::new(),
             engine_restart_pending: false,
             signed_in: false,
-            #[cfg(target_os = "macos")]
+            #[cfg(free_helper)]
             free_session: false,
-            #[cfg(target_os = "macos")]
+            #[cfg(free_helper)]
             free_account: None,
             premium: None,
-            #[cfg(target_os = "macos")]
+            #[cfg(free_helper)]
             web_player: None,
-            #[cfg(target_os = "macos")]
+            #[cfg(free_helper)]
             start_web_player_early: !cfg!(test),
             cancel_signin: None,
             authorizing_source: None,
@@ -2263,10 +2263,10 @@ impl Worker {
                             crate::soloist::Status::Off,
                         )));
                     }
-                    #[cfg(target_os = "macos")]
+                    #[cfg(free_helper)]
                     let free_session = self.free_session;
                     // The Free web player exists only on macOS.
-                    #[cfg(not(target_os = "macos"))]
+                    #[cfg(not(free_helper))]
                     let free_session = false;
                     if !soloist_allowed(enabled, free_session) {
                         self.stop_soloist().await;
@@ -2446,9 +2446,9 @@ impl Worker {
                     client_id,
                 } => self.change_proxy(request, config, Some(client_id)),
                 Command::SignInFree => self.sign_in_free_clicked(),
-                #[cfg(target_os = "macos")]
+                #[cfg(free_helper)]
                 Command::FreeSignedIn(result) => self.on_free_signed_in(*result),
-                #[cfg(target_os = "macos")]
+                #[cfg(free_helper)]
                 Command::FreeAccount(account) => self.on_free_account(account),
                 Command::CancelSignIn => {
                     self.authorization_attempt += 1;
@@ -2505,7 +2505,7 @@ impl Worker {
                     if matches!(&command, PlayerCommand::Load(_)) {
                         self.resume = None;
                     }
-                    #[cfg(target_os = "macos")]
+                    #[cfg(free_helper)]
                     if self.premium == Some(false) {
                         self.web_player_command(&command);
                         continue;
@@ -3166,7 +3166,7 @@ impl Worker {
         {
             // A Free sign-in has no grant here: Spotify's own sign-in lives
             // in the helper's website data, and the page signs in again.
-            #[cfg(target_os = "macos")]
+            #[cfg(free_helper)]
             if !self.free_session
                 && crate::web_player::saved_free_sign_in(&self.dirs.volume_dir()).is_some()
             {
@@ -3571,7 +3571,7 @@ impl Worker {
         self.spotify_restore_started = true;
         self.cancel_search();
         self.signed_in = false;
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         {
             self.free_session = false;
             self.free_account = None;
@@ -3594,7 +3594,7 @@ impl Worker {
         self.pending_playback_grant = None;
         self.engine_busy = false;
         self.premium = None;
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         {
             if let Some(player) = self.web_player.take() {
                 player.shutdown();
@@ -4259,7 +4259,7 @@ impl Worker {
     }
 
     /// Tells the backend when the helper's page signs in or out of Spotify.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     fn web_player_account(&self) -> crate::web_player::OnAccount {
         let commands = self.commands.clone();
         Arc::new(move |account| {
@@ -4276,14 +4276,14 @@ impl Worker {
     /// never asks for it.
     fn sign_in_free_clicked(&mut self) {
         self.sign_in_free();
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         if let Some(player) = self.web_player.as_ref() {
             player.show_sign_in();
         }
     }
 
     fn sign_in_free(&mut self) {
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         {
             self.free_session = true;
             self.emit(Event::Auth(AuthStatus::Connecting));
@@ -4294,14 +4294,14 @@ impl Worker {
                 self.emit(Event::Auth(AuthStatus::SignedOut));
             }
         }
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(not(free_helper))]
         self.emit(Event::Auth(AuthStatus::Failed(PREMIUM_NEEDED.into())));
     }
 
     /// Reads the account through the helper's page. A page still signed out
     /// answers `NotSignedIn`, and the read runs again when the page reports
     /// the sign-in.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     fn read_free_account(&mut self) {
         let Some(player) = self.web_player.as_ref() else {
             return;
@@ -4319,7 +4319,7 @@ impl Worker {
         });
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     fn on_free_account(&mut self, account: crate::web_player::Account) {
         if !self.free_session {
             return;
@@ -4333,7 +4333,7 @@ impl Worker {
         }
     }
 
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     fn on_free_signed_in(&mut self, result: Result<User, ApiError>) {
         if !self.free_session || self.signed_in {
             return;
@@ -4374,7 +4374,7 @@ impl Worker {
 
     /// Sends the helper's playback state to the app the way the librespot
     /// engine's notify does.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     fn web_player_notify(&self) -> crate::web_player::Notify {
         let events = self.events.clone();
         let waker = self.waker.clone();
@@ -4388,7 +4388,7 @@ impl Worker {
     /// running from the moment the plan is known, so presses never wait on a
     /// cold start), and replaces one that exited. `false` when it could not
     /// start, after saying why.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     fn ensure_web_player(&mut self) -> bool {
         use crate::web_player::WebPlayer;
         if self
@@ -4413,7 +4413,7 @@ impl Worker {
     }
 
     /// Takes a helper that just started, or says why it could not.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     fn web_player_started(
         &mut self,
         started: std::io::Result<crate::web_player::WebPlayer>,
@@ -4447,7 +4447,7 @@ impl Worker {
     /// Sends a command to the Free playback helper, starting it first if it
     /// is not running. Controls Spotify's web player does not offer report
     /// why, rather than failing silently.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     fn web_player_command(&mut self, command: &PlayerCommand) {
         use crate::web_player::Unsupported;
         if !self.ensure_web_player() {
@@ -4480,7 +4480,7 @@ impl Worker {
     /// `exit(1)` for Free accounts, which cannot be caught. If the plan is
     /// unknown, preserve the previous behavior and start the engine.
     fn on_account_checked(&mut self, premium: Option<bool>) {
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         let premium = {
             let path = self.dirs.volume_dir().join("plan");
             // The plan belongs to one account; without a verified account
@@ -4531,7 +4531,7 @@ impl Worker {
             // Free accounts play through the web player helper. Start it now,
             // so the first press finds Spotify's page loaded and connected
             // instead of waiting about six seconds for a cold start.
-            #[cfg(target_os = "macos")]
+            #[cfg(free_helper)]
             if crate::web_player::WebPlayer::available() {
                 log::info!("free account: local playback through the web player helper");
                 self.emit(Event::Playback(LocalPlayback::Ready {
@@ -4565,7 +4565,7 @@ impl Worker {
         // Premium account replaced a Free one): the engine takes over. The
         // app was told the helper is its local player, so withdraw that
         // first, or plays keep going to a helper that is gone.
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         if let Some(player) = self.web_player.take() {
             player.shutdown();
         }
@@ -4758,7 +4758,7 @@ impl Worker {
     fn start_rootlist(&mut self) {
         // A Free sign-in has no librespot session: its web player's page
         // reads the same list, folders included, for the signed-in account.
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         if self.free_session {
             let reader = self
                 .web_player
@@ -4825,13 +4825,13 @@ impl Worker {
     fn fetch_album_types(&mut self, uris: Vec<String>) {
         // A Free sign-in has no librespot session, but its web player's page
         // reads the album type the same way Spotify's album page does.
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         let premium = if self.free_session {
             None
         } else {
             self.premium
         };
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(not(free_helper))]
         let premium = self.premium;
         self.album_type_lookup
             .enqueue(self.signed_in, premium, uris);
@@ -4843,7 +4843,7 @@ impl Worker {
     fn start_audiobook_lookup(&mut self) {
         // A Free sign-in asks its web player's page for each show's own
         // page, which says whether it is a podcast or an audiobook.
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         if let Some(reader) = self
             .free_session
             .then(|| {
@@ -5014,7 +5014,7 @@ impl Worker {
             }))
         };
         // A Free sign-in removes the rows through its page, by their uids.
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         if let Some(reader) = self
             .free_session
             .then(|| {
@@ -5181,7 +5181,7 @@ impl Worker {
     }
 
     fn start_album_type_lookup(&mut self) {
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         if self.free_session {
             let Some(reader) = self
                 .web_player
@@ -5255,7 +5255,7 @@ impl Worker {
         let waker = self.waker.clone();
         let cache_dir = self.dirs.lyrics_cache_dir();
         let engine = self.engine.clone();
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         let free: Option<FreeLyricsRead> = self
             .free_session
             .then(|| {
@@ -5272,7 +5272,7 @@ impl Worker {
                 let pending = reader.query(&query);
                 Box::pin(async move { crate::free_reads::answer(pending.await) }) as FreeLyricsRead
             });
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(not(free_helper))]
         let free: Option<FreeLyricsRead> = None;
         tokio::spawn(async move {
             // A local file's own words go first, then Spotify's: they
@@ -5355,7 +5355,7 @@ impl Worker {
     fn fetch_user_names(&self, ids: Vec<String>) {
         // A Free sign-in asks its web player's page for the same profile
         // view, one id at a time as below.
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         if let Some(reader) = self
             .free_session
             .then(|| {
@@ -5418,7 +5418,7 @@ impl Worker {
         };
         // A Free sign-in has no librespot session: its web player's page
         // reads the same artist and album queries, counts included.
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         if let Some(reader) = self
             .free_session
             .then(|| {
@@ -5547,7 +5547,7 @@ impl Worker {
     /// Cancel requests on sign-out and report completion under their original generation.
     fn dispatch(&self, request: ApiRequest) -> tokio::task::AbortHandle {
         // A Free sign-in has no Web API grant: its page reads for it.
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         let free = self
             .free_session
             .then(|| {
@@ -5588,7 +5588,7 @@ impl Worker {
                 _ = session.changed() => return,
                 result = async {
                     // What the page does not read yet goes the usual way.
-                    #[cfg(target_os = "macos")]
+                    #[cfg(free_helper)]
                     if let Some((reader, account)) = &free {
                         let name = format!("{request:?}");
                         let name = name.split([' ', '(', '{']).next().unwrap_or_default().to_owned();
@@ -6049,7 +6049,7 @@ where
 /// every read the app makes for a Free account answers through Spotify's
 /// web player, by the same route the app's pages use. Read-only.
 /// `SPOTIFAST_PLAYBACK_HELPER=... cargo test --lib free_reads_end_to_end -- --ignored`
-#[cfg(all(test, target_os = "macos"))]
+#[cfg(all(test, free_helper))]
 mod free_live {
     use super::*;
 
@@ -6157,7 +6157,7 @@ mod free_live {
 
 /// The reads a Free sign-in answers through Spotify's web player, shaped as
 /// the Web API's answers. `None` for a request it does not cover yet.
-#[cfg(target_os = "macos")]
+#[cfg(free_helper)]
 async fn handle_free(
     reader: &crate::web_player::Reader,
     account: Option<&str>,
@@ -9810,7 +9810,7 @@ mod authorization_tests {
     /// A Free sign-in signs the app in with the account the web player's
     /// page reads, and starts Free playback for it. A page still on
     /// Spotify's sign-in signs nothing in; it is read again once in.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn a_free_sign_in_uses_the_account_the_page_reads() {
         let (runtime, mut worker, events) = worker("free-sign-in");
@@ -9854,7 +9854,7 @@ mod authorization_tests {
     /// launch showed the sign-in screen again; nothing remembered the Free
     /// sign-in. With no Web API grant to restore, a remembered Free sign-in
     /// signs in again through the helper's page.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn a_free_sign_in_is_restored_on_the_next_launch() {
         let (runtime, mut worker, events) = worker("free-sign-in-restore");
@@ -9905,7 +9905,7 @@ mod authorization_tests {
     /// Live, 2026-10-26: clicking Sign in opened Spotify's sign-in behind
     /// the app, where nobody saw it. The click asks the helper to bring it
     /// to the front; a sign-in restored at launch does not.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn clicking_sign_in_brings_spotifys_sign_in_to_the_front() {
         let (runtime, mut worker, _events) = worker("free-sign-in-front");
@@ -9956,7 +9956,7 @@ mod authorization_tests {
     /// Live, 2026-10-26: the helper's page left for Spotify's login, so the
     /// first read was never answered, and the app gave up before the
     /// listener had signed in. An unanswered read waits for the sign-in.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn an_unanswered_read_while_signing_in_keeps_waiting() {
         let (runtime, mut worker, events) = worker("free-sign-in-unanswered");
@@ -9981,7 +9981,7 @@ mod authorization_tests {
 
     /// A Premium account must keep librespot: it is never routed to the Free
     /// helper, whatever the helper's presence or a stale saved plan says.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn premium_never_uses_the_free_helper() {
         let (runtime, mut worker, events) = worker("premium-not-helper");
@@ -10008,7 +10008,7 @@ mod authorization_tests {
 
     /// With no saved plan and no answer from Spotify, the plan stays unknown
     /// and librespot keeps its old behaviour; nothing is guessed as Free.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn an_unknown_plan_is_not_guessed_free() {
         let (runtime, mut worker, _events) = worker("unknown-plan");
@@ -10024,7 +10024,7 @@ mod authorization_tests {
 
     /// A Free plan saved by one account is never used for another, so a
     /// different (for example Premium) account keeps librespot.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn another_accounts_free_plan_is_not_used() {
         let (runtime, mut worker, _events) = worker("other-account-plan");
@@ -10039,7 +10039,7 @@ mod authorization_tests {
     }
 
     /// The same account's saved Free plan is used before Spotify answers.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn the_same_accounts_free_plan_is_used() {
         let (runtime, mut worker, _events) = worker("same-account-plan");
@@ -10056,7 +10056,7 @@ mod authorization_tests {
     /// A helper started for a Free sign-in says local playback is connected,
     /// since the app holds plays until it is; the helper itself only reports
     /// changes, so without this every play waited forever.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn a_started_helper_reports_local_playback_connected() {
         let (runtime, mut worker, events) = worker("helper-connected");
@@ -10082,7 +10082,7 @@ mod authorization_tests {
 
     /// A Free plan that turns out Premium withdraws the helper from the app,
     /// so plays stop going to it and librespot can take over.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn free_then_premium_withdraws_the_helper() {
         let (runtime, mut worker, events) = worker("free-then-premium");
@@ -10102,7 +10102,7 @@ mod authorization_tests {
     }
 
     /// A Premium recheck of a Premium account sends nothing new.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn premium_recheck_keeps_local_playback() {
         let (runtime, mut worker, events) = worker("premium-recheck");
@@ -10121,7 +10121,7 @@ mod authorization_tests {
     }
 
     /// Signing out forgets the plan, so the next account does not start on it.
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     #[test]
     fn sign_out_forgets_the_saved_plan() {
         let (runtime, mut worker, _events) = worker("plan-sign-out");

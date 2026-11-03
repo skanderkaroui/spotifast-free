@@ -43,6 +43,16 @@ fn glew_library(lib: &std::path::Path) -> Option<&'static str> {
 }
 
 fn main() {
+    // Spotify Free plays through a helper running Spotify's web player:
+    // system WebKit on macOS, castLabs Electron on Linux. Windows has none
+    // yet. Code for it is under `cfg(free_helper)`.
+    println!("cargo:rustc-check-cfg=cfg(free_helper)");
+    if matches!(
+        std::env::var("CARGO_CFG_TARGET_OS").as_deref(),
+        Ok("macos" | "linux")
+    ) {
+        println!("cargo:rustc-cfg=free_helper");
+    }
     #[cfg(feature = "soloist-native-audio")]
     native_soloist_audio();
     fastframe_i18n::build::compile_catalogs("assets/i18n");

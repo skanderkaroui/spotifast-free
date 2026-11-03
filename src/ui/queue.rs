@@ -825,7 +825,7 @@ mod tests {
         assert!(shows_clear(&mut app));
         app.backend.shutdown();
 
-        #[cfg(target_os = "macos")]
+        #[cfg(free_helper)]
         {
             let mut app = test_app("free");
             app.local_device_id = Some(crate::web_player::DEVICE_ID.into());
