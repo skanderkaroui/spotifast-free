@@ -144,8 +144,13 @@
                   icnsify
                 ];
               # The command-alias regression starts its own bus, isolated from
-              # the listener's desktop and running application.
-              nativeCheckInputs = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.dbus ];
+              # the listener's desktop and running application. The Free
+              # helper's tests stand a small python3 script in for Spotify's
+              # page.
+              nativeCheckInputs = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+                pkgs.dbus
+                pkgs.python3
+              ];
               # It starts an orphan process from a copied binary, which never
               # comes up in the build sandbox. CI runs it outside Nix.
               checkFlags = [ "--skip=soloist::tests::reclaims_a_leftover_soloist_from_this_installation" ];
