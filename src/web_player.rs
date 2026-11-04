@@ -165,18 +165,56 @@ pub enum Unsupported {
 /// The helper app's bundle identifier, as its Info.plist names it.
 pub const HELPER_BUNDLE_ID: &str = "io.github.skanderkaroui.SpotifastFree.Helper";
 
+/// The Linux helper's folder (castLabs Electron with
+/// `experiments/linux-playback-host`) and its executable inside.
+#[cfg(not(target_os = "macos"))]
+const LINUX_HELPER_DIR: &str = "spotifast-free-helper";
+#[cfg(not(target_os = "macos"))]
+const LINUX_HELPER_EXE: &str = "spotifast-free-helper";
+
+/// How Spotifast starts the helper: hidden until Spotify's sign-in needs it.
+/// The macOS helper also takes `--web-player` (it doubles as a probe). The
+/// Linux one runs without Chromium's setuid sandbox, which a user's unpacked
+/// download cannot install; Spotify's page is its only content.
+fn helper_args() -> &'static [&'static str] {
+    if cfg!(target_os = "macos") {
+        &["--headless", "--web-player"]
+    } else {
+        &["--headless", "--no-sandbox"]
+    }
+}
+
 impl WebPlayer {
-    /// The helper app's executable: `SPOTIFAST_PLAYBACK_HELPER`, else next to
-    /// this executable inside the app bundle.
+    /// The helper app's executable: `SPOTIFAST_PLAYBACK_HELPER`, else where
+    /// the app ships it: inside the bundle on macOS, and on Linux in a
+    /// `spotifast-free-helper` folder beside this executable or in the
+    /// user's data folder, where the separate helper download unpacks.
     pub fn helper_path() -> Option<PathBuf> {
         if let Some(path) = std::env::var_os("SPOTIFAST_PLAYBACK_HELPER") {
             return Some(PathBuf::from(path));
         }
         let exe = std::env::current_exe().ok()?;
-        let bundled = exe
-            .parent()?
-            .join("../Helpers/SpotifastPlaybackProbe.app/Contents/MacOS/SpotifastPlaybackProbe");
-        bundled.exists().then_some(bundled)
+        #[cfg(target_os = "macos")]
+        let candidates =
+            vec![exe.parent()?.join(
+                "../Helpers/SpotifastPlaybackProbe.app/Contents/MacOS/SpotifastPlaybackProbe",
+            )];
+        #[cfg(not(target_os = "macos"))]
+        let candidates = {
+            let mut found = vec![exe.parent()?.join(LINUX_HELPER_DIR).join(LINUX_HELPER_EXE)];
+            // XDG: an empty or relative XDG_DATA_HOME counts as unset.
+            if let Some(data) = std::env::var_os("XDG_DATA_HOME")
+                .map(PathBuf::from)
+                .filter(|path| path.is_absolute())
+                .or_else(|| {
+                    std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".local/share"))
+                })
+            {
+                found.push(data.join(LINUX_HELPER_DIR).join(LINUX_HELPER_EXE));
+            }
+            found
+        };
+        candidates.into_iter().find(|path| path.exists())
     }
 
     pub fn available() -> bool {
@@ -192,7 +230,7 @@ impl WebPlayer {
             std::io::Error::new(std::io::ErrorKind::NotFound, "playback helper not found")
         })?;
         let mut command = Command::new(path);
-        command.args(["--headless", "--web-player"]);
+        command.args(helper_args());
         Self::spawn(command, notify, on_account, ad_log)
     }
 
@@ -1790,7 +1828,7 @@ mod tests {
     }
 }
 
-#[cfg(all(test, target_os = "macos"))]
+#[cfg(all(test, free_helper))]
 mod live {
     use std::sync::Mutex;
 

@@ -325,10 +325,18 @@ fn sign_in_column(app: &mut App, ui: &mut egui::Ui, connecting: bool, beside: Op
             ui.add_space(10.0);
             wrapped(
                 ui,
-                gettext(
-                    locale,
-                    "Sign in through your browser. Spotifast never sees your password. Local playback needs Spotify Premium.",
-                ),
+                if app.free_sign_in {
+                    // The Free helper plays here: Premium is not needed.
+                    gettext(
+                        locale,
+                        "Sign in on Spotify's own page. Spotifast never sees your password. Free and Premium accounts both play here.",
+                    )
+                } else {
+                    gettext(
+                        locale,
+                        "Sign in through your browser. Spotifast never sees your password. Local playback needs Spotify Premium.",
+                    )
+                },
                 theme::regular(12.5),
                 palette.secondary,
             );
@@ -773,6 +781,17 @@ mod tests {
             "pressing it signs in through Spotify's own page"
         );
         assert_eq!(app.settings.web_client_id, None);
+        let says = |tree: &egui::accesskit::TreeUpdate, text: &str| {
+            tree.nodes
+                .iter()
+                .any(|(_, node)| node.value().is_some_and(|value| value.contains(text)))
+        };
+        let tree = frame(&mut app, vec![]);
+        assert!(
+            says(&tree, "Free and Premium accounts both play here"),
+            "a Free account is told it can play"
+        );
+        assert!(!says(&tree, "needs Spotify Premium"));
     }
 
     #[test]

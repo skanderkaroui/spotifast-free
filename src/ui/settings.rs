@@ -2721,11 +2721,11 @@ fn start_with_computer_row(
 
 /// Whether Spotify Free can play on this computer through the web player helper.
 pub(crate) fn free_helper_available() -> bool {
-    #[cfg(target_os = "macos")]
+    #[cfg(free_helper)]
     {
         crate::web_player::WebPlayer::available()
     }
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(free_helper))]
     {
         false
     }

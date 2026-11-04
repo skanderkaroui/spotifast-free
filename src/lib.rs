@@ -18,17 +18,17 @@ pub mod demo;
 pub mod device_history;
 pub mod emoji;
 pub mod eq;
-#[cfg(target_os = "macos")]
+#[cfg(free_helper)]
 pub mod free_home;
-#[cfg(target_os = "macos")]
+#[cfg(free_helper)]
 pub mod free_library_saves;
-#[cfg(target_os = "macos")]
+#[cfg(free_helper)]
 pub mod free_player;
-#[cfg(target_os = "macos")]
+#[cfg(free_helper)]
 pub mod free_playlist_edits;
-#[cfg(target_os = "macos")]
+#[cfg(free_helper)]
 pub mod free_podcasts;
-#[cfg(target_os = "macos")]
+#[cfg(free_helper)]
 pub mod free_reads;
 pub mod history;
 pub mod http;
@@ -78,7 +78,7 @@ pub mod ui;
 pub mod updates;
 pub mod util;
 pub mod vis;
-#[cfg(target_os = "macos")]
+#[cfg(free_helper)]
 pub mod web_player;
 pub mod winamp;
 pub mod window;
