@@ -204,3 +204,9 @@ files = ["src/demo.rs"]
 from = "\"Spotifast registered\""
 to = "\"Spotifast Free registered\""
 files = ["src/demo.rs"]
+
+# The Fedora source RPM is built from this fork's release source.
+[[rule]]
+from = "https://github.com/crmne/spotifast/releases/download/"
+to = "https://github.com/skanderkaroui/spotifast-free/releases/download/"
+files = ["packaging/rpm/spotifast.spec.in", "packaging/rpm/build-srpm.sh"]
