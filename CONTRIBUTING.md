@@ -266,7 +266,7 @@ cargo test --locked --all-targets
 cargo test --locked --all-targets --all-features
 cargo test --locked --all-features --doc
 RUSTDOCFLAGS='-D warnings' cargo doc --locked --all-features --no-deps
-(cd docs && bundle exec jekyll build)
+(cd docs && bundle exec jekyll-vitepress build)
 ```
 
 Free playback changes also need the helper's own checks, and on a Mac

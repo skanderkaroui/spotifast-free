@@ -145,7 +145,7 @@ Spotify lyrics without changing players.
 | **Lyrics** | Spotify lyrics when the playback session is signed in, with LRCLIB as fallback. Temporary LRCLIB overloads retry and try search; older cached lyrics remain available during outages. |
 | **Spotify Connect** | Premium: play on this computer or control your other devices, including Google Cast speakers and groups. Cast devices appear as they are discovered; frequently and recently chosen outputs rise to the top. Remote volume keeps your chosen level while Spotify updates. |
 | **Queue** | Add songs to the queue. On Premium, **Play next** puts a song or selection first when playing on this computer. |
-| **Themes** | Choose light, dark, system appearance, or custom colours, with one theme for light mode and one for dark mode that switch with the system. On Omarchy, follow your desktop theme. |
+| **Themes** | Choose light, dark, system appearance, or custom colours, with one theme for light mode and one for dark mode that switch with the system. On Omarchy, follow your desktop theme, in the panel, selection and muted shades each theme defines ([details](https://spotifast.rocks/settings-and-files/#follow-an-omarchy-theme)). |
 | **Desktop controls** | Use keyboard shortcuts, media keys and the command line (`spotifast play`, `next`, `now-playing`…; the command is still called `spotifast`). Start Spotifast Free with your computer, with its window or in the tray. |
 | **Winamp mini player** | Use classic skins with an equalizer, playlist, and animated sound displays, also in the collapsed title bar. Premium only for the equalizer and visuals. |
 | **MilkDrop** | Watch music-reactive visuals, Premium only. See Spotifast's [MilkDrop guide](https://spotifast.rocks/milkdrop/). |
