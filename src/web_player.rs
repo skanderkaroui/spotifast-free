@@ -669,6 +669,9 @@ fn helper_lines(
         PlayerCommand::VolumePreview(_) => vec![],
         PlayerCommand::Radio(seed) => vec![connect("radio", json!({ "seed": seed }))],
         PlayerCommand::ClearQueue => return Err(Unsupported::NotOffered("clearing the queue")),
+        PlayerCommand::RemoveNextTrack { .. } => {
+            return Err(Unsupported::NotOffered("removing a queued track"));
+        }
         PlayerCommand::Transfer => return Err(Unsupported::NotOffered("transfer")),
     })
 }

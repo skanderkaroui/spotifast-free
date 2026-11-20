@@ -22,7 +22,17 @@ files = ["packaging/macos/autostart.plist"]
 [[rule]]
 from = "rocks.spotifast.Spotifast"
 to = "io.github.skanderkaroui.SpotifastFree"
-files = ["packaging/macos/autostart.plist", "packaging/macos/bundle.sh", "src/updates.rs"]
+files = ["packaging/macos/autostart.plist", "packaging/macos/bundle.sh"]
+
+[[rule]]
+from = "bundle_ids: &[\"rocks.spotifast.Spotifast\"]"
+to = "bundle_ids: &[\"io.github.skanderkaroui.SpotifastFree\"]"
+files = ["src/updates.rs"]
+
+[[rule]]
+from = "github.com/crmne/spotifast/releases/download"
+to = "github.com/skanderkaroui/spotifast-free/releases/download"
+files = ["src/updates.rs"]
 
 [[rule]]
 from = "github.com/crmne/spotifast/releases"
