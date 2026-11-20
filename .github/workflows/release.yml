@@ -409,9 +409,10 @@ jobs:
       # against the same published checksums as the binaries.
       - name: Source archive
         run: |
-          curl --fail --location --retry 3 \
-            "https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz" \
-            --output "dist/spotifast-${GITHUB_REF_NAME}-source.tar.gz"
+          git archive --format=tar.gz --prefix="spotifast-${GITHUB_REF_NAME#v}/" \
+            --output="dist/spotifast-${GITHUB_REF_NAME}-source.tar.gz" HEAD
+          bash packaging/test-arch-source.sh "dist/spotifast-${GITHUB_REF_NAME}-source.tar.gz" \
+            "${GITHUB_REF_NAME#v}"
       - name: Public filenames, updater compatibility and checksums
         run: python3 packaging/release-names.py dist "$GITHUB_REF_NAME"
       - uses: ruby/setup-ruby@v1

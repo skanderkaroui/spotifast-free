@@ -17,8 +17,9 @@ expected="$srcdir/spotifast-$version"
 test -f "$expected/Cargo.toml"
 test -f "$expected/Cargo.lock"
 
-# Exercise the real recipe phases; only the expensive Cargo subprocess is
-# replaced. A wrong cd fails before this function, reproducing the 0.8.0 bug.
+# Exercise the real recipe phases. Stub the Cargo work and Arch's version
+# comparison so this layout check also runs on the release runner.
+vercmp() { printf '0\n'; }
 cargo() {
   test "$PWD" = "$expected"
   case "$1" in fetch|build|test) ;; *) return 1 ;; esac
