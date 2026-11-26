@@ -1392,6 +1392,28 @@ mod live {
             })
             .collect();
         let search = search_results(&found);
+        let podcasts = search_results(&[(
+            SearchKind::Podcasts,
+            answer(read(search_query(SearchKind::Podcasts, "lex fridman", 20))).unwrap(),
+        )])
+        .shows
+        .unwrap();
+        assert!(
+            podcasts
+                .items
+                .iter()
+                .any(|show| !show.name.is_empty() && show.uri.starts_with("spotify:show:")),
+            "podcast search found no podcasts"
+        );
+        eprintln!(
+            "podcasts found: {:?}",
+            podcasts
+                .items
+                .iter()
+                .take(3)
+                .map(|s| &s.name)
+                .collect::<Vec<_>>()
+        );
         let (made_for_you, top_mixes) =
             home_shelves(&answer(read(home_query("UTC"))).unwrap()).unwrap();
         let contexts = recent_contexts(&answer(read(recently_played_query(&user.id, 50))).unwrap());
