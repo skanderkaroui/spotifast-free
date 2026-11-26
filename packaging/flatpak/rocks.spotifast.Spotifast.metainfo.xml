@@ -50,7 +50,7 @@
     <control>keyboard</control>
   </supports>
   <releases>
-    <release version="0.18.1" date="2026-11-20">
+    <release version="0.18.1" date="2026-11-26">
       <url>https://github.com/skanderkaroui/spotifast-free/releases/tag/v0.18.1</url>
     </release>
     <release version="0.18.0" date="2026-11-12">
