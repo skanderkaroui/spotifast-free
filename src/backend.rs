@@ -6319,17 +6319,19 @@ async fn handle_free(
         },
         ApiRequest::Search { query, serial } | ApiRequest::SearchCatalogue { query, serial } => {
             use free::SearchKind;
-            let (tracks, artists, albums, playlists) = tokio::join!(
+            let (tracks, artists, albums, playlists, podcasts) = tokio::join!(
                 read(free::search_query(SearchKind::Tracks, query, 20)),
                 read(free::search_query(SearchKind::Artists, query, 20)),
                 read(free::search_query(SearchKind::Albums, query, 20)),
                 read(free::search_query(SearchKind::Playlists, query, 20)),
+                read(free::search_query(SearchKind::Podcasts, query, 20)),
             );
             let found: Vec<_> = [
                 (SearchKind::Tracks, tracks),
                 (SearchKind::Artists, artists),
                 (SearchKind::Albums, albums),
                 (SearchKind::Playlists, playlists),
+                (SearchKind::Podcasts, podcasts),
             ]
             .into_iter()
             .filter_map(|(kind, answer)| Some((kind, answer.ok()?)))

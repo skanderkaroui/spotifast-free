@@ -111,6 +111,11 @@ fn podcast(data: &Value) -> Option<Show> {
     })
 }
 
+/// A podcast row from `searchPodcasts`, which has the same shape as its page.
+pub(crate) fn search_show(data: &Value) -> Option<Show> {
+    podcast(data)
+}
+
 /// An episode as the web player describes it. Its place is Spotify's own
 /// (`playedState`): started, finished, or not begun.
 fn episode_data(data: &Value) -> Option<Episode> {

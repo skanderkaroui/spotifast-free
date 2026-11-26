@@ -188,8 +188,8 @@ pub fn discography_query(uri: &str, offset: u32, limit: u32) -> Value {
     )
 }
 
-/// One kind of search: `searchTracks`, `searchAlbums`, `searchArtists` or
-/// `searchPlaylists`.
+/// One kind of search: `searchTracks`, `searchAlbums`, `searchArtists`,
+/// `searchPlaylists` or `searchPodcasts`.
 pub fn search_query(kind: SearchKind, term: &str, limit: u32) -> Value {
     let (operation, hash) = match kind {
         SearchKind::Tracks => (
@@ -207,6 +207,10 @@ pub fn search_query(kind: SearchKind, term: &str, limit: u32) -> Value {
         SearchKind::Playlists => (
             "searchPlaylists",
             "d520014e748f9ea44f7707d8df1819867ac1205e8b7f3e28f22fe5fc858921b1",
+        ),
+        SearchKind::Podcasts => (
+            "searchPodcasts",
+            "0195d9f61b43606d490bca64c3456e3593528cea6cc05c7e822c7c42beed0f4e",
         ),
     };
     persisted(
@@ -227,6 +231,7 @@ pub enum SearchKind {
     Albums,
     Artists,
     Playlists,
+    Podcasts,
 }
 
 /// An album header from a list row (library, search, discography).
@@ -359,6 +364,7 @@ pub fn search_results(answers: &[(SearchKind, Value)]) -> SearchResults {
             SearchKind::Albums => ("albumsV2", "/data"),
             SearchKind::Artists => ("artists", "/data"),
             SearchKind::Playlists => ("playlists", "/data"),
+            SearchKind::Podcasts => ("podcasts", "/data"),
         };
         let Some(section) = body.pointer(&format!("/data/searchV2/{key}")) else {
             continue;
@@ -386,6 +392,13 @@ pub fn search_results(answers: &[(SearchKind, Value)]) -> SearchResults {
             SearchKind::Playlists => {
                 let items = data.filter_map(playlist_header).collect();
                 results.playlists = Some(page(items, 0, rows.len(), total));
+            }
+            SearchKind::Podcasts => {
+                let items = data
+                    .filter(|data| str_at(data, "/__typename") == Some("Podcast"))
+                    .filter_map(crate::free_podcasts::search_show)
+                    .collect();
+                results.shows = Some(page(items, 0, rows.len(), total));
             }
         }
     }
@@ -1017,6 +1030,30 @@ mod tests {
     use super::*;
 
     #[test]
+    fn a_podcast_search_finds_podcasts_and_skips_audiobooks() {
+        let body = json!({"data": {"searchV2": {"podcasts": {
+            "totalCount": 2,
+            "items": [
+                {"data": {"__typename": "Podcast", "uri": "spotify:show:abc", "name": "Lex Fridman Podcast",
+                    "publisher": {"name": "Lex Fridman"},
+                    "coverArt": {"sources": [{"url": "https://i.scdn.co/image/x", "width": 64, "height": 64}]}}},
+                {"data": {"__typename": "Audiobook", "uri": "spotify:show:book", "name": "A Book"}},
+            ],
+        }}}});
+        let shows = search_results(&[(SearchKind::Podcasts, body)])
+            .shows
+            .unwrap();
+        assert_eq!(shows.items.len(), 1);
+        assert_eq!(shows.items[0].id, "abc");
+        assert_eq!(shows.items[0].publisher, "Lex Fridman");
+        assert_eq!(shows.items[0].images.len(), 1);
+        assert_eq!(
+            search_query(SearchKind::Podcasts, "lex", 20)["operationName"],
+            "searchPodcasts"
+        );
+    }
+
+    #[test]
     fn lyrics_are_asked_by_song_and_cover_as_the_web_player_asks() {
         let cover = "https://i.scdn.co/image/ab67616d0000b273c8b444df094279e70d0ed856";
         assert_eq!(
@@ -1343,6 +1380,7 @@ mod live {
             SearchKind::Artists,
             SearchKind::Albums,
             SearchKind::Playlists,
+            SearchKind::Podcasts,
         ];
         let found: Vec<_> = kinds
             .iter()

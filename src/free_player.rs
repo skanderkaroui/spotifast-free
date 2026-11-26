@@ -143,6 +143,7 @@ pub fn best_match(kind: SearchKind, body: &Value) -> Option<String> {
         SearchKind::Albums => first(found.albums, |album| album.uri),
         SearchKind::Artists => first(found.artists, |artist| artist.uri),
         SearchKind::Playlists => first(found.playlists, |playlist| playlist.uri),
+        SearchKind::Podcasts => first(found.shows, |show| show.uri),
     }
 }
 
